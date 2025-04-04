@@ -1,0 +1,128 @@
+services:
+  # --- RabbitMQ ---
+  rabbitmq:
+    image: rabbitmq:3.11-management
+    container_name: rabbitmq_notifier
+    ports:
+      - "5672:5672" # AMQP port
+      - "15672:15672" # Management UI
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq/
+    environment:
+      RABBITMQ_DEFAULT_USER: user # Keep simple credentials for local dev
+      RABBITMQ_DEFAULT_PASS: password
+    healthcheck: # Ensure RabbitMQ is ready before services connect
+      test: ["CMD", "rabbitmqctl", "status"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - notification_network # Connect to custom network
+
+  # --- Postgres Database ---
+  postgres:
+    image: postgres:15
+    container_name: postgres_notifier
+    environment:
+      # Use variables defined in the root .env file or defaults
+      POSTGRES_DB: ${POSTGRES_DB:-notifications_db}
+      POSTGRES_USER: ${POSTGRES_USER:-user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432" # Map host port from env or default 5432
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck: # Ensure DB is ready before services connect
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-user} -d ${POSTGRES_DB:-notifications_db}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - notification_network # Connect to custom network
+
+  # --- Notification API Service ---
+  notification-api:
+    build:
+      context: ./notification-api # Path to Dockerfile context
+      dockerfile: Dockerfile
+      args: # Pass build-time args like NODE_ENV
+        NODE_ENV: ${NODE_ENV:-development}
+    container_name: notification_api_service
+    ports:
+      - "${API_PORT:-3000}:3000" # Map host port from env or default 3000
+    volumes:
+      # Mount code for development (optional, remove for production builds)
+      - ./notification-api/src:/usr/src/app/src
+      - ./notification-api/config:/usr/src/app/config # Mount config for easy changes
+      - ./notification-api/models:/usr/src/app/models # Mount models
+      # Might need others like migrations if run from container
+    environment:
+      # Pass runtime environment variables
+      NODE_ENV: ${NODE_ENV:-development}
+      PORT: 3000
+      # RabbitMQ URL uses service name 'rabbitmq' from this docker-compose file
+      RABBITMQ_URL: amqp://${RABBITMQ_DEFAULT_USER:-user}:${RABBITMQ_DEFAULT_PASS:-password}@rabbitmq:5672
+      RABBITMQ_EXCHANGE_NAME: notifications_exchange
+      # Database connection details use service name 'postgres'
+      DB_HOST: postgres # Service name in docker network
+      POSTGRES_DB: ${POSTGRES_DB:-notifications_db}
+      POSTGRES_USER: ${POSTGRES_USER:-user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
+      # Add any other necessary env vars
+    depends_on: # Wait for dependencies to be healthy
+      rabbitmq:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    networks:
+      - notification_network # Connect to custom network
+    command: > # Use nodemon for development, node for production
+      sh -c "if [ \"$NODE_ENV\" = \"development\" ]; then npm install nodemon && npx sequelize-cli db:migrate && npx nodemon src/server.js; else npx sequelize-cli db:migrate && node src/server.js; fi"
+
+  # --- Slack Connector Service ---
+  slack-connector:
+    build:
+      context: ./slack-connector
+      dockerfile: Dockerfile
+      args:
+        NODE_ENV: ${NODE_ENV:-development}
+    container_name: slack_connector_service
+    volumes: # Mount code for development
+      - ./slack-connector/src:/usr/src/app/src
+      - ./slack-connector/config:/usr/src/app/config # Needs config/models sync
+      - ./slack-connector/models:/usr/src/app/models # Needs config/models sync
+    environment:
+      NODE_ENV: ${NODE_ENV:-development}
+      # RabbitMQ connection
+      RABBITMQ_URL: amqp://${RABBITMQ_DEFAULT_USER:-user}:${RABBITMQ_DEFAULT_PASS:-password}@rabbitmq:5672
+      RABBITMQ_EXCHANGE_NAME: notifications_exchange
+      RABBITMQ_QUEUE_NAME: slack_queue
+      RABBITMQ_BINDING_KEY: slack
+      # Database connection
+      DB_HOST: postgres
+      POSTGRES_DB: ${POSTGRES_DB:-notifications_db}
+      POSTGRES_USER: ${POSTGRES_USER:-user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
+      # Slack Token (IMPORTANT: Use Docker secrets or env file in production)
+      SLACK_BOT_TOKEN: ${SLACK_BOT_TOKEN} # Pass the token from your host environment or a .env file
+      MAX_PROCESSING_ATTEMPTS: 3
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    networks:
+      - notification_network
+    command: > # Use nodemon for development
+      sh -c "if [ \"$NODE_ENV\" = \"development\" ]; then npm install nodemon && npx nodemon src/connector.js; else node src/connector.js; fi"
+
+
+# --- Volumes Definition ---
+volumes:
+  rabbitmq_data:
+  postgres_data:
+
+# --- Network Definition ---
+networks:
+  notification_network: # Define a custom bridge network
+    driver: bridge

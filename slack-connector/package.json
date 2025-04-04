@@ -1,0 +1,27 @@
+{
+  "name": "slack-connector",
+  "version": "1.0.0",
+  "description": "",
+  "main": "/src/connector.js",
+  "scripts": {
+    "start": "node src/connector.js",
+    "dev": "nodemon src/connector.js",
+    "test": "jest --detectOpenHandles --forceExit --coverage"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@slack/web-api": "^7.9.1",
+    "amqplib": "^0.10.7",
+    "axios": "^1.8.4",
+    "dotenv": "^16.4.7",
+    "pg": "^8.14.1",
+    "pg-hstore": "^2.3.4",
+    "sequelize": "^6.37.7",
+    "winston": "^3.17.0"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0"
+  }
+}
