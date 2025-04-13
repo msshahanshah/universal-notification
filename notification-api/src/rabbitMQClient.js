@@ -5,10 +5,18 @@ const config = require('./config');
 let connection = null;
 let channel = null;
 
+/**
+ * Establishes a connection to RabbitMQ and creates a channel.
+ * Also asserts the existence of the configured exchange.
+ *
+ * @returns {Promise<{connection: object, channel: object}>} An object containing the connection and channel.
+ * @throws {Error} If there is a failure connecting to RabbitMQ.
+ */
 async function connectRabbitMQ() {
     if (channel) {
         return { connection, channel };
     }
+
 
     console.log('Connecting to RabbitMQ...');
     try {
@@ -47,6 +55,13 @@ async function connectRabbitMQ() {
     }
 }
 
+/**
+ * Publishes a message to the specified exchange with the given routing key.
+ *
+ * @param {string} routingKey - The routing key for the message.
+ * @param {object} message - The message to be published.
+ * @throws {Error} If the channel is not available or if publishing fails.
+ */
 async function publishMessage(routingKey, message) {
     if (!channel) {
         console.error('Cannot publish message: RabbitMQ channel not available.');
@@ -76,6 +91,10 @@ async function publishMessage(routingKey, message) {
     }
 }
 
+/**
+ * Closes the RabbitMQ channel and connection.
+ *
+ */
 async function closeConnection() {
     if (channel) {
         await channel.close();
@@ -89,11 +108,15 @@ async function closeConnection() {
     }
 }
 
+/**
+ * @module rabbitMQClient
+ * @description This module provides functions to connect to RabbitMQ, publish messages, and close the connection.
+ */
 
 module.exports = {
     connectRabbitMQ,
     publishMessage,
     closeConnection,
-    // Export channel directly ONLY for testing purposes if absolutely needed
+    /** @returns {object} current channel*/
     getChannel: () => channel,
 };

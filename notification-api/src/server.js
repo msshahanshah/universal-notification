@@ -5,8 +5,19 @@ const { connectRabbitMQ, closeConnection: closeRabbitMQConnection } = require('.
 const logger = require('./logger');
 const db = require('../models'); // Import Sequelize instance for connection check/close
 
+/**
+ * @type {import('http').Server|null}
+ */
 let server;
 
+/**
+ * Starts the server by performing the following steps:
+ * 1. Test the database connection.
+ * 2. Connect to RabbitMQ.
+ * 3. Start the HTTP server.
+ *
+ * @returns {Promise<void>} - Resolves when the server has started successfully or rejects on error.
+ */
 async function startServer() {
     try {
         // 1. Test Database Connection
@@ -31,6 +42,12 @@ async function startServer() {
     }
 }
 
+/**
+ * Shuts down the server gracefully by closing the HTTP server, RabbitMQ connection, and the database connection.
+ *
+ * @param {number} [exitCode=0] - The exit code to use when exiting the process.
+ * @returns {Promise<void>} - Resolves when all connections have been closed.
+ */
 async function shutdown(exitCode = 0) {
      logger.info('Shutting down server...');
      // Close HTTP server first to stop accepting new requests
@@ -68,6 +85,7 @@ async function shutdown(exitCode = 0) {
 process.on('SIGTERM', () => shutdown(0));
 process.on('SIGINT', () => shutdown(0)); // Catches Ctrl+C
 
+/**  Event listener for unhandled promise rejections. */
 // Handle unhandled promise rejections
 process.on('unhandledRejection', (reason, promise) => {
     logger.error('Unhandled Rejection at:', { promise, reason: reason.message || reason });
@@ -75,6 +93,7 @@ process.on('unhandledRejection', (reason, promise) => {
     // shutdown(1);
 });
 process.on('uncaughtException', (error) => {
+    /** Event listener for uncaught exceptions. */
      logger.error('Uncaught Exception:', { error: error.message, stack: error.stack });
      // It's generally recommended to shutdown on uncaught exceptions
      shutdown(1);

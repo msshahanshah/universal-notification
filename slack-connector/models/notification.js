@@ -3,9 +3,20 @@
 const { Model } = require('sequelize');
 
 module.exports = (sequelize, DataTypes) => {
+  /**
+   * @class Notification
+   * @extends Model
+   * @classdesc Represents a notification entity in the database.
+   */
   class Notification extends Model {
+    /**
+     * @method associate
+     * @description Defines associations with other models (if any).
+     * @param {Object} models - The collection of models in the application.
+     */
     static associate(models) {
-      // define association here if needed in the future
+      // Define association here if needed in the future. For example:
+      // Notification.belongsTo(models.User);
     }
   }
   Notification.init({
@@ -41,11 +52,20 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.TEXT,
         allowNull: true
     }
-    // createdAt and updatedAt are automatically handled by Sequelize if timestamps: true (default)
+    // createdAt and updatedAt are automatically handled by Sequelize if `timestamps: true` (default).
   }, {
     sequelize,
+    /**
+     * @property {string} modelName - The name of the model in Sequelize.
+     * @default 'Notification'
+     */
     modelName: 'Notification',
-    // timestamps: true // This is the default
+     /**
+     * @property {boolean} timestamps - Indicates whether to include `createdAt` and `updatedAt` timestamps.
+     * @default true
+     */
+    // timestamps: true // This is the default, meaning Sequelize will automatically add and manage `createdAt` and `updatedAt` columns.
   });
+  /** @memberof Notification */
   return Notification;
 };

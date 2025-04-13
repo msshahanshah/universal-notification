@@ -1,26 +1,47 @@
 // ./notification-api/src/app.js
+/**
+ * Main application file for the Notification API.
+ * Sets up the Express server, defines routes, and handles request logic.
+ */
 const express = require('express');
 const { v4: uuidv4 } = require('uuid'); // For generating unique IDs
 const { publishMessage } = require('./rabbitMQClient');
 const config = require('./config');
 const logger = require('./logger');
-const db = require('../models'); // Import Sequelize models (index.js in models dir)
-const Notification = db.Notification; // Get the Notification model
+const db = require('../models');
+const Notification = db.Notification;
 
 const app = express();
 
 // Middleware
 app.use(express.json());
 
-// Routes
+/**
+ * Health check route.
+ * @route GET /health
+ * @group Health - Operations related to the health of the API
+ * @returns {object} 200 - An indicator that the API is healthy.
+ * @returns {Error}  default - Unexpected error
+ */
 app.get('/health', (req, res) => {
-    // Optionally add DB and RabbitMQ connection checks here
     res.status(200).send('OK');
 });
 
+/**
+ * Route for creating and publishing a notification request.
+ * @route POST /notify
+ * @group Notification - Operations related to sending notifications
+ * @param {string} service.body.required - The service to use for sending the notification (e.g., 'slack', 'email', 'telegram').
+ * @param {string} channel.body.required - The target channel for the notification (e.g., Slack channel ID).
+ * @param {string} message.body.required - The message content for the notification.
+ * @returns {object} 202 - Notification request accepted and queued.
+ * @returns {object} 400 - Invalid request data.
+ * @returns {object} 409 - Conflict: A notification with this identifier potentially exists.
+ * @returns {object} 500 - Internal server error, failed to queue notification.
+ */
 app.post('/notify', async (req, res) => {
     const { service, channel: targetChannel, message } = req.body;
-    const messageId = uuidv4(); // Generate unique ID for this notification
+    const messageId = uuidv4();
 
     // Validation
     if (!service || !targetChannel || !message) {
@@ -38,13 +59,11 @@ app.post('/notify', async (req, res) => {
         });
     }
 
-    // 1. Save to Database First
     let notificationRecord;
     try {
         logger.info(`Creating notification record in DB`, { messageId, service: lowerCaseService, targetChannel });
         notificationRecord = await Notification.create({
             messageId: messageId,
-            service: lowerCaseService,
             target: targetChannel,
             content: message,
             status: 'pending', // Initial status
@@ -57,17 +76,14 @@ app.post('/notify', async (req, res) => {
             messageId,
             error: dbError.message,
             stack: dbError.stack,
-            // parent: dbError.parent, // Original DB error if available
-            // sql: dbError.sql // SQL query if available
         });
-        // Check for unique constraint violation (maybe duplicate messageId, though unlikely with UUIDv4)
+
         if (dbError.name === 'SequelizeUniqueConstraintError') {
              return res.status(409).json({ error: 'Conflict: A notification with this identifier potentially exists.', messageId });
         }
         return res.status(500).json({ error: 'Failed to save notification request.' });
     }
 
-    // 2. Publish to RabbitMQ
     const notificationData = {
         // Include DB record ID and messageId in the message payload
         dbId: notificationRecord.id, // The auto-incremented primary key
@@ -79,12 +95,9 @@ app.post('/notify', async (req, res) => {
     };
 
     try {
-        logger.info(`Publishing notification request to RabbitMQ`, { messageId, service: lowerCaseService, exchange: config.rabbitMQ.exchangeName, routingKey: lowerCaseService });
-        await publishMessage(lowerCaseService, notificationData); // Use service name as routing key
+        logger.info(`Publishing notification request to RabbitMQ`, { messageId, service: lowerCaseService, routingKey: lowerCaseService });
+        await publishMessage(lowerCaseService, notificationData);
         logger.info(`Notification request published successfully`, { messageId });
-
-        // Optionally: Update DB status to 'queued' here if desired, but 'pending' is often sufficient
-        // await notificationRecord.update({ status: 'queued' });
 
         res.status(202).json({
             status: 'accepted',
@@ -99,12 +112,6 @@ app.post('/notify', async (req, res) => {
              error: publishError.message,
              stack: publishError.stack
         });
-
-        // Critical Decision: If publish fails after DB record created, what to do?
-        // Option 1: Leave DB record as 'pending'. A background job could retry publishing later. (More complex)
-        // Option 2: Update DB record to 'failed' state immediately. (Simpler)
-        // Option 3: Delete the DB record. (Data loss)
-        // Let's go with Option 2 for now.
         try {
             await notificationRecord.update({
                  status: 'failed',
@@ -118,7 +125,6 @@ app.post('/notify', async (req, res) => {
                 updateError: updateError.message,
                 stack: updateError.stack
              });
-             // At this point, state is inconsistent (pending in DB, but failed to publish)
         }
 
         res.status(500).json({ error: 'Failed to queue notification request after saving.' });
@@ -126,6 +132,13 @@ app.post('/notify', async (req, res) => {
 });
 
 // Update Error Handling Middleware
+/**
+ * Error handling middleware.
+ * @param {Error} err - The error object.
+ * @param {object} req - The request object.
+ * @param {object} res - The response object.
+ * @param {function} next - The next middleware function.
+ */
 app.use((err, req, res, next) => {
     logger.error('Unhandled error:', { error: err.message, stack: err.stack, url: req.originalUrl, method: req.method });
     res.status(500).send('Something broke!');

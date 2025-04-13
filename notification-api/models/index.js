@@ -1,18 +1,30 @@
 'use strict';
 
+/**
+ * Module dependencies.
+ */
 const fs = require('fs');
 const path = require('path');
 const Sequelize = require('sequelize');
 const process = require('process');
 const basename = path.basename(__filename);
 const env = process.env.NODE_ENV || 'development';
+/**
+ * Load the configuration for the current environment.
+ */
 const config = require(__dirname + '/../config/config.js')[env];
 const db = {};
 
 let sequelize;
+
+/**
+ * Initializes the Sequelize instance.
+ */
 if (config.use_env_variable) {
+  /** If use_env_variable is set in the configuration, use it to get the database URL from environment variables. */
   sequelize = new Sequelize(process.env[config.use_env_variable], config);
 } else {
+  /** Otherwise, use the database, username, and password from the configuration. */
   sequelize = new Sequelize(config.database, config.username, config.password, config);
 }
 
@@ -21,6 +33,9 @@ fs
   .filter(file => {
     return (
       file.indexOf('.') !== 0 &&
+      /**
+       * Exclude files that are not JavaScript files or test files.
+       */
       file !== basename &&
       file.slice(-3) === '.js' &&
       file.indexOf('.test.js') === -1
@@ -31,6 +46,9 @@ fs
     db[model.name] = model;
   });
 
+/**
+ * Call the associate method for each model if it exists.
+ */
 Object.keys(db).forEach(modelName => {
   if (db[modelName].associate) {
     db[modelName].associate(db);
@@ -40,4 +58,7 @@ Object.keys(db).forEach(modelName => {
 db.sequelize = sequelize;
 db.Sequelize = Sequelize;
 
+/**
+ * Export the database object.
+ */
 module.exports = db;

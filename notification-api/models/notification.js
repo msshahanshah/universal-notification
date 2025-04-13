@@ -3,9 +3,19 @@
 const { Model } = require('sequelize');
 
 module.exports = (sequelize, DataTypes) => {
+  /**
+   * @class Notification
+   * @extends Model
+   * @classdesc Represents a notification entity in the database.
+   */
   class Notification extends Model {
+    /**
+     * @method associate
+     * @description Defines associations with other models (if any).
+     * @param {Object} models - The collection of models in the application.
+     */
     static associate(models) {
-      // define association here if needed in the future
+      // Define association here if needed in the future
     }
   }
   Notification.init({
@@ -41,7 +51,7 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.TEXT,
         allowNull: true
     }
-    // createdAt and updatedAt are automatically handled by Sequelize if timestamps: true (default)
+    // createdAt and updatedAt are automatically managed by Sequelize if timestamps: true (default)
   }, {
     sequelize,
     modelName: 'Notification',

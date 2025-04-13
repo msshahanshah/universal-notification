@@ -11,7 +11,19 @@ let connection = null;
 let channel = null;
 let consumerTag = null; // Store consumer tag to allow cancellation
 
-console.log(process.env.SLACK_BOT_TOKEN)
+
+/**
+ * Processes a message received from RabbitMQ.
+ *
+ * This function handles the entire message processing lifecycle:
+ * - Parsing the message content
+ * - Idempotency checks
+ * - Updating the database status
+ * - Sending the message to Slack
+ * - Updating the database with the final status
+ *
+ * @param {Object} msg - The message object received from RabbitMQ.
+ * @param {Object} channel - The RabbitMQ channel. */
 async function processMessage(msg, channel) {
     if (msg === null) {
         logger.warn("Consumer received null message, possibly cancelled.");
@@ -177,6 +189,11 @@ async function processMessage(msg, channel) {
 }
 
 
+/**
+ * Establishes a connection to RabbitMQ, asserts the necessary exchange and queue,
+ * binds the queue to the exchange, tests the database connection, and starts consuming messages.
+ *
+ * Also handles connection errors and implements a basic retry mechanism. */
 async function connectAndConsume() {
     try {
         logger.info('Connecting to RabbitMQ...');
@@ -244,16 +261,23 @@ async function connectAndConsume() {
     }
 }
 
-// --- Connection Handling & Shutdown ---
+// --- Connection Handling, Error Handling, & Shutdown ---
 
 let isShuttingDown = false; // Prevent duplicate shutdown attempts
 
+/**
+ * Handles RabbitMQ connection errors.
+ *
+ * Logs the error and relies on the 'close' event handler for reconnection.
+ * @param {Error} err - The error object. */
 function handleRabbitError(err) {
     logger.error('RabbitMQ connection error:', { errorMessage: err.message, stack: err.stack });
     // Connection is likely closed already or will be soon. The 'close' handler will attempt reconnection.
     // No need to call closeConnections here, may interfere with close handler.
 }
 
+/**
+ * Handles the RabbitMQ connection close event. */
 function handleRabbitClose() {
     if (isShuttingDown) return; // Already handling shutdown
     logger.warn('RabbitMQ connection closed.');
@@ -265,6 +289,13 @@ function handleRabbitClose() {
     setTimeout(connectAndConsume, 10000); // Simple retry delay
 }
 
+/**
+ * Closes all open connections (RabbitMQ channel, connection, and database) and performs cleanup.
+ *
+ * This function is used during shutdown and also during error recovery.
+ * It handles cases where connections might already be closed or not yet established.
+ *
+ * @param {boolean} [attemptReconnect=false] - Whether this is part of a reconnect attempt (true) or final shutdown (false). */
 async function closeConnections(attemptReconnect = false) {
     if (isShuttingDown && !attemptReconnect) return; // Prevent multiple shutdowns unless it's for a retry
     isShuttingDown = !attemptReconnect; // Set flag if it's a final shutdown
@@ -326,6 +357,10 @@ async function closeConnections(attemptReconnect = false) {
     }
 }
 
+/**
+ * Gracefully handle signals and exceptions to ensure cleanup and orderly shutdown.
+ * SIGTERM, SIGINT, unhandledRejection, uncaughtException
+ */
 // Graceful shutdown handlers
 process.on('SIGTERM', () => {
     logger.info('Received SIGTERM signal.');
