@@ -50,6 +50,22 @@ module.exports = (sequelize, DataTypes) => {
     connectorResponse: {
         type: DataTypes.TEXT,
         allowNull: true
+    },
+      /**
+     * @property {string} templateId - The ID of the template used for the notification.
+     * @type {DataTypes.STRING}
+     */
+    templateId: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
+    /**
+     * @property {object} message - The data that replaces placeholders in the template.
+     * @type {DataTypes.JSON}
+     */
+    message: {
+      type: DataTypes.JSON,
+      allowNull: true,
     }
     // createdAt and updatedAt are automatically managed by Sequelize if timestamps: true (default)
   }, {

@@ -116,6 +116,43 @@ services:
     command: > # Use nodemon for development
       sh -c "if [ \"$NODE_ENV\" = \"development\" ]; then npm install nodemon && npx nodemon src/connector.js; else node src/connector.js; fi"
 
+  # --- Email Connector Service ---
+  email-connector:
+    build:
+      context: ./email-connector
+      args:
+        dockerfile: Dockerfile
+        NODE_ENV: ${NODE_ENV:-development}
+    container_name: email_connector_service
+    volumes:
+      - ./email-connector/src:/usr/src/app/src
+      - ./email-connector/config:/usr/src/app/config
+      - ./email-connector/models:/usr/src/app/models
+    environment:
+      NODE_ENV: ${NODE_ENV:-development}
+      # RabbitMQ connection
+      RABBITMQ_URL: amqp://${RABBITMQ_DEFAULT_USER:-user}:${RABBITMQ_DEFAULT_PASS:-password}@rabbitmq:5672
+      RABBITMQ_EXCHANGE_NAME: notifications_exchange
+      RABBITMQ_QUEUE_NAME: email_queue
+      RABBITMQ_BINDING_KEY: email
+      # Database connection
+      DB_HOST: postgres
+      POSTGRES_DB: ${POSTGRES_DB:-notifications_db}
+      POSTGRES_USER: ${POSTGRES_USER:-user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
+      # AWS config
+      AWS_REGION: ${AWS_REGION}
+      AWS_S3_BUCKET: ${AWS_S3_BUCKET}
+      MAX_PROCESSING_ATTEMPTS: 3
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    networks:
+      - notification_network
+    command: >
+      sh -c "if [ \"$NODE_ENV\" = \"development\" ]; then npm install nodemon && npx nodemon src/connector.js; else node src/connector.js; fi"
 
 # --- Volumes Definition ---
 volumes:

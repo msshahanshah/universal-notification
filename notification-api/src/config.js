@@ -27,6 +27,10 @@ module.exports = {
         url: process.env.RABBITMQ_URL || 'amqp://user:password@rabbitmq:5672', // Use service name 'rabbitmq' for Docker network
         exchangeName: process.env.RABBITMQ_EXCHANGE_NAME || 'notifications_exchange',
         exchangeType: 'direct',
+        // Email queue configuration
+        emailQueueName: process.env.RABBITMQ_EMAIL_QUEUE_NAME || 'email_queue',
+        emailBindingKey: process.env.RABBITMQ_EMAIL_BINDING_KEY || 'email',
+        emailExchangeName: process.env.RABBITMQ_EXCHANGE_NAME_EMAIL || 'notifications_exchange_email'
     },
     // Add database config (read from Sequelize config implicitly or explicitly define here)
      /**
