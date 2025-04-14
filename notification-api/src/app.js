@@ -96,6 +96,7 @@ app.post('/notify', async (req, res) => {
             status: 'pending', // Initial status
             attempts: 0,
             templateId: req.body.templateId,
+            service: lowerCaseService
             
         });
 

@@ -18,8 +18,6 @@ require('dotenv').config(); // Load local .env potentially overriding root setti
  * @property {string} rabbitMQ.exchangeType - The type of the RabbitMQ exchange.
  * @property {string} rabbitMQ.queueName - The name of the RabbitMQ queue.
  * @property {string} rabbitMQ.bindingKey - The binding key for the queue.
- * @property {Object} database - Database connection details.
- * @property {string} database.host - The database host.
  * @property {Object} aws - AWS configuration details.
  * @property {string} aws.region - The AWS region.
  * @property {string} aws.s3Bucket - The name of the S3 bucket for email templates.
@@ -44,10 +42,6 @@ module.exports = {
         queueName: process.env.RABBITMQ_QUEUE_NAME_EMAIL || 'email_queue',
         /** @type {string} */
         bindingKey: process.env.RABBITMQ_BINDING_KEY_EMAIL || 'email',
-    },
-    database: {
-        /** @type {string} */
-        host: process.env.DB_HOST || 'postgres', // Use service name 'postgres'
     },
     aws: {
         /** @type {string} */

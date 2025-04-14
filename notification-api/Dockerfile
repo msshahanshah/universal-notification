@@ -17,5 +17,6 @@ COPY . .
 # Expose the port the app runs in
 EXPOSE 3000
 
-# Define the default command to run when the container starts
-CMD ["node", "src/server.js"]
+# Run migrations and start the server
+ENTRYPOINT ["sh", "-c", "npm run migrate"]
+ CMD ["node src/server.js"]

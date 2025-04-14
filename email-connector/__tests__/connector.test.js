@@ -109,14 +109,3 @@ describe('processMessage', function() {
   });
 
 });
-
-// Mock for Jest
-const jest = {
-    fn: () => {
-      const mockFn = function () {
-        mockFn.mock.calls.push(Array.from(arguments));
-      };
-      mockFn.mock = { calls: [] };
-      return mockFn;
-    },
-  };

@@ -7,7 +7,7 @@ services:
       - "5672:5672" # AMQP port
       - "15672:15672" # Management UI
     volumes:
-      - rabbitmq_data:/var/lib/rabbitmq/
+      - ./rabbitmq_data:/var/lib/rabbitmq/
     environment:
       RABBITMQ_DEFAULT_USER: user # Keep simple credentials for local dev
       RABBITMQ_DEFAULT_PASS: password
@@ -156,7 +156,7 @@ services:
 
 # --- Volumes Definition ---
 volumes:
-  rabbitmq_data:
+  # rabbitmq_data:
   postgres_data:
 
 # --- Network Definition ---

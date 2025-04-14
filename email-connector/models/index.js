@@ -18,7 +18,7 @@ module.exports = (env) => {
   /**
    * @type {object} - Configuration for the database, based on the current environment.
    */
-  const config = require('../src/config.js')[env];
+  const dbConfig = require('../config/database.js')[env];  // Load the database configuration
 
   /**
    * @type {object} - An empty object that will store the database models.
@@ -30,11 +30,11 @@ module.exports = (env) => {
    */
   let sequelize;
   /** Initializes a new Sequelize instance using environment variables or configuration file. */
-  if (config.use_env_variable) {
-    sequelize = new Sequelize(process.env[config.use_env_variable], config);
+  if (dbConfig.use_env_variable) {
+    sequelize = new Sequelize(process.env[dbConfig.use_env_variable], dbConfig);
   } else {
     /** Initializes a new Sequelize instance using the configuration file. */
-    sequelize = new Sequelize(config.database, config.username, config.password, config);
+    sequelize = new Sequelize(dbConfig.database, dbConfig.username, dbConfig.password, dbConfig);
   }
 
   fs

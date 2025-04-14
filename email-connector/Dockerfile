@@ -6,9 +6,16 @@ WORKDIR /usr/src/app
 
 # Copy package.json and package-lock.json to the working directory
 COPY package*.json ./
+# Install dependencies
+RUN npm install
+# copy env files
+COPY env.sample .env
+COPY ../.env ../.env
 
 # Install dependencies
 RUN npm install
+
+
 
 # Copy all the files from the current directory to the working directory
 COPY . ./
@@ -16,8 +23,5 @@ COPY . ./
 # Expose port 3000 for the API
 EXPOSE 3000 
 
-# Default command to run when the container starts
+# Command to run when the container starts
 CMD ["node", "src/connector.js"]
-
-# Start command
-CMD [ "npm", "start" ]

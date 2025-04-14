@@ -79,6 +79,7 @@ describe('POST /notify Endpoint', () => {
             messageId: testMessageId,
             service: validPayload.service,
             target: validPayload.channel,
+            templateId: undefined,
             content: validPayload.message,
             status: 'pending',
             attempts: 0,
@@ -115,9 +116,11 @@ describe('POST /notify Endpoint', () => {
         expect(Notification.create).toHaveBeenCalledWith({
             messageId: testMessageId,
             service: validPayload.service.toLowerCase(),
+            templateId: undefined,
             target: validPayload.channel,
             content: validPayload.message,
             status: 'pending',
+            templateId: undefined,
             attempts: 0,
         });
 
@@ -127,6 +130,7 @@ describe('POST /notify Endpoint', () => {
             validPayload.service.toLowerCase(), // routing key
             expect.objectContaining({ // message payload
                 dbId: 1, // Check if DB ID is included
+                templateId: undefined,
                 messageId: testMessageId,
                 service: validPayload.service.toLowerCase(),
                 channel: validPayload.channel,
@@ -197,7 +201,7 @@ describe('POST /notify Endpoint', () => {
             .expect('Content-Type', /json/)
             .expect(500);
 
-        expect(response.body).toEqual({ error: 'Failed to save notification request.' });
+        expect(response.body).toEqual({ error: 'Failed to save notification request to database.' });
         expect(Notification.create).toHaveBeenCalledTimes(1);
         expect(rabbitMQClient.publishMessage).not.toHaveBeenCalled(); // Should not publish if DB fails
         expect(logger.error).toHaveBeenCalledWith(expect.stringContaining('Database error: Failed to create notification record'), expect.any(Object));
