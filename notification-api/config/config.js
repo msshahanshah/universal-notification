@@ -5,6 +5,8 @@
  * handling environment variables, and configuring database pools.
  */
 
+const { migrateAllDatabases } = require('../src/utillity/migrationRunner');
+
 /**
  * Load environment variables from the root .env file.
  * It prioritizes the root .env file, allowing a local .env file
@@ -99,5 +101,6 @@ module.exports = {
       acquire: 30000,
       idle: 10000
     }
-  }
+  },
+  migrationRunner: migrateAllDatabases
 };

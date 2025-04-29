@@ -15,18 +15,19 @@ const env = process.env.NODE_ENV || 'development';
 const config = require(__dirname + '/../config/config.js')[env];
 const db = {};
 
-let sequelize;
+let sequelize=global.clientSequelize;
 
 /**
  * Initializes the Sequelize instance.
  */
-if (config.use_env_variable) {
-  /** If use_env_variable is set in the configuration, use it to get the database URL from environment variables. */
-  sequelize = new Sequelize(process.env[config.use_env_variable], config);
-} else {
-  /** Otherwise, use the database, username, and password from the configuration. */
-  sequelize = new Sequelize(config.database, config.username, config.password, config);
-}
+// console.log(global.clientSequelize,process.env.CLIENT_ID)
+// if (config.use_env_variable) {
+//   /** If use_env_variable is set in the configuration, use it to get the database URL from environment variables. */
+//   sequelize = new Sequelize(process.env[config.use_env_variable], config);
+// } else {
+//   /** Otherwise, use the database, username, and password from the configuration. */
+//   sequelize = new Sequelize(config.database, config.username, config.password, config);
+// }
 
 fs
   .readdirSync(__dirname)

@@ -8,8 +8,9 @@ const { v4: uuidv4 } = require('uuid'); // For generating unique IDs
 const { publishMessage } = require('./rabbitMQClient');
 const config = require('./config');
 const logger = require('./logger');
-const db = require('../models');
-const Notification = db.Notification;
+
+const notificationRouter = require('./notify/route');
+
 
 const app = express();
 
@@ -24,9 +25,10 @@ app.use(express.json());
  * @returns {Error}  default - Unexpected error
  */
 app.get('/health', (req, res) => {
+    console.log('Health check endpoint hit', process.env.CLIENT_ID);
     res.status(200).send('OK');
 });
-
+app.use(notificationRouter)
 /**
  * Route for creating and publishing a notification request.
  * @route POST /notify
@@ -41,128 +43,6 @@ app.get('/health', (req, res) => {
  * @returns {object} 409 - Conflict: A notification with this identifier potentially exists.
  * @returns {object} 500 - Internal server error, failed to queue notification.
  */
-
-/**
- * @typedef {Object} NotificationRequest
- * @property {string} templateId - The template id for the notification. Required if service is 'email'.
- * @property {object} message - The message content for the notification. Required if service is 'email'.
- * @property {string} service - The service to use for sending the notification.
- * @property {string} target - The target for the notification.
- */
-app.post('/notify', async (req, res) => {
-    const { service, channel: targetChannel, message } = req.body;
-    const messageId = uuidv4();
-
-    // Validation
-    if (!service || !targetChannel || !message) {
-        logger.warn('Validation failed: Missing fields', { body: req.body, messageId });
-         return res.status(400).json({
-             error: 'Missing required fields: service, channel, message',
-         });
-    } 
-    const allowedServices = ['slack', 'email', 'telegram'];
-    const lowerCaseService = service.toLowerCase();
-
-    // Validate email specific fields
-    if (lowerCaseService === 'email') {
-        if (!req.body.templateId) {
-            logger.warn('Validation failed: Missing templateId for email', { body: req.body, messageId });
-            return res.status(400).json({ error: 'Missing templateId for email service' });
-        }
-        if (!message) {
-            logger.warn('Validation failed: Missing message for email service', { body: req.body, messageId });
-            return res.status(400).json({ error: 'Missing message for email service' });
-        }
-
-        if (typeof message !== 'object' || message === null) {
-            logger.warn('Validation failed: message is not an object for email service', { body: req.body, messageId });
-            return res.status(400).json({ error: 'Invalid message format: must be an object for email service' });
-        }
-    }
-    if (!allowedServices.includes(lowerCaseService)) {
-         logger.warn('Validation failed: Invalid service', { service, messageId });
-         return res.status(400).json({
-            error: `Invalid service specified. Allowed services are: ${allowedServices.join(', ')}`,
-        });
-    }
-
-    let notificationRecord;
-    try {
-        logger.info(`Creating notification record in DB`, { messageId, service: lowerCaseService, targetChannel, templateId: req.body.templateId });
-        notificationRecord = await Notification.create({
-            messageId: messageId,
-            target: targetChannel,
-            content: message,
-            status: 'pending', // Initial status
-            attempts: 0,
-            templateId: req.body.templateId,
-            service: lowerCaseService
-            
-        });
-
-        logger.info(`Notification record created successfully`, { id: notificationRecord.id, messageId });
-
-    } catch (dbError) {
-        logger.error('Database error: Failed to create notification record', {
-            messageId,
-            error: dbError.message,
-            stack: dbError.stack,
-        });
-
-        if (dbError.name === 'SequelizeUniqueConstraintError') {
-             return res.status(409).json({ error: 'Conflict: A notification with this identifier potentially exists.', messageId });
-        }
-        return res.status(500).json({ error: 'Failed to save notification request to database.' });
-    }
-
-    const notificationData = {
-        // Include DB record ID and messageId in the message payload
-        dbId: notificationRecord.id, // The auto-incremented primary key
-        messageId: messageId, // The unique UUID
-        service: lowerCaseService,
-        channel: targetChannel, // Keep original casing if needed by connector
-        message,
-        templateId: req.body.templateId,
-
-        timestamp: new Date().toISOString(),
-    };
-
-      try {
-        logger.info(`Publishing notification request to RabbitMQ`, { messageId, service: lowerCaseService, routingKey: lowerCaseService });
-        await publishMessage(lowerCaseService, notificationData);
-        logger.info(`Notification request published successfully`, { messageId });
-
-        res.status(202).json({
-            status: 'accepted',
-            message: 'Notification request accepted and queued.',
-            messageId: messageId, // Return the ID to the client
-        });
-
-    } catch (publishError) {
-        logger.error('RabbitMQ error: Failed to publish notification request', {
-             messageId,
-             dbId: notificationRecord.id,
-             error: publishError.message,
-             stack: publishError.stack
-        });
-        try {
-            await notificationRecord.update({
-                 status: 'failed',
-                 connectorResponse: `Failed to publish to RabbitMQ: ${publishError.message}`
-            });
-             logger.warn(`Updated notification status to 'failed' due to publish error`, { messageId, dbId: notificationRecord.id });
-        } catch (updateError) {
-             logger.error('DB error: Failed to update notification status to "failed" after publish error', {
-                messageId,
-                dbId: notificationRecord.id,
-                updateError: updateError.message,
-                stack: updateError.stack
-             });
-        }
-
-        res.status(500).json({ error: 'Failed to queue notification request after saving.' });
-    }
-});
 
 
 // Update Error Handling Middleware

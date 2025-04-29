@@ -1,0 +1,42 @@
+[
+    {
+        "ID": "GKMIT",
+        "SERVER_PORT":3001,
+        "SLACKBOT_TOKEN": "",
+        "DBCONFIG": {
+            "HOST": "localhost",
+            "PORT": 54333,
+            "NAME": "notifications_db",
+            "USER": "postgres",
+            "PASSWORD": "admin"
+        },
+        "RABBITMQ": {
+            "HOST": "localhost",
+            "PORT": 5673,
+            "USER": "user",
+            "PASSWORD": "password"
+        }
+    },
+    {
+        "ID": "EXCEL",
+        "SERVER_PORT":3002,
+        "SLACKBOT_TOKEN": "",
+        "DBCONFIG": {
+            "HOST": "localhost",
+            "PORT": 5432,
+            "NAME": "notifications_db",
+            "USER": "postgres",
+            "PASSWORD": "admin"
+        },
+        "RABBITMQ": {
+            "HOST": "localhost",
+            "PORT": 5672,
+            "USER": "user",
+            "PASSWORD": "password"
+        }
+    },
+    {
+        "ID": "CERTIFY",
+        "SERVER_PORT":3003
+    }
+]

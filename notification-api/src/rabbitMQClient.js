@@ -1,6 +1,6 @@
 // ./notification-api/src/rabbitMQClient.js
 const amqp = require('amqplib');
-const config = require('./config');
+const logger = require('./logger');
 
 let connection = null;
 let channel = null;
@@ -17,19 +17,18 @@ async function connectRabbitMQ() {
         return { connection, channel };
     }
 
-
+    let url=process.env.RABBITMQ_URL || 'amqp://user:password@rabbitmq:5672'
     console.log('Connecting to RabbitMQ...');
     try {
-        connection = await amqp.connect(config.rabbitMQ.url);
-        channel = await connection.createChannel();
-
+        connection = await amqp.connect(url);
+        channel = await connection.createConfirmChannel();
         // Assert the exchange exists
-        await channel.assertExchange(
-            config.rabbitMQ.exchangeName,
-            config.rabbitMQ.exchangeType,
+       let ss= await channel.assertExchange(
+            'notifications_exchange',
+            'direct', // Exchange type
             { durable: true } // Make exchange survive broker restart
         );
-
+        channel.waitForConfirms()
         console.log('RabbitMQ connected and exchange asserted.');
 
         connection.on('error', (err) => {
@@ -73,21 +72,24 @@ async function publishMessage(routingKey, message) {
     }
 
     try {
-        console.log(`Publishing message to exchange '${config.rabbitMQ.exchangeName}' with routing key '${routingKey}'`);
+        // console.log(`Publishing message to exchange '${config.rabbitMQ.exchangeName}' with routing key '${routingKey}'`);
         // Publish the message to the exchange with the routing key
-        channel.publish(
-            config.rabbitMQ.exchangeName,
+        logger.info(`Publishing notification request to RabbitMQ`,message);
+
+       let res= channel.publish(
+            'notifications_exchange', // Exchange name
             routingKey,
             Buffer.from(JSON.stringify(message)),
             {
                 persistent: true, // Make message survive broker restart
             }
         );
-        console.log('Message published successfully.');
+        channel.waitForConfirms()
+        logger.info(`Notification request published successfully`, { messageId: message.messageId });
+        return res
     } catch (error) {
         console.error('Failed to publish message:', error);
-        // Handle potential connection issues during publish if necessary
-        throw error;
+        return false
     }
 }
 

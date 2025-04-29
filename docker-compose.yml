@@ -18,8 +18,28 @@ services:
       retries: 5
     networks:
       - notification_network # Connect to custom network
-
+  #---- Client 2--------------
+  
+  rabbitmqx:
+    image: rabbitmq:3.11-management
+    container_name: rabbitmq_notifierx
+    ports:
+      - "5673:5672" # AMQP port
+      - "15673:15672" # Management UI
+    volumes:
+      - ./rabbitmq_data:/var/lib/rabbitmq/
+    environment:
+      RABBITMQ_DEFAULT_USER: user # Keep simple credentials for local dev
+      RABBITMQ_DEFAULT_PASS: password
+    healthcheck: # Ensure RabbitMQ is ready before services connect
+      test: ["CMD", "rabbitmqctl", "status"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - notification_network # Connect to custom network
   # --- Postgres Database ---
+  
   postgres:
     image: postgres:15
     container_name: postgres_notifier
@@ -29,7 +49,7 @@ services:
       POSTGRES_USER: ${POSTGRES_USER:-user}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
     ports:
-      - "${POSTGRES_PORT:-5432}:5432" # Map host port from env or default 5432
+      - "${POSTGRES_PORT:-5433}:5432" # Map host port from env or default 5432
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck: # Ensure DB is ready before services connect

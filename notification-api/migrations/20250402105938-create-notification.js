@@ -1,4 +1,3 @@
-// ./notification-api/migrations/YYYYMMDDHHMMSS-create-notification.js
 'use strict';
 
 /**
@@ -16,29 +15,33 @@ module.exports = {
    * @param {Sequelize} Sequelize 
    */
   async up(queryInterface, Sequelize) {
-    await queryInterface.createTable('Notifications', {
-      id: { 
+    await queryInterface.createTable('notifications', {
+      id: {
+        type: Sequelize.INTEGER,
+        primaryKey: true,
         allowNull: false,
         autoIncrement: true,
-        primaryKey: true,
-        type: Sequelize.INTEGER
       },
-      messageId: { // Unique ID for idempotency
-        type: Sequelize.UUID, // Use UUID type
+      messageId: { 
+        type: Sequelize.UUID,
         allowNull: false,
-        unique: true // Ensure uniqueness
+        unique: true,
+      },
+      clientId: { 
+        type: Sequelize.STRING,
+        allowNull: false,
       },
       service: { 
         type: Sequelize.STRING,
         allowNull: false,
       },
-      target: { 
+      destination: { 
         type: Sequelize.STRING,
-        allowNull: false
+        allowNull: false,
       },
       content: { 
-        type: Sequelize.TEXT,
-        allowNull: false
+        type: Sequelize.JSONB,
+        allowNull: false,
       },
       status: { 
         type: Sequelize.STRING,
@@ -48,34 +51,39 @@ module.exports = {
       attempts: { 
         type: Sequelize.INTEGER,
         allowNull: false,
-        defaultValue: 0
+        defaultValue: 0,
       },
       connectorResponse: { 
         type: Sequelize.TEXT,
-        allowNull: true
+        allowNull: true,
+      },
+      templateId: { 
+        type: Sequelize.STRING,
+        allowNull: true,
       },
       createdAt: {
         allowNull: false,
         type: Sequelize.DATE,
-        defaultValue: Sequelize.NOW 
+        defaultValue: Sequelize.NOW,
       },
       updatedAt: {
         allowNull: false,
         type: Sequelize.DATE,
-        defaultValue: Sequelize.NOW
-      }
+        defaultValue: Sequelize.NOW,
+      },
     });
 
-    await queryInterface.addIndex('Notifications', ['messageId'], { unique: true });
-    await queryInterface.addIndex('Notifications', ['status']);
-    await queryInterface.addIndex('Notifications', ['service', 'status']); 
+    // Add indexes for better query performance
+    await queryInterface.addIndex('notifications', ['messageId'], { unique: true });
+    await queryInterface.addIndex('notifications', ['status']);
+    await queryInterface.addIndex('notifications', ['service', 'status']);
   },
+
   /**
    * @param {QueryInterface} queryInterface 
    * @param {Sequelize} Sequelize 
    */
   async down(queryInterface, Sequelize) {
-    await queryInterface.dropTable('Notifications');
-    // No need to remove indexes explicitly when dropping the table
+    await queryInterface.dropTable('notifications');
   }
 };

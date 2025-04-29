@@ -20,6 +20,8 @@ const logger = require('./logger'); // Load logger early if needed
  * @property {Object} database - Configuration for the database.
  * @property {string} database.host - The host address of the database.
  */
+
+
 module.exports = {
     env: process.env.NODE_ENV || 'development', 
     port: process.env.PORT || 3000,
