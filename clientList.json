@@ -1,8 +1,16 @@
 [
     {
         "ID": "GKMIT",
-        "SERVER_PORT":3001,
-        "SLACKBOT_TOKEN": "",
+        "SERVER_PORT": 3001,
+        "SLACKBOT": {
+            "TOKEN": "xoxb-",
+            "RABBITMQ": {
+                "EXCHANGE_NAME": "notifications_exchange",
+                "EXCHANGE_TYPE": "direct",
+                "QUEUE_NAME": "slackbot_queue",
+                "ROUTING_KEY": "slack"
+            }
+        },
         "DBCONFIG": {
             "HOST": "localhost",
             "PORT": 54333,
@@ -18,9 +26,17 @@
         }
     },
     {
-        "ID": "EXCEL",
-        "SERVER_PORT":3002,
-        "SLACKBOT_TOKEN": "",
+        "ID": "ACCEL",
+        "SERVER_PORT": 3002,
+        "SLACKBOT": {
+            "TOKEN": "xoxb-",
+            "RABBITMQ": {
+                "EXCHANGE_NAME": "notifications_exchange",
+                "EXCHANGE_TYPE": "direct",
+                "QUEUE_NAME": "slackbot_queue",
+                "ROUTING_KEY": "slack"
+            }
+        },
         "DBCONFIG": {
             "HOST": "localhost",
             "PORT": 5432,
@@ -34,9 +50,5 @@
             "USER": "user",
             "PASSWORD": "password"
         }
-    },
-    {
-        "ID": "CERTIFY",
-        "SERVER_PORT":3003
     }
 ]

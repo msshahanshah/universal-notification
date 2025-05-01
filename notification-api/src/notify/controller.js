@@ -11,6 +11,9 @@ const { creatingNotificationRecord, publishingNotificationRequest } = require(".
 const notify = async (req, res) => {
     const { service, destination, message, subject, body } = req.body;
     let content = {}
+    if(message){
+        content.message=message
+    }
     const clientID = req.headers['x-client-id'];
     const notificationRecord = await creatingNotificationRecord(clientID, service, destination, content)
     if (notificationRecord.statusCode) {
