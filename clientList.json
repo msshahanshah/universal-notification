@@ -2,6 +2,7 @@
     {
         "ID": "GKMIT",
         "SERVER_PORT": 3001,
+        "ENABLED_SERVERICES":["slack","email","sms"],
         "SLACKBOT": {
             "TOKEN": "xoxb-",
             "RABBITMQ": {
@@ -10,6 +11,21 @@
                 "QUEUE_NAME": "slackbot_queue",
                 "ROUTING_KEY": "slack"
             }
+        },
+        "EMAIL":{
+            "AWS":{
+                "REGION":"us-east-1",
+                "ACCESS_KEY_ID":"AKIAYOUR_ACCESS_KEY_ID",
+                "SECRET_ACCESS_KEY":"YOUR_SECRET_ACCESS_KEY",
+                "SENDER_EMAIL":""
+            }
+        },
+        "SMS":{
+           "TEWILIO":{
+                "ACCOUNT_SID":"YOUR_TWILIO_ACCOUNT_SID",
+                "AUTH":"YOUR_TWILIO_AUTH_TOKEN",
+                "FROM_NUMBER":"YOUR_TWILIO_PHONE_NUMBER"
+           }
         },
         "DBCONFIG": {
             "HOST": "localhost",
@@ -28,6 +44,7 @@
     {
         "ID": "ACCEL",
         "SERVER_PORT": 3002,
+        "ENABLED_SERVERICES":["slack","email","sms"],
         "SLACKBOT": {
             "TOKEN": "xoxb-",
             "RABBITMQ": {
@@ -50,5 +67,9 @@
             "USER": "user",
             "PASSWORD": "password"
         }
+    },
+    {
+        "ID":"test",
+        "ENABLED_SERVERICES":["slack","email","sms"]
     }
 ]
