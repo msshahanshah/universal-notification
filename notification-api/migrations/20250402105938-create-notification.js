@@ -14,8 +14,12 @@ module.exports = {
    * @param {QueryInterface} queryInterface 
    * @param {Sequelize} Sequelize 
    */
-  async up(queryInterface, Sequelize) {
-    await queryInterface.createTable('notifications', {
+  async up(queryInterface, Sequelize,schemaName) {
+    const tableName={
+      tableName: 'notifications',
+      schema: schemaName,
+    }
+    await queryInterface.createTable(tableName, {
       id: {
         type: Sequelize.INTEGER,
         primaryKey: true,
@@ -26,10 +30,6 @@ module.exports = {
         type: Sequelize.UUID,
         allowNull: false,
         unique: true,
-      },
-      clientId: { 
-        type: Sequelize.STRING,
-        allowNull: false,
       },
       service: { 
         type: Sequelize.STRING,
@@ -74,9 +74,9 @@ module.exports = {
     });
 
     // Add indexes for better query performance
-    await queryInterface.addIndex('notifications', ['messageId'], { unique: true });
-    await queryInterface.addIndex('notifications', ['status']);
-    await queryInterface.addIndex('notifications', ['service', 'status']);
+    await queryInterface.addIndex(tableName, ['messageId'], { unique: true });
+    await queryInterface.addIndex(tableName, ['status']);
+    await queryInterface.addIndex(tableName, ['service', 'status']);
   },
 
   /**
@@ -84,6 +84,6 @@ module.exports = {
    * @param {Sequelize} Sequelize 
    */
   async down(queryInterface, Sequelize) {
-    await queryInterface.dropTable('notifications');
+    await queryInterface.dropTable(tableName);
   }
 };

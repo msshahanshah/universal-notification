@@ -16,7 +16,6 @@ const config = require(__dirname + '/../config/config.js')[env];
 const db = {};
 
 let sequelize=global.clientSequelize;
-
 /**
  * Initializes the Sequelize instance.
  */

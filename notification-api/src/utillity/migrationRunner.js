@@ -1,7 +1,7 @@
 const { Sequelize } = require('sequelize');
 const fs = require('fs').promises;
 const path = require('path');
-const config = require('../../config/config');
+const Umzug = require('umzug');
 
 async function loadClientConfigs() {
     try {
@@ -15,19 +15,20 @@ async function loadClientConfigs() {
     }
 }
 
-async function runMigrations(sequelize, clientId = 'common') {
-    const Umzug = require('umzug');
+async function runMigrations(sequelize, clientId) {
+    // Ensure schema exists
+    const schemaName = clientId.toLowerCase()
+    await sequelize.query(`CREATE SCHEMA IF NOT EXISTS ${schemaName}`);
     const umzug = new Umzug({
         migrations: {
             path: path.join(__dirname, '../../migrations'),
-            params: [sequelize.getQueryInterface(), Sequelize]
+            params: [sequelize.getQueryInterface(), Sequelize, schemaName]
         },
         storage: 'sequelize',
         storageOptions: {
             sequelize: sequelize
         }
     });
-
     try {
         console.log(`Running migrations for client: ${clientId}`);
         await umzug.up();
@@ -39,50 +40,33 @@ async function runMigrations(sequelize, clientId = 'common') {
 }
 
 async function migrateAllDatabases() {
-    // First, migrate the common database
-    const commonConfig = {
-        dialect: 'postgres',
-        host: config.dbHost || 'localhost',
-        port: config.dbPort || 5432,
-        database: config.dbName || 'notifications_db',
-        username: config.dbUser || 'postgres',
-        password: config.dbPassword || 'admin'
-    };
-
     try {
-        // Migrate common database
-        console.log('Migrating common database...');
-        const commonSequelize = new Sequelize(commonConfig);
-        await runMigrations(commonSequelize, 'common');
-        await commonSequelize.close();
-
         // Load and migrate client databases
         const clients = await loadClientConfigs();
         for (const client of clients) {
-            if (!client.DBCONFIG) {
-                console.log(`Client ${client.ID} uses common database - skipping`);
-                continue;
-            }
-
             const clientConfig = {
                 dialect: 'postgres',
-                host: client.DBCONFIG.HOST,
-                port: client.DBCONFIG.PORT,
-                database: client.DBCONFIG.NAME,
-                username: client.DBCONFIG.USER,
-                password: client.DBCONFIG.PASSWORD
+                host: client?.DBCONFIG?.HOST,
+                port: client?.DBCONFIG?.PORT,
+                database: client?.DBCONFIG?.NAME,
+                username: client?.DBCONFIG?.USER,
+                password: client?.DBCONFIG?.PASSWORD,
+                dialectOptions: {
+                    options: `-c search_path=${client.ID.toLowerCase()},public`
+                },
             };
-
             const clientSequelize = new Sequelize(clientConfig);
+
+            clientSequelize.authenticate()
             await runMigrations(clientSequelize, client.ID);
             await clientSequelize.close();
         }
-
         console.log('All migrations completed successfully');
     } catch (error) {
         console.error('Migration process failed:', error);
         process.exit(1);
     }
+
 }
 
 module.exports = { migrateAllDatabases };

@@ -2,7 +2,7 @@
 
 const { Model, DataTypes } = require('sequelize');
 
-module.exports = (sequelize) => {
+module.exports = (sequelize,schemaName) => {
   /**
    * @class Notification
    * @extends Model
@@ -34,13 +34,6 @@ module.exports = (sequelize) => {
         allowNull: false,
         unique: true,
       },
-
-      // Identifier for the client sending the notification
-      clientId: {
-        type: DataTypes.STRING,
-        allowNull: false,
-      },
-
       // Service responsible for sending the notification
       service: {
         type: DataTypes.STRING,
@@ -90,7 +83,7 @@ module.exports = (sequelize) => {
       modelName: 'Notification',
       timestamps: true, // Enable createdAt and updatedAt fields
       tableName: 'notifications', // Explicit table name for clarity
-
+      schema:schemaName
     }
   );
 
