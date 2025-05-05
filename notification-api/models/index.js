@@ -13,52 +13,54 @@ const env = process.env.NODE_ENV || 'development';
  * Load the configuration for the current environment.
  */
 const config = require(__dirname + '/../config/config.js')[env];
-const db = {};
 
-let sequelize=global.clientSequelize;
-/**
- * Initializes the Sequelize instance.
- */
-// console.log(global.clientSequelize,process.env.CLIENT_ID)
-// if (config.use_env_variable) {
-//   /** If use_env_variable is set in the configuration, use it to get the database URL from environment variables. */
-//   sequelize = new Sequelize(process.env[config.use_env_variable], config);
-// } else {
-//   /** Otherwise, use the database, username, and password from the configuration. */
-//   sequelize = new Sequelize(config.database, config.username, config.password, config);
-// }
 
-fs
-  .readdirSync(__dirname)
-  .filter(file => {
-    return (
-      file.indexOf('.') !== 0 &&
-      /**
-       * Exclude files that are not JavaScript files or test files.
-       */
-      file !== basename &&
-      file.slice(-3) === '.js' &&
-      file.indexOf('.test.js') === -1
-    );
-  })
-  .forEach(file => {
-    const model = require(path.join(__dirname, file))(sequelize, Sequelize.DataTypes);
-    db[model.name] = model;
+module.exports = (sequelize,schemaName) => {
+  const db = {};
+  /**
+   * Initializes the Sequelize instance.
+   */
+  // console.log(global.clientSequelize,process.env.CLIENT_ID)
+  // if (config.use_env_variable) {
+  //   /** If use_env_variable is set in the configuration, use it to get the database URL from environment variables. */
+  //   sequelize = new Sequelize(process.env[config.use_env_variable], config);
+  // } else {
+  //   /** Otherwise, use the database, username, and password from the configuration. */
+  //   sequelize = new Sequelize(config.database, config.username, config.password, config);
+  // }
+  
+  fs
+    .readdirSync(__dirname)
+    .filter(file => {
+      return (
+        file.indexOf('.') !== 0 &&
+        /**
+         * Exclude files that are not JavaScript files or test files.
+         */
+        file !== basename &&
+        file.slice(-3) === '.js' &&
+        file.indexOf('.test.js') === -1
+      );
+    })
+    .forEach(file => {
+      const model = require(path.join(__dirname, file))(sequelize,schemaName);
+      db[model.name] = model;
+    });
+  
+  /**
+   * Call the associate method for each model if it exists.
+   */
+  Object.keys(db).forEach(modelName => {
+    if (db[modelName].associate) {
+      db[modelName].associate(db);
+    }
   });
-
-/**
- * Call the associate method for each model if it exists.
- */
-Object.keys(db).forEach(modelName => {
-  if (db[modelName].associate) {
-    db[modelName].associate(db);
-  }
-});
-
-db.sequelize = sequelize;
-db.Sequelize = Sequelize;
-
-/**
- * Export the database object.
- */
-module.exports = db;
+  
+  db.sequelize = sequelize;
+  db.Sequelize = Sequelize;
+  
+  /**
+   * Export the database object.
+   */
+  return db;
+};

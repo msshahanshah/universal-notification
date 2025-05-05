@@ -14,17 +14,17 @@ async function loadClientConfigs() {
         // Default configurations from .env
         const defaultConfig = {
             DBCONFIG: {
-                HOST: config.dbHost || 'localhost',
-                PORT: config.dbPort || 5432,
-                NAME: config.dbName || 'notifications_db',
-                USER: config.dbUser || 'postgres',
-                PASSWORD: config.dbPassword || 'admin',
+                HOST: process.env.POSTGRES_HOST || 'localhost',
+                PORT: process.env.POSTGRES_PORT || 5432,
+                NAME: process.env.POSTGRES_DB || 'notifications_db',
+                USER: process.env.POSTGRES_USER || 'postgres',
+                PASSWORD: process.env.POSTGRES_PASSWORD || 'admin',
             },
             RABBITMQ: {
-                HOST: config.rabbitMQHost || 'localhost',
-                PORT: config.rabbitMQPort || 5672,
-                USER: config.rabbitMQUser || 'user',
-                PASSWORD: config.rabbitMQPassword || 'password',
+                HOST:'localhost',
+                PORT:5672,
+                USER:'user',
+                PASSWORD:'password',
             },
         };
 
@@ -32,7 +32,7 @@ async function loadClientConfigs() {
         return clients.map(client => ({
             ID: client.ID,
             SERVER_PORT: client.SERVER_PORT || 3000,
-            SLACKBOT_TOKEN: client.SLACKBOT_TOKEN || '',
+            SLACKBOT_TOKEN: client.SLACKBOT.TOKEN || '',
             DBCONFIG: client.DBCONFIG || defaultConfig.DBCONFIG,
             RABBITMQ: client.RABBITMQ || defaultConfig.RABBITMQ,
         }));

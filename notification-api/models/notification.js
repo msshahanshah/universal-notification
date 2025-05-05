@@ -83,7 +83,7 @@ module.exports = (sequelize,schemaName) => {
       modelName: 'Notification',
       timestamps: true, // Enable createdAt and updatedAt fields
       tableName: 'notifications', // Explicit table name for clarity
-      schema:schemaName
+      schema:schemaName.toLowerCase(), // Use lowercase schema name
     }
   );
 

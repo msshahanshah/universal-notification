@@ -4,7 +4,6 @@ const cluster = require('cluster');
 const express = require('express');
 const httpProxy = require('http-proxy');
 const config = require('./config');
-const { connectRabbitMQ, closeConnection: closeRabbitMQConnection } = require('./rabbitMQClient');
 const logger = require('./logger');
 const { Sequelize } = require('sequelize');
 const connectionManager = require('./utillity/connectionManager');
@@ -13,8 +12,6 @@ const { loadClientConfigs } = require('./utillity/loadClientConfigs');
 /**
  * @type {import('http').Server|null}
  */
-let server;
-let masterServer;
 
 
 /**
@@ -26,31 +23,20 @@ async function startServer(clientConfigList) {
     logger.info(`[${process.env.clientList}] Starting server...`);
     try {
         // Initialize client-specific Sequelize
-        
-        clientConfigList.forEach(async(clientItem)=>{
-            logger.info(`[${clientItem}] Testing database connection...`);
-            connectionManager.sequelize
-            const sequelize = initializeSequelize(clientItem.DBCONFIG, clientItem);
-            await sequelize.authenticate();
-            logger.info(`[${clientItem}] Database connection successful.`);
-    
-            // Store sequelize instance for shutdown
-             
-            global.rabbitMQ = client.RABBITMQ;
-            // Connect to RabbitMQ
-            logger.info(`[${clientId}] Connecting to RabbitMQ...`);
-            await connectRabbitMQ(); // connectRabbitMQ accepts config
-            logger.info(`[${clientId}] RabbitMQ connection established successfully.`);
-        })
+        for (const clientItem of clientConfigList) {
+            await connectionManager.initializeSequelize(clientItem.DBCONFIG, clientItem.ID);
+            await connectionManager.initializeRABBITMQ(clientItem.RABBITMQ ,clientItem.ID)
+          }
         global.connectionManager=connectionManager;
         const app = require('./app');
         // Start HTTP Server
-        server = app.listen(client.SERVER_PORT, () => {
-            logger.info(`[${process.env.clientList}] Notification API listening on port ${client.SERVER_PORT} in ${config.env} mode`);
+        server = app.listen(process.env.SERVER_PORT, () => {
+            logger.info(`[${process.env.clientList}] Notification API listening on port ${process.env.SERVER_PORT} in ${config.env} mode`);
         });
+        return server;
     } catch (error) {
-        logger.error(`[${clientId}] Failed to start server:`, { error: error.message, stack: error.stack });
-        await shutdown(1, clientId);
+        logger.error(`[${process.env.clientList}] Failed to start server:`, { error: error.message, stack: error.stack });
+        await shutdown(1, process.env.clientList);
     }
 }
 
@@ -60,34 +46,34 @@ async function startServer(clientConfigList) {
  * @param {string} [clientId='unknown'] - Client identifier.
  * @returns {Promise<void>}
  */
-async function shutdown(exitCode = 0, clientId = 'unknown') {
+async function shutdown(exitCode = 0, clientId = 'unknown',server) {
     logger.info(`[${clientId}] Shutting down server...`);
 
     // Close HTTP server
     if (server) {
         await new Promise((resolve, reject) => {
-            server.close((err) => {
-                if (err) {
-                    logger.error(`[${clientId}] Error closing HTTP server:`, err);
-                    return reject(err);
-                }
-                logger.info(`[${clientId}] HTTP server closed.`);
+            if(server){
+                server.close((err) => {
+                    if (err) {
+                        logger.error(`[${clientId}] Error closing HTTP server:`, err);
+                        return reject(err);
+                    }
+                    logger.info(`[${clientId}] HTTP server closed.`);
+                    resolve();
+                });
+                setTimeout(() => reject(new Error('HTTP server close timeout')), 10000).unref();
+            }else{
+                logger.info(`[${clientId}] HTTP server already closed.`);
                 resolve();
-            });
-            setTimeout(() => reject(new Error('HTTP server close timeout')), 10000).unref();
+            }
+            
         }).catch(err => logger.error(`[${clientId}] ${err.message}`));
         server = null;
     }
-
-    // Close RabbitMQ connection
-    await closeRabbitMQConnection().catch(err => logger.error(`[${clientId}] Error closing RabbitMQ connection:`, err));
-
+  
     // Close Database connection
-    if (global.clientSequelize) {
-        await global.clientSequelize.close().then(() => {
-            logger.info(`[${clientId}] Database connection closed.`);
-        }).catch(err => logger.error(`[${clientId}] Error closing database connection:`, err));
-        global.clientSequelize = null;
+    if (global.connectionManager) {
+        await global.connectionManager.closeAllTypeConnection(clientId);
     }
 
     logger.info(`[${clientId}] Shutdown complete. Exiting with code ${exitCode}.`);
@@ -167,16 +153,16 @@ if (cluster.isMaster) {
             clients = await loadClientConfigs();
             const clientConfigList = clients.filter(c => c.SERVER_PORT === +process.env.SERVER_PORT);
 
-            await startServer(clientConfigList);
+            let server=await startServer(clientConfigList);
 
             // Handle graceful shutdown
-            process.on('SIGTERM', () => shutdown(0,process.env.clientList));
-            process.on('SIGINT', () => shutdown(0,process.env.clientList));
+            process.on('SIGTERM', () => shutdown(0,process.env.clientList,server));
+            process.on('SIGINT', () => shutdown(0,process.env.clientList,server));
 
             // Handle unhandled promise rejections
             process.on('unhandledRejection', (reason, promise) => {
                 logger.error(`[${process.env.clientList}] Unhandled Rejection at:`, { promise, reason: reason.message || reason });
-                shutdown(1,process.env.clientList);
+                //shutdown(1,process.env.clientList);
             });
 
             // Handle uncaught exceptions
