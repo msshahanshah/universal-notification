@@ -2,7 +2,11 @@
     {
         "ID": "GKMIT",
         "SERVER_PORT": 3001,
-        "ENABLED_SERVERICES":["slack","email","sms"],
+        "ENABLED_SERVERICES": [
+            "slack",
+            "email",
+            "sms"
+        ],
         "SLACKBOT": {
             "TOKEN": "xoxb-",
             "RABBITMQ": {
@@ -12,20 +16,33 @@
                 "ROUTING_KEY": "slack"
             }
         },
-        "EMAIL":{
-            "AWS":{
-                "REGION":"us-east-1",
-                "ACCESS_KEY_ID":"AKIAYOUR_ACCESS_KEY_ID",
-                "SECRET_ACCESS_KEY":"YOUR_SECRET_ACCESS_KEY",
-                "SENDER_EMAIL":""
+        "EMAIL": {
+            "AWS": {
+                "REGION": "us-east-1",
+                "ACCESS_KEY_ID": "AKIAYOUR_ACCESS_KEY_ID",
+                "SECRET_ACCESS_KEY": "YOUR_SECRET_ACCESS_KEY",
+                "SENDER_EMAIL": ""
+            },
+
+            "RABBITMQ": {
+                "EXCHANGE_NAME": "notifications_exchange",
+                "EXCHANGE_TYPE": "direct",
+                "QUEUE_NAME": "email_queue",
+                "ROUTING_KEY": "email"
             }
         },
-        "SMS":{
-           "TEWILIO":{
-                "ACCOUNT_SID":"YOUR_TWILIO_ACCOUNT_SID",
-                "AUTH":"YOUR_TWILIO_AUTH_TOKEN",
-                "FROM_NUMBER":"YOUR_TWILIO_PHONE_NUMBER"
-           }
+        "SMS": {
+            "TEWILIO": {
+                "ACCOUNT_SID": "YOUR_TWILIO_ACCOUNT_SID",
+                "AUTH": "YOUR_TWILIO_AUTH_TOKEN",
+                "FROM_NUMBER": "YOUR_TWILIO_PHONE_NUMBER"
+            },
+            "RABBITMQ": {
+                "EXCHANGE_NAME": "notifications_exchange",
+                "EXCHANGE_TYPE": "direct",
+                "QUEUE_NAME": "sms_queue",
+                "ROUTING_KEY": "sms"
+            }
         },
         "DBCONFIG": {
             "HOST": "localhost",
@@ -36,7 +53,7 @@
         },
         "RABBITMQ": {
             "HOST": "localhost",
-            "PORT": 5673,
+            "PORT": 5672,
             "USER": "user",
             "PASSWORD": "password"
         }
@@ -44,7 +61,11 @@
     {
         "ID": "ACCEL",
         "SERVER_PORT": 3002,
-        "ENABLED_SERVERICES":["slack","email","sms"],
+        "ENABLED_SERVERICES": [
+            "slack",
+            "email",
+            "sms"
+        ],
         "SLACKBOT": {
             "TOKEN": "xoxb-",
             "RABBITMQ": {
@@ -52,6 +73,33 @@
                 "EXCHANGE_TYPE": "direct",
                 "QUEUE_NAME": "slackbot_queue",
                 "ROUTING_KEY": "slack"
+            }
+        },
+        "EMAIL": {
+            "AWS": {
+                "REGION": "us-east-1",
+                "ACCESS_KEY_ID": "AccessKey",
+                "SECRET_ACCESS_KEY": "SecretKey",
+                "SENDER_EMAIL": ""
+            },
+            "RABBITMQ": {
+                "EXCHANGE_NAME": "notifications_exchange",
+                "EXCHANGE_TYPE": "direct",
+                "QUEUE_NAME": "email_queue",
+                "ROUTING_KEY": "email"
+            }
+        },
+        "SMS": {
+            "TEWILIO": {
+                "ACCOUNT_SID": "YOUR_TWILIO_ACCOUNT_SID",
+                "AUTH": "YOUR_TWILIO_AUTH_TOKEN",
+                "FROM_NUMBER": "YOUR_TWILIO_PHONE_NUMBER"
+            },
+            "RABBITMQ": {
+                "EXCHANGE_NAME": "notifications_exchange",
+                "EXCHANGE_TYPE": "direct",
+                "QUEUE_NAME": "sms_queue",
+                "ROUTING_KEY": "sms"
             }
         },
         "DBCONFIG": {

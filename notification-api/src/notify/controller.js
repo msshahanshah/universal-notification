@@ -13,7 +13,11 @@ const notify = async (req, res) => {
     let content = {}
     if(message){
         content.message=message
+    }else {
+        content.subject=subject
+        content.body=body
     }
+
     const clientID = req.headers['x-client-id'];
     
     const notificationRecord = await creatingNotificationRecord(clientID, service, destination, content)

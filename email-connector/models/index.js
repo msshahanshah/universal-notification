@@ -1,60 +1,47 @@
 'use strict';
 
-// This file is the entry point for the Sequelize ORM setup. It reads the model files,
-// creates a Sequelize instance, and exports the database connection and models.
+/**
+ * @fileoverview This file sets up Sequelize models for a provided Sequelize instance.
+ * It reads model files, initializes them with the given Sequelize instance, and returns
+ * the database object containing the models and Sequelize instance.
+ */
 
 const fs = require('fs');
 const path = require('path');
-const Sequelize = require('sequelize');
-const process = require('process');
 const basename = path.basename(__filename);
 
-
 /**
- * @param {string} env - The environment (e.g., 'development', 'test', 'production').
- * @returns {object} - The database models.
+ * Initializes Sequelize models for a given Sequelize instance.
+ * @param {Sequelize} sequelize - The Sequelize instance for the database connection.
+ * @param {object} Sequelize - The Sequelize module (for DataTypes).
+ * @returns {object} - The database object containing models, sequelize instance, and Sequelize module.
  */
-module.exports = (env) => {
-  /**
-   * @type {object} - Configuration for the database, based on the current environment.
-   */
-  const dbConfig = require('../config/database.js')[env];  // Load the database configuration
-
-  /**
-   * @type {object} - An empty object that will store the database models.
-   */
+module.exports = (sequelize, Sequelize,schemaName) => {
   const db = {};
 
-  /**
-   * @type {Sequelize} - The Sequelize instance for the database connection.
-   */
-  let sequelize;
-  /** Initializes a new Sequelize instance using environment variables or configuration file. */
-  if (dbConfig.use_env_variable) {
-    sequelize = new Sequelize(process.env[dbConfig.use_env_variable], dbConfig);
-  } else {
-    /** Initializes a new Sequelize instance using the configuration file. */
-    sequelize = new Sequelize(dbConfig.database, dbConfig.username, dbConfig.password, dbConfig);
-  }
-
-  fs
-    .readdirSync(__dirname)
-    .filter(file => {
-      return (file.indexOf('.') !== 0 && file !== basename && file.slice(-3) === '.js' && file.indexOf('.test.js') === -1);
-    })
+  // Read and initialize model files
+  fs.readdirSync(__dirname)
+    .filter(file => (
+      file.indexOf('.') !== 0 &&
+      file !== basename &&
+      file.slice(-3) === '.js' &&
+      file.indexOf('.test.js') === -1
+    ))
     .forEach(file => {
-      /** Creates and adds a model to the database object. */
-      const model = require(path.join(__dirname, file))(sequelize, Sequelize.DataTypes);
+      const model = require(path.join(__dirname, file))(sequelize,schemaName);
       db[model.name] = model;
     });
 
+  // Call associate methods for models, if they exist
   Object.keys(db).forEach(modelName => {
     if (db[modelName].associate) {
       db[modelName].associate(db);
     }
   });
 
+  // Attach sequelize instance and Sequelize module to the db object
   db.sequelize = sequelize;
   db.Sequelize = Sequelize;
+
   return db;
 };
