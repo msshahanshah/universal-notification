@@ -25,7 +25,7 @@ async function startServer(clientConfigList) {
         // Initialize client-specific Sequelize
         for (const clientItem of clientConfigList) {
             await connectionManager.initializeSequelize(clientItem.DBCONFIG, clientItem.ID);
-            await connectionManager.initializeRABBITMQ(clientItem.RABBITMQ ,clientItem.ID)
+            await connectionManager.initializeRabbitMQ(clientItem.RABBITMQ,clientItem.ID)
           }
         global.connectionManager=connectionManager;
         const app = require('./app');

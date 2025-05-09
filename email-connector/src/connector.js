@@ -18,6 +18,20 @@ async function connectAndConsume(clientConfigList) {
         await new Promise(resolve => setTimeout(resolve, retryDelay)); // Wait before retrying
     }
 }
+async function closeConnections(clientId) {
+    try {
+        if (clientId) {
+            // await connectionManager.closeAllTypeConnection(clientId);
+            logger.info(`Closed all connections for client ${clientId}`);
+        } else {
+            // await connectionManager.closeAll();
+            logger.info('Closed all connections');
+        }
+    } catch (error) {
+        logger.error('Failed to close connections:', { error: error.message });
+    }
+}
 module.exports = {
-    connectAndConsume
+    connectAndConsume,
+    closeConnections
 };

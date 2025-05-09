@@ -32,9 +32,12 @@ async function loadClientConfigs() {
         return clients.map(client => ({
             ID: client.ID,
             SERVER_PORT: client.SERVER_PORT || 3000,
-            SLACKBOT_TOKEN: client.SLACKBOT.TOKEN || '',
+            ENABLED_SERVERICES:client.ENABLED_SERVERICES || [],
             DBCONFIG: client.DBCONFIG || defaultConfig.DBCONFIG,
-            RABBITMQ: client.RABBITMQ || defaultConfig.RABBITMQ,
+            RABBITMQ:{
+                ...client.RABBITMQ,
+                SERVERICES:[client.EMAIL.RABBITMQ,client.SMS.RABBITMQ,client.SLACKBOT.RABBITMQ]
+            } || defaultConfig.RABBITMQ,
         }));
     } catch (error) {
         logger.error('Failed to load client configurations:', { error: error.message });

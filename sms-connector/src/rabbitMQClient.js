@@ -26,15 +26,15 @@ module.exports = (RABBITMQ_URL,rabbitConfig) => {
         connection.on('error', handleRabbitError);
         connection.on('close', handleRabbitClose);
         console.log(rabbitConfig);
-        await channel.assertExchange(rabbitConfig.EXCHANGE_NAME,rabbitConfig.EXCHANGE_TYPE, { durable: true });
+        await channel.assertExchange(rabbitConfig.SERVERICES.EXCHANGE_NAME||rabbitConfig.EXCHANGE_NAME,rabbitConfig.SERVERICES.EXCHANGE_TYPE||rabbitConfig.EXCHANGE_TYPE, { durable: true });
 
         logger.info(`Exchange '${rabbitConfig.EXCHANGE_NAME}' asserted.`);
 
         const queueArgs = { durable: true };
-        const q = await channel.assertQueue(rabbitConfig.QUEUE_NAME, queueArgs);
+        const q = await channel.assertQueue(rabbitConfig.SERVERICES.QUEUE_NAME||rabbitConfig.QUEUE_NAME, queueArgs);
         logger.info(`Queue '${q.queue}' asserted.`);
 
-        await channel.bindQueue(q.queue,rabbitConfig.EXCHANGE_NAME,rabbitConfig.ROUTING_KEY);
+        await channel.bindQueue(q.queue,rabbitConfig.SERVERICES.EXCHANGE_NAME||rabbitConfig.EXCHANGE_NAME,rabbitConfig.SERVERICES.ROUTING_KEY||rabbitConfig.ROUTING_KEY);
         logger.info(`Queue '${q.queue}' bound to exchange '${rabbitConfig.EXCHANGE_NAME}' with key '${rabbitConfig.ROUTING_KEY}'.`);
 
         logger.info('Testing database connection...');

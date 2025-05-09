@@ -55,7 +55,11 @@
             "HOST": "localhost",
             "PORT": 5672,
             "USER": "user",
-            "PASSWORD": "password"
+            "PASSWORD": "password",
+            "EXCHANGE_NAME": "notifications_exchange",
+            "EXCHANGE_TYPE": "direct",
+            "QUEUE_NAME": "notifications_queue",
+            "ROUTING_KEY": "notifications"
         }
     },
     {
@@ -113,7 +117,11 @@
             "HOST": "localhost",
             "PORT": 5672,
             "USER": "user",
-            "PASSWORD": "password"
+            "PASSWORD": "password",
+            "EXCHANGE_NAME": "notifications_exchange",
+            "EXCHANGE_TYPE": "direct",
+            "QUEUE_NAME": "notifications_queue",
+            "ROUTING_KEY": "notifications"
         }
     }
 ]

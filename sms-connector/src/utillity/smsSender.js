@@ -25,10 +25,11 @@ class SmsSender {
             }
         }
 
-        throw new Error('No valid SMS service configuration found');
+        // throw new Error('No valid SMS service configuration found');
     }
 
     async sendSms({ to, message }) {
+        console.log(`SMS sent via `);
         if (!this.sender) throw new Error('SMS sender not initialized');
         try {
             const result = await this.sender({ to, message });
