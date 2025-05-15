@@ -17,8 +17,10 @@ async function connectAndConsume(clientConfigList) {
                 return;
             }
             await connectionManager.initialize(clientItem, clientItem.ID);
+            global.connectionManager = connectionManager;
+            await connectionManager.initializeRABBITMQ(clientItem, clientItem.ID);
+            global.connectionManager = connectionManager;
         }));
-        global.connectionManager = connectionManager;
         logger.info('All connections initialized successfully.');
     } catch (error) {
         logger.error('Failed to connect or consume from RabbitMQ / DB check failed:', { error: error.message, stack: error.stack });

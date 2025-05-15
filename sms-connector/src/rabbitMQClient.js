@@ -62,9 +62,9 @@ module.exports = (RABBITMQ_URL,rabbitConfig) => {
     
         try {
             notificationData = JSON.parse(messageContent);
-            const { clientId, messageId , templateId, content, destination } = notificationData;
+            const { clientId, messageId , content, destination } = notificationData;
     
-            if (!clientId||!messageId ||!content||!content.subject||!content.body ||!destination ) {
+            if (!clientId||!messageId ||!content||!content.message||!destination ) {
                 logger.error("Invalid message format received from queue", { content: messageContent });
                 channel.nack(msg, false, false);
                 return;
@@ -129,15 +129,9 @@ module.exports = (RABBITMQ_URL,rabbitConfig) => {
             }
     
             try {
-                let emailConnect=await global.connectionManager.getEmailSender(clientId);   
-                await emailConnect.sendEmail({to:destination,subject: content.subject,body: content.body,undefined,from:"test@gkmit.co"}); 
-                const template = await getEmailTemplate(templateId);
-                const compiledTemplate = Handlebars.compile(template);
-                const emailBody = compiledTemplate(message);
-                const subject = 'Notification Email'; // You might want to get the subject from the template or the message object
-                // --- Actual Processing (Send Email) ---\
-                await sendEmail(to, subject, emailBody, messageId);
-                await db.Notification.update(   // access Notification model dynamically
+                let smsConnect=await global.connectionManager.getSMSSender(clientId);   
+                await smsConnect.sendSms({to:destination,message:content.message}); 
+                await dbConnect.Notification.update(   // access Notification model dynamically
                     { status: "sent" },
                     { where: { id: notificationRecord.id } }
                 );
@@ -146,15 +140,15 @@ module.exports = (RABBITMQ_URL,rabbitConfig) => {
             } catch (processingError) {
                 logger.error('Error processing email', { messageId, dbId: notificationRecord.id, error: processingError.message, stack: processingError.stack });
                 // Update DB with 'failed' state and error info
-                logger.error(`Slack send failed. Updating status to 'failed'`, { messageId, dbId: notificationRecord.id, error: processingError.message });
-                await db.Notification.update(  // access Notification model dynamically
+                logger.error(`SMS send failed. Updating status to 'failed'`, { messageId, dbId: notificationRecord.id, error: processingError.message });
+                await dbConnect.Notification.update(  // access Notification model dynamically
                     { status: 'failed', connectorResponse: processingError.message }, // Store error message
                     { where: { id: notificationRecord.id } }
                 );
     
                 logger.warn(`Notification status updated to 'failed'`, { messageId, dbId: notificationRecord.id });
     
-                await db.Notification.update({ status: 'failed', connectorResponse: processingError.message }, { where: { id: notificationRecord.id } });
+    
                 channel.ack(msg);
             }
         } catch (error) {

@@ -3,12 +3,14 @@ const connectionManager = require('./utillity/connectionManager');
 
 async function connectAndConsume(clientConfigList) {
     try {
-        for (const clientItem of clientConfigList) {
-           await connectionManager.initializeSequelize(clientItem.DBCONFIG, clientItem.ID);
-           await connectionManager.initializeRABBITMQ({...clientItem.RABBITMQ,...clientItem.EMAIL.RABBITMQ},clientItem.ID);
-           await connectionManager.initializeEmailSender(clientItem.EMAIL, clientItem.ID);
-        }
-        global.connectionManager = connectionManager;  
+        await Promise.all(clientConfigList.map(async (clientItem) => {
+            await connectionManager.initializeSequelize(clientItem.DBCONFIG, clientItem.ID);
+            await connectionManager.initializeEmailSender(clientItem.EMAIL, clientItem.ID);
+            global.connectionManager = connectionManager; 
+            await connectionManager.initializeRABBITMQ({...clientItem.RABBITMQ,...clientItem.EMAIL.RABBITMQ},clientItem.ID);
+            global.connectionManager = connectionManager; 
+        }));
+        
       
         logger.info('All connections initialized successfully.');
     } catch (error) {

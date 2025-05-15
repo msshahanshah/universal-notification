@@ -81,7 +81,7 @@ async function connectAndConsume(client) {
         logger.info(`[${clientId}] Database connection successful.`);
 
         // Define models (assuming models are defined similarly to the original code)
-        const database=require('../models')(sequelize,Sequelize); // Initialize models for this client's Sequelize instance
+        const database=require('../models')(sequelize,Sequelize,clientId); // Initialize models for this client's Sequelize instance
         const processMessage = require('./rabbitMQClient')(database);
         channel.prefetch(1);
         logger.info(`[${clientId}] Waiting for messages in queue '${q.queue}'.`);

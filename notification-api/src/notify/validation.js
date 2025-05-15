@@ -28,6 +28,14 @@ const validateSchema = Joi.object({
         }),
         otherwise: Joi.forbidden()
     }),
+    fromEmail: Joi.string().when('service', {
+        is: 'email',
+        then: Joi.string().email().required().messages({
+            'string.empty': 'From email is required for Email service',
+            'string.email': 'From email must be a valid email address'
+        }),
+        otherwise: Joi.forbidden()
+    }),
     destination: Joi.string()
         .custom((value, helpers) => {
             const service = helpers.state.ancestors[0].service;

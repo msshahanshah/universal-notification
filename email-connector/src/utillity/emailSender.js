@@ -17,7 +17,7 @@ class EmailSender {
     async initialize() {
         
         // Determine which email service to use (default to AWS SES if configured)
-        if (this.clientConfig?.AWS?.ACCESS_KEY_ID) {
+        if (this.clientConfig?.AWS?.USER_NAME) {
             await this.setupAmazonSES();
         } else if (this.clientConfig?.SENDGRID?.API_KEY) {
             await this.setupSendGrid();
@@ -31,15 +31,15 @@ class EmailSender {
     }
 
     async setupAmazonSES() {
-        const { ACCESS_KEY_ID,REGION,SECRET_ACCESS_KEY } = this.clientConfig;
+        const { USER_NAME,PASSWORD } = this.clientConfig.AWS;
       
         this.transporter= nodemailer.createTransport({
             host: 'email-smtp.us-east-1.amazonaws.com', // or region-specific
             port: 465,
             secure: true, // use TLS
             auth: {
-              user: 'userName',
-              pass: 'password',
+              user: USER_NAME,
+              pass: PASSWORD,
             },
           });
         this.provider = 'AmazonSES';

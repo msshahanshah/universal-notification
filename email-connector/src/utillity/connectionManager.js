@@ -121,10 +121,11 @@ class ConnectionManager {
             },
         });
         logger.info(`[${clientId}] Testing database connection...`);
-        sequelize.authenticate()
+        await sequelize.authenticate()
         logger.info(`[${clientId}] Database connection successful.`);
         let db = await require('../../models')(sequelize,Sequelize, clientId);
         this.modelCache.set(clientId, db);
+        return Promise.resolve();
     }
     async getModels(clientId) {
         let db = this.modelCache.get(clientId);

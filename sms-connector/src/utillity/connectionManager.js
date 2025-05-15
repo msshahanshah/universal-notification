@@ -7,6 +7,10 @@ class ConnectionManager {
      
     }
     async initialize(clientConfig,clientId) {
+        await DatabaseManager.initializeSequelize(clientConfig?.DBCONFIG, clientId);
+        await SMSManager.initializeSMSSender(clientConfig?.SMS, clientId);
+    }
+    async initializeRABBITMQ(clientConfig, clientId) {
         let RABBITMQ = {};
         if (clientConfig?.SMS?.RABBITMQ) {
             RABBITMQ = { ...clientConfig.SMS.RABBITMQ };
@@ -14,38 +18,36 @@ class ConnectionManager {
         if (clientConfig.RABBITMQ) {
             RABBITMQ = { ...RABBITMQ, ...clientConfig.RABBITMQ };
         }
-        await DatabaseManager.initializeSequelize(clientConfig?.DBCONFIG, clientId);
         await RabbitMQManager.initializeRABBITMQ(RABBITMQ, clientId);
-        await SMSManager.initializeSMSSender(clientConfig?.SMS, clientId);
     }
     async getModels(clientId) {
-        return await this.dbManager.getModels(clientId);
+        return await DatabaseManager.getModels(clientId);
     }
 
     async getRabbitMQ(clientId) {
-        return await this.rabbitManager.getRabbitMQ(clientId);
+        return await RabbitMQManager.getRabbitMQ(clientId);
     }
 
     async getSMSSender(clientId) {
-        return await this.smsManager.getSMSSender(clientId);
+        return await SMSManager.getSMSSender(clientId);
     }
 
     async closeAllTypeConnection(clientId) {
-        await this.dbManager.close(clientId);
-        await this.rabbitManager.close(clientId);
-        await this.smsManager.close(clientId);
+        await DatabaseManager.close(clientId);
+        await RabbitMQManager.close(clientId);
+        await SMSManager.close(clientId);
     }
 
     async closeAll() {
-        await this.dbManager.closeAll();
-        await this.rabbitManager.closeAll();
-        await this.smsManager.closeAll();
+        await DatabaseManager.closeAll();
+        await RabbitMQManager.closeAll();
+        await SMSManager.closeAll();
     }
 
     clearCache(clientId) {
-        this.dbManager.clearCache(clientId);
-        this.rabbitManager.clearCache(clientId);
-        this.smsManager.clearCache(clientId);
+        DatabaseManager.clearCache(clientId);
+        RabbitMQManager.clearCache(clientId);
+        SMSManager.clearCache(clientId);
     }
 }
 
