@@ -24,4 +24,4 @@ COPY . ./
 EXPOSE 3000 
 
 # Command to run when the container starts
-CMD ["node", "src/connector.js"]
+CMD ["node", "src/index.js"]

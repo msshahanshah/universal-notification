@@ -12,4 +12,4 @@ COPY . .
 
 EXPOSE 3000
 
-CMD ["node", "src/connector.js"]
+CMD ["node", "src/index.js"]

@@ -111,7 +111,7 @@ if (cluster.isMaster) {
                     });
                 });
 
-                masterServer = masterApp.listen(3010, () => {
+                masterServer = masterApp.listen(3000, () => {
                     logger.info('Master router listening on port 3000');
                 });
             } catch (error) {
