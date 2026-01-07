@@ -9,11 +9,16 @@
 const { creatingNotificationRecord, publishingNotificationRequest } = require("./service");
 
 const notify = async (req, res) => {
-    const { service, destination, message, subject, body } = req.body;
+    const { service, destination, message, subject, body,fromEmail } = req.body;
     let content = {}
     if(message){
         content.message=message
+    }else {
+        content.subject=subject
+        content.body=body
+        content.fromEmail=fromEmail
     }
+
     const clientID = req.headers['x-client-id'];
     
     const notificationRecord = await creatingNotificationRecord(clientID, service, destination, content)

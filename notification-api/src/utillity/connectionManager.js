@@ -1,146 +1,260 @@
-// connectionManager.js
 'use strict';
 
 const {Sequelize}  = require('sequelize');
 const { LRUCache } = require('lru-cache');
-const { cli } = require('winston/lib/winston/config/index.js');
 const { loadClientConfigs } = require('./loadClientConfigs.js');
 const logger = require('../logger.js');
 
+/**
+ * Custom error for connection-related issues
+ */
+class ConnectionError extends Error {
+    constructor(message, details = {}) {
+        super(message);
+        this.name = 'ConnectionError';
+        this.details = details;
+    }
+}
 
+/**
+ * Manages database and RabbitMQ connections with memory-efficient caching
+ */
 class ConnectionManager {
-    constructor() {
-        // LRU cache for client-specific models
+    /**
+     * @param {Object} [options] - Configuration options
+     * @param {number} [options.cacheMax=25] - Maximum cache size (reduced for memory)
+     * @param {number} [options.cacheTtl=1800000] - Cache TTL in ms (30 minutes)
+     */
+    constructor(options = {}) {
+        const { cacheMax = 25, cacheTtl = 1000 * 60 * 30 } = options;
+        
+        // Initialize LRU caches with smaller footprint
         this.modelCache = new LRUCache({
-            max: 50, // Cache up to 50 clients (~50-100 MB)
-            ttl: 1000 * 60 * 60, // 1 hour expiration
+            max: cacheMax,
+            ttl: cacheTtl,
             dispose: (value, key) => {
-                console.log(`Evicting models for client ${key} from cache`);
+                logger.debug(`Evicting database models for client ${key}`);
             },
         });
+
         this.rabbitCache = new LRUCache({
-            max: 50, // Cache up to 50 clients (~50-100 MB)
-            ttl: 1000 * 60 * 60, // 1 hour expiration
+            max: cacheMax,
+            ttl: cacheTtl,
             dispose: (value, key) => {
-                console.log(`Evicting RabbitMQ connection for client ${key} from cache`);
-            }
+                logger.debug(`Evicting RabbitMQ connection for client ${key}`);
+            },
         });
     }
-    async initializeRABBITMQ(rabbitConfig, clientId) {
-        if (!clientId) {
-            throw new Error(`Client ID is missing`);
-        }
-        if (this.rabbitCache.get(clientId)) {
-            return;
-        }
-
-        if (!rabbitConfig) {
-            const clientList = loadClientConfigs();
-            rabbitConfig = clientList.find(client => client.ID === clientId)?.RABBITMQ;
-            if (!rabbitConfig) {
-                throw new Error(`RabbitMQ configuration not found for client ID: ${clientId}`);
-            }
-        }
-         let RABBITMQ_URL = 'amqp://user:password@rabbitmq:5672'
-        if (rabbitConfig.HOST && rabbitConfig.PORT && rabbitConfig.USER && rabbitConfig.PASSWORD) {
-            RABBITMQ_URL = `amqp://${rabbitConfig.USER}:${rabbitConfig.PASSWORD}@${rabbitConfig.HOST}:${rabbitConfig.PORT}`
-        }
-        const rabbit = await require('../rabbitMQClient.js')(RABBITMQ_URL);
-        logger.info(`[${clientId}] Testing RabbitMQ connection...`);
-        await rabbit.connectRabbitMQ();
-        logger.info(`[${clientId}] RabbitMQ connection successful.`);
-        this.rabbitCache.set(clientId, rabbit);
-    }
-
 
     /**
-     * Initializes Sequelize instance for a client.
-     * @param {Object} dbConfig - Database configuration.
-     * @param {string} clientId - Client identifier.
-     * @returns {Sequelize} - Sequelize instance.
+     * Validates RabbitMQ configuration
+     * @param {Object} config - RabbitMQ configuration
+     * @private
+     */
+    #validateRabbitConfig(config) {
+        const requiredFields = ['HOST', 'PORT', 'USER', 'PASSWORD', 'EXCHANGE_NAME', 'EXCHANGE_TYPE'];
+        for (const field of requiredFields) {
+            if (!config[field]) {
+                throw new ConnectionError(`Missing RabbitMQ config: ${field}`);
+            }
+        }
+    }
+
+    /**
+     * Initializes RabbitMQ connection
+     * @param {Object} [rabbitConfig] - RabbitMQ configuration
+     * @param {string} clientId - Client identifier
+     * @returns {Promise<void>}
+     */
+    async initializeRabbitMQ(rabbitConfig, clientId) {
+        if (!clientId) {
+            throw new ConnectionError('Client ID required');
+        }
+
+        if (this.rabbitCache.get(clientId)) {
+            const rabbit = this.rabbitCache.get(clientId);
+            if (rabbit.getChannel()) {
+                return; // Reuse healthy connection
+            }
+            this.rabbitCache.delete(clientId); // Clear stale connection
+        }
+
+        try {
+            if (!rabbitConfig) {
+                const clientList = await loadClientConfigs();
+                rabbitConfig = clientList.find(client => client.ID === clientId)?.RABBITMQ;
+                if (!rabbitConfig) {
+                    throw new ConnectionError(`No RabbitMQ config for client ${clientId}`);
+                }
+            }
+
+            this.#validateRabbitConfig(rabbitConfig);
+
+            const RABBITMQ_URL =`amqp://${rabbitConfig.USER}:${rabbitConfig.PASSWORD}@${rabbitConfig.HOST}:${rabbitConfig.PORT}`||process.env.RABBITMQ_URL;
+
+            const rabbit = await require('../rabbitMQClient.js')({
+                url: RABBITMQ_URL,
+                exchange: {
+                    name: rabbitConfig.EXCHANGE_NAME,
+                    type: rabbitConfig.EXCHANGE_TYPE,
+                    durable: true,
+                },
+                services: rabbitConfig.SERVERICES,
+            });
+
+            await rabbit.connectRabbitMQ();
+            logger.debug(`[${clientId}] RabbitMQ connection established`);
+            this.rabbitCache.set(clientId, rabbit);
+        } catch (error) {
+            throw new ConnectionError(`RabbitMQ init failed for client ${clientId}`, { error: error.message });
+        }
+    }
+
+    /**
+     * Validates database configuration
+     * @param {Object} config - Database configuration
+     * @private
+     */
+    #validateDbConfig(config) {
+        const requiredFields = ['HOST', 'PORT', 'NAME', 'USER', 'PASSWORD'];
+        for (const field of requiredFields) {
+            if (!config[field]) {
+                throw new ConnectionError(`Missing database config: ${field}`);
+            }
+        }
+    }
+
+    /**
+     * Initializes Sequelize instance
+     * @param {Object} [dbConfig] - Database configuration
+     * @param {string} clientId - Client identifier
+     * @returns {Promise<void>}
      */
     async initializeSequelize(dbConfig, clientId) {
         if (!clientId) {
-            throw new Error(`Client ID is missing`);
+            throw new ConnectionError('Client ID required');
         }
+
         if (this.modelCache.get(clientId)) {
-            return;
+            return; // Reuse cached models
         }
 
-        if (!dbConfig) {
-            const clientList = loadClientConfigs();
-            dbConfig = clientList.find(client => client.ID === clientId)?.DBCONFIG;
+        try {
             if (!dbConfig) {
-                throw new Error(`Database configuration not found for client ID: ${clientId}`);
+                const clientList = await loadClientConfigs();
+                dbConfig = clientList.find(client => client.ID === clientId)?.DBCONFIG;
+                if (!dbConfig) {
+                    throw new ConnectionError(`No database config for client ${clientId}`);
+                }
             }
-        }
 
-        const sequelize = new Sequelize({
-            dialect: 'postgres', // Adjust if using another database
-            host: dbConfig.HOST,
-            port: dbConfig.PORT,
-            database: dbConfig.NAME,
-            username: dbConfig.USER,
-            password: dbConfig.PASSWORD,
-            schema: clientId.toLowerCase(),
-            logging: msg => logger.debug(`[${clientId}] Sequelize: ${msg}`),
-            pool: {
-                max: 5,
-                min: 0,
-                acquire: 30000,
-                idle: 10000,
-            },
-        });
-        logger.info(`[${clientId}] Testing database connection...`);
-        sequelize.authenticate()
-        logger.info(`[${clientId}] Database connection successful.`);
-        let db = await require('../../models')(sequelize, clientId);
-        this.modelCache.set(clientId, db);
+            this.#validateDbConfig(dbConfig);
+
+            const sequelize = new Sequelize({
+                dialect: process.env.DB_DIALECT || 'postgres',
+                host: dbConfig.HOST,
+                port: dbConfig.PORT,
+                database: dbConfig.NAME,
+                username: dbConfig.USER,
+                password: dbConfig.PASSWORD,
+                schema: clientId.toLowerCase(),
+                logging: false, // Disable logging for performance
+                pool: {
+                    max: 3, // Reduced for memory efficiency
+                    min: 0,
+                    acquire: 10000,
+                    idle: 5000,
+                },
+            });
+
+            await sequelize.authenticate();
+            const db = await require('../../models')(sequelize, clientId);
+            this.modelCache.set(clientId, db);
+        } catch (error) {
+            throw new ConnectionError(`Sequelize init failed for client ${clientId}`, { error: error.message });
+        }
     }
+
+    /**
+     * Gets cached database models
+     * @param {string} clientId - Client identifier
+     * @returns {Promise<Object>} Database models
+     */
     async getModels(clientId) {
         let db = this.modelCache.get(clientId);
         if (!db) {
             await this.initializeSequelize(undefined, clientId);
             db = this.modelCache.get(clientId);
-            console.log(`Cache stats: size=${this.modelCache.size}, max=${this.modelCache.max}`);
         }
         return db;
     }
-  async getRabbitMQ(clientId) {
-    let rabbit = this.rabbitCache.get(clientId);
-    if (!rabbit) {
-        await this.initializeRABBITMQ(undefined, clientId);
-        rabbit = this.rabbitCache.get(clientId);
-        console.log(`Cache stats: size=${this.rabbitCache.size}, max=${this.rabbitCache.max}`);
+
+    /**
+     * Gets cached RabbitMQ connection
+     * @param {string} clientId - Client identifier
+     * @returns {Promise<Object>} RabbitMQ connection
+     */
+    async getRabbitMQ(clientId) {
+        let rabbit = this.rabbitCache.get(clientId);
+        if (!rabbit || !rabbit.getChannel()) {
+            await this.initializeRabbitMQ(undefined, clientId);
+            rabbit = this.rabbitCache.get(clientId);
+        }
+        return rabbit;
     }
-    return rabbit;
-  }
+
+    /**
+     * Clears cache for a client
+     * @param {string} [clientId] - Client identifier
+     * @returns {Promise<void>}
+     */
     async clearCache(clientId) {
         if (clientId) {
             this.modelCache.delete(clientId);
-        } else {
-            this.modelCache.clear();
-        }
-    }
-   async closeAllTypeConnection(clientId){
-        if (clientId) {
-            const db = this.modelCache.get(clientId);
-            if (db) {
-                await db.sequelize.close();
-                this.modelCache.delete(clientId);
-            }
-            const rabbit = this.rabbitCache.get(clientId);
-            if (rabbit) {
-                await rabbit.closeConnection();
-                this.rabbitCache.delete(clientId);
-            }
+            this.rabbitCache.delete(clientId);
         } else {
             this.modelCache.clear();
             this.rabbitCache.clear();
         }
-   }
+    }
+
+    /**
+     * Closes all connections for a client
+     * @param {string} [clientId] - Client identifier
+     * @returns {Promise<void>}
+     */
+    async closeAllConnections(clientId) {
+        try {
+            if (clientId) {
+                const db = this.modelCache.get(clientId);
+                if (db) {
+                    await db.sequelize.close();
+                    this.modelCache.delete(clientId);
+                }
+                const rabbit = this.rabbitCache.get(clientId);
+                if (rabbit) {
+                    await rabbit.closeConnection();
+                    this.rabbitCache.delete(clientId);
+                }
+            } else {
+                await Promise.all([
+                    ...Array.from(this.modelCache.values()).map(db => db.sequelize.close()),
+                    ...Array.from(this.rabbitCache.values()).map(rabbit => rabbit.closeConnection()),
+                ]);
+                this.modelCache.clear();
+                this.rabbitCache.clear();
+            }
+        } catch (error) {
+            throw new ConnectionError(`Failed to close connections for ${clientId || 'all'}`, { error: error.message });
+        }
+    }
+
+    /**
+     * Closes all connections and clears caches
+     * @returns {Promise<void>}
+     */
     async close() {
-        this.modelCache.clear();
+        await this.closeAllConnections();
     }
 }
 

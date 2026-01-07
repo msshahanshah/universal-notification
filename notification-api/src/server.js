@@ -25,7 +25,7 @@ async function startServer(clientConfigList) {
         // Initialize client-specific Sequelize
         for (const clientItem of clientConfigList) {
             await connectionManager.initializeSequelize(clientItem.DBCONFIG, clientItem.ID);
-            await connectionManager.initializeRABBITMQ(clientItem.RABBITMQ ,clientItem.ID)
+            await connectionManager.initializeRabbitMQ(clientItem.RABBITMQ,clientItem.ID)
           }
         global.connectionManager=connectionManager;
         const app = require('./app');
@@ -111,7 +111,7 @@ if (cluster.isMaster) {
                     });
                 });
 
-                masterServer = masterApp.listen(3010, () => {
+                masterServer = masterApp.listen(3000, () => {
                     logger.info('Master router listening on port 3000');
                 });
             } catch (error) {

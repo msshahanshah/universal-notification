@@ -13,7 +13,8 @@ RUN npm install
 
 # Copy all files to the working directory
 COPY . .
-
+# Copy clientList.json from parent directory
+COPY ../clientList.json /usr/src
 # Expose the port the app runs in
 EXPOSE 3000
 

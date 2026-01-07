@@ -1,125 +1,198 @@
-// ./notification-api/src/rabbitMQClient.js
 const amqp = require('amqplib');
 const logger = require('./logger');
 
-module.exports = (RABBITMQ_URL) => {
+/**
+ * Custom error for RabbitMQ issues
+ */
+class RabbitMQError extends Error {
+    constructor(message, details = {}) {
+        super(message);
+        this.name = 'RabbitMQError';
+        this.details = details;
+    }
+}
+
+/**
+ * RabbitMQ Client Factory
+ * @param {Object} config - RabbitMQ configuration
+ * @param {string} config.url - Connection URL
+ * @param {Object} config.exchange - Exchange config
+ * @param {string} config.exchange.name - Exchange name
+ * @param {string} config.exchange.type - Exchange type
+ * @param {boolean} [config.exchange.durable=true] - Exchange durability
+ * @param {Array<Object>} [config.services] - Service configurations
+ * @returns {Object} RabbitMQ client instance
+ */
+module.exports = (config) => {
     let connection = null;
     let channel = null;
+    let isConnecting = false;
+    const reconnectAttempts = 3;
+    const baseReconnectDelay = 2000;
+
     /**
-     * Establishes a connection to RabbitMQ and creates a channel.
-     * Also asserts the existence of the configured exchange.
-     *
-     * @returns {Promise<{connection: object, channel: object}>} An object containing the connection and channel.
-     * @throws {Error} If there is a failure connecting to RabbitMQ.
+     * Validates configuration
+     * @private
+     */
+    function validateConfig() {
+        if (!config.url || !config.exchange?.name || !config.exchange?.type) {
+            throw new RabbitMQError('Invalid config: url, exchange.name, and exchange.type required');
+        }
+    }
+
+    /**
+     * Calculates reconnect delay with exponential backoff
+     * @param {number} attempt - Current attempt
+     * @returns {number} Delay in ms
+     * @private
+     */
+    function getReconnectDelay(attempt) {
+        return Math.min(baseReconnectDelay * Math.pow(1.5, attempt), 10000);
+    }
+
+    /**
+     * Establishes RabbitMQ connection
+     * @returns {Promise<{connection: Object, channel: Object}>}
      */
     async function connectRabbitMQ() {
-        if (channel) {
+        if (channel && connection) {
             return { connection, channel };
         }
 
-        let url = RABBITMQ_URL || 'amqp://user:password@rabbitmq:5672'
-        console.log('Connecting to RabbitMQ...');
+        if (isConnecting) {
+            while (isConnecting) {
+                await new Promise(resolve => setTimeout(resolve, 50));
+            }
+            return { connection, channel };
+        }
+
+        validateConfig();
+        isConnecting = true;
+
         try {
-            connection = await amqp.connect(url);
+            const url = config.url||process.env.RABBITMQ_URL;
+            connection = await amqp.connect(url, { heartbeat: 30, timeout: 5000 });
             channel = await connection.createConfirmChannel();
-            // Assert the exchange exists
-            let ss = await channel.assertExchange(
-                'notifications_exchange',
-                'direct', // Exchange type
-                { durable: true } // Make exchange survive broker restart
+
+            // Assert exchange
+            await channel.assertExchange(
+                config.exchange.name,
+                config.exchange.type,
+                { durable: true }
             );
-            channel.waitForConfirms()
-            console.log('RabbitMQ connected and exchange asserted.');
+
+            // Setup service queues if provided
+            if (config.services) {
+                for (const service of config.services) {
+                    await channel.assertQueue(service.QUEUE_NAME, { durable: true });
+                    await channel.bindQueue(
+                        service.QUEUE_NAME,
+                        config.exchange.name,
+                        service.ROUTING_KEY
+                    );
+                }
+            }
 
             connection.on('error', (err) => {
-                console.error('RabbitMQ connection error:', err.message);
-                // Implement reconnection logic if needed
+                logger.error('RabbitMQ connection error', { error: err.message });
                 connection = null;
                 channel = null;
-                // setTimeout(connectRabbitMQ, 5000); // Basic retry
             });
+
             connection.on('close', () => {
-                console.warn('RabbitMQ connection closed. Attempting to reconnect...');
+                logger.warn('RabbitMQ connection closed');
                 connection = null;
                 channel = null;
-                // setTimeout(connectRabbitMQ, 5000); // Basic retry
+                setTimeout(() => attemptReconnect(0), baseReconnectDelay);
             });
 
             return { connection, channel };
         } catch (error) {
-            console.error('Failed to connect to RabbitMQ:', error.message);
-            // Implement retry logic
-            // setTimeout(connectRabbitMQ, 5000); // Basic retry
-            throw error; // Re-throw for initial connection failure
+            throw new RabbitMQError('Connection failed', { error: error.message });
+        } finally {
+            isConnecting = false;
         }
     }
 
     /**
-     * Publishes a message to the specified exchange with the given routing key.
-     *
-     * @param {string} routingKey - The routing key for the message.
-     * @param {object} message - The message to be published.
-     * @throws {Error} If the channel is not available or if publishing fails.
+     * Attempts reconnection with backoff
+     * @param {number} attempt - Current attempt
+     * @private
      */
-    async function publishMessage(routingKey, message) {
-        if (!channel) {
-            console.error('Cannot publish message: RabbitMQ channel not available.');
-            // Optionally try to reconnect here or throw error
-            await connectRabbitMQ(); // Try to reconnect
-            if (!channel) {
-                throw new Error('RabbitMQ channel not available after attempting reconnect.');
-            }
+    async function attemptReconnect(attempt) {
+        if (attempt >= reconnectAttempts) {
+            logger.error('Max reconnection attempts reached');
+            return;
         }
 
         try {
-            // console.log(`Publishing message to exchange '${config.rabbitMQ.exchangeName}' with routing key '${routingKey}'`);
-            // Publish the message to the exchange with the routing key
-            logger.info(`Publishing notification request to RabbitMQ`, message);
-
-            let res = channel.publish(
-                'notifications_exchange', // Exchange name
-                routingKey,
-                Buffer.from(JSON.stringify(message)),
-                {
-                    persistent: true, // Make message survive broker restart
-                }
-            );
-            channel.waitForConfirms()
-            logger.info(`Notification request published successfully`, { messageId: message.messageId });
-            return res
+            await connectRabbitMQ();
         } catch (error) {
-            console.error('Failed to publish message:', error);
-            return false
+            const delay = getReconnectDelay(attempt);
+            logger.warn(`Reconnect attempt ${attempt + 1} failed, retrying in ${delay}ms`);
+            setTimeout(() => attemptReconnect(attempt + 1), delay);
         }
     }
 
     /**
-     * Closes the RabbitMQ channel and connection.
-     *
+     * Publishes a message to the exchange
+     * @param {string} serviceType - Service type (e.g., 'email', 'sms', 'slack')
+     * @param {Object} message - Message to publish
+     * @returns {Promise<boolean>} Success status
+     */
+    async function publishMessage(serviceType, message) {
+        if (!channel) {
+            await connectRabbitMQ();
+        }
+
+        try {
+            // Find routing key from services config
+            const service = config.services?.find(s => s.ROUTING_KEY === serviceType);
+            if (!service) {
+                throw new RabbitMQError(`No service found for routing key: ${serviceType}`);
+            }
+
+            const success = channel.publish(
+                config.exchange.name,
+                service.ROUTING_KEY,
+                Buffer.from(JSON.stringify(message)),
+                { persistent: true }
+            );
+
+            await channel.waitForConfirms();
+            return success;
+        } catch (error) {
+            throw new RabbitMQError('Message publishing failed', {
+                error: error.message,
+                serviceType,
+                messageId: message.messageId,
+            });
+        }
+    }
+
+    /**
+     * Closes RabbitMQ connection
+     * @returns {Promise<void>}
      */
     async function closeConnection() {
-        if (channel) {
-            await channel.close();
-            channel = null;
-            console.log('RabbitMQ channel closed.');
-        }
-        if (connection) {
-            await connection.close();
-            connection = null;
-            console.log('RabbitMQ connection closed.');
+        try {
+            if (channel) {
+                await channel.close();
+                channel = null;
+            }
+            if (connection) {
+                await connection.close();
+                connection = null;
+            }
+        } catch (error) {
+            throw new RabbitMQError('Connection closure failed', { error: error.message });
         }
     }
 
-    /**
-     * @module rabbitMQClient
-     * @description This module provides functions to connect to RabbitMQ, publish messages, and close the connection.
-     */
     return {
         connectRabbitMQ,
         publishMessage,
         closeConnection,
-        /** @returns {object} current channel*/
         getChannel: () => channel,
     };
-    
-}
+};

@@ -34,9 +34,10 @@ async function loadClientConfigs() {
             SERVER_PORT: client.SERVER_PORT || 3000,
             ENABLED_SERVERICES:client.ENABLED_SERVERICES || [],
             DBCONFIG: client.DBCONFIG || defaultConfig.DBCONFIG,
+            SMS: client.SMS || defaultConfig.SMS,
             RABBITMQ:{
                 ...client.RABBITMQ,
-                SERVERICES:[client.EMAIL.RABBITMQ,client.SMS.RABBITMQ,client.SLACKBOT.RABBITMQ]
+                SERVERICES:client.SMS.RABBITMQ
             } || defaultConfig.RABBITMQ,
         }));
     } catch (error) {
