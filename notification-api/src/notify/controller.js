@@ -15,6 +15,7 @@ const notify = async (req, res) => {
         content.message=message
     }
     const clientID = req.headers['x-client-id'];
+    
     const notificationRecord = await creatingNotificationRecord(clientID, service, destination, content)
     if (notificationRecord.statusCode) {
         return res.status(notificationRecord.statusCode).json({
@@ -22,6 +23,7 @@ const notify = async (req, res) => {
             messageId: notificationRecord.messageId,
         });
     }
+    notificationRecord.clientId=clientID
     let result = await publishingNotificationRequest(notificationRecord)
 
     return res.status(202).json({

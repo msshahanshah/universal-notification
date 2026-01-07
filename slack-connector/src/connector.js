@@ -28,6 +28,7 @@ function initializeSequelize(dbConfig, clientId) {
         database: dbConfig.NAME,
         username: dbConfig.USER,
         password: dbConfig.PASSWORD,
+        schema: clientId.toLowerCase(),
         logging: msg => logger.debug(`[${clientId}] Sequelize: ${msg}`),
         pool: {
             max: 5,

@@ -4,9 +4,6 @@
  * Sets up the Express server, defines routes, and handles request logic.
  */
 const express = require('express');
-const { v4: uuidv4 } = require('uuid'); // For generating unique IDs
-const { publishMessage } = require('./rabbitMQClient');
-const config = require('./config');
 const logger = require('./logger');
 
 const notificationRouter = require('./notify/route');

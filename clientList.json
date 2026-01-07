@@ -67,9 +67,5 @@
             "USER": "user",
             "PASSWORD": "password"
         }
-    },
-    {
-        "ID":"test",
-        "ENABLED_SERVERICES":["slack","email","sms"]
     }
 ]
