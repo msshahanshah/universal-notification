@@ -2,10 +2,10 @@
   "name": "slack-connector",
   "version": "1.0.0",
   "description": "",
-  "main": "/src/connector.js",
+  "main": "/src/index.js",
   "scripts": {
-    "start": "node src/connector.js",
-    "dev": "nodemon src/connector.js",
+    "start": "node src/index.js",
+    "dev": "nodemon src/index.js",
     "test": "jest --detectOpenHandles --forceExit --coverage"
   },
   "keywords": [],
