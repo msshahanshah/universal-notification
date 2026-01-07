@@ -6,7 +6,7 @@
  */
 
 require('dotenv').config({ path: require('path').resolve(__dirname, '../../.env') }); // Load root .env
-const logger = require('./logger'); // Load logger early if needed
+// const logger = require('./logger'); // Load logger early if needed
 
 /**
  * Configuration object for the application.

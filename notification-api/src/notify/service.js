@@ -1,13 +1,14 @@
-const db = require("../../models");
+
 const logger = require("../logger");
 const { v4: uuidv4 } = require('uuid');
 const { publishMessage } = require("../rabbitMQClient");
+const { ConnectionManager } = require("../utillity/connectionManager");
 
 const creatingNotificationRecord = async (clientId, service, destination, content, templateId = null) => {
     logger.info(`Creating notification record in DB`, { clientId, service, destination, content, templateId });
-    return await db.Notification.create({
+    let dbConnect=await global.connectionManager.getModels(clientId);
+    return await dbConnect.Notification.create({
         messageId: uuidv4(),
-        clientId: clientId,
         service: service,
         destination: destination,
         content: content,
@@ -40,10 +41,13 @@ const creatingNotificationRecord = async (clientId, service, destination, conten
 }
 const publishingNotificationRequest = async (notificationRecord) => {
     let { service, destination, content, messageId, clientId } = notificationRecord;
-   return await publishMessage(service, {
-        service, destination, content, messageId, clientId,
-        timestamp: new Date().toISOString(),
-    });
+    let rabbitConnect=await global.connectionManager.getRabbitMQ(clientId);
+    if(rabbitConnect){
+       return await rabbitConnect.publishMessage(service, {
+            service, destination, content, messageId, clientId,
+            timestamp: new Date().toISOString(),
+        });
+    }
 }
 module.exports = {
     creatingNotificationRecord,

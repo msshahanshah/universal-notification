@@ -3,30 +3,33 @@ const { WebClient } = require('@slack/web-api');
 const config = require('./config');
 const logger = require('./logger');
 
-let slackClient = null;
+// Map to cache Slack clients per bot token
+const slackClients = new Map();
 
-function getSlackClient() {
-    if (!slackClient) {
-        const tokenFromConfig = config.slack.botToken; // Get token from config
-
-        // --- TEMPORARY DEBUG LOGGING ---
-        // Log only a portion to avoid exposing the full token in logs
-        const tokenSnippet = tokenFromConfig ? `${tokenFromConfig.substring(0, 10)}...${tokenFromConfig.substring(tokenFromConfig.length - 4)}` : 'TOKEN NOT FOUND/LOADED';
-        logger.info(`Initializing Slack WebClient. Token snippet from config: [${tokenSnippet}]`);
-        // --------------------------------
-
-        if (!config.slack.botToken) {
-            logger.error('Slack Bot Token (SLACK_BOT_TOKEN) is not configured!');
-            throw new Error('Missing Slack configuration: Bot Token');
-        }
-        slackClient = new WebClient(config.slack.botToken);
-         logger.info('Slack WebClient initialized.');
+function getSlackClient(botToken) {
+    if (!botToken) {
+        logger.error('Slack Bot Token is not provided!');
+        throw new Error('Missing Slack configuration: Bot Token');
     }
-    return slackClient;
+
+    // Check if we already have a client for this token
+    if (slackClients.has(botToken)) {
+        return slackClients.get(botToken);
+    }
+
+    // Log only a portion to avoid exposing the full token in logs
+    const tokenSnippet = `${botToken.substring(0, 10)}...${botToken.substring(botToken.length - 4)}`;
+    logger.info(`Initializing Slack WebClient. Token snippet: [${tokenSnippet}]`);
+
+    const client = new WebClient(botToken);
+    slackClients.set(botToken, client);
+    logger.info('Slack WebClient initialized and cached.');
+
+    return client;
 }
 
-async function sendSlackMessage(channel, message, messageId) {
-    const client = getSlackClient(); // Get initialized client
+async function sendSlackMessage(authToken, channel, message, messageId) {
+    const client = getSlackClient(authToken); // Get initialized client
 
     logger.debug(`Attempting to send message to Slack channel: ${channel}`, { messageId });
 
@@ -48,13 +51,13 @@ async function sendSlackMessage(channel, message, messageId) {
         }
     } catch (error) {
         logger.error(`Error sending message to Slack via API`, {
-             messageId,
-             channel,
-             errorCode: error.code, // e.g., 'slack_error_code'
-             errorMessage: error.message,
-             // errorData: error.data, // Contains detailed error info from Slack API
-             slackErrorCode: error.data?.error, // Specific slack error like 'channel_not_found'
-             stack: error.stack
+            messageId,
+            channel,
+            errorCode: error.code, // e.g., 'slack_error_code'
+            errorMessage: error.message,
+            // errorData: error.data, // Contains detailed error info from Slack API
+            slackErrorCode: error.data?.error, // Specific slack error like 'channel_not_found'
+            stack: error.stack
         });
 
         // Rethrow a structured error or return failure info

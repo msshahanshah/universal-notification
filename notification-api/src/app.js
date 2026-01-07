@@ -4,9 +4,6 @@
  * Sets up the Express server, defines routes, and handles request logic.
  */
 const express = require('express');
-const { v4: uuidv4 } = require('uuid'); // For generating unique IDs
-const { publishMessage } = require('./rabbitMQClient');
-const config = require('./config');
 const logger = require('./logger');
 
 const notificationRouter = require('./notify/route');
@@ -25,7 +22,7 @@ app.use(express.json());
  * @returns {Error}  default - Unexpected error
  */
 app.get('/health', (req, res) => {
-    console.log('Health check endpoint hit', process.env.CLIENT_ID);
+    logger.debug('Health check endpoint hit', { clientId: process.env.CLIENT_ID });
     res.status(200).send('OK');
 });
 app.use(notificationRouter)

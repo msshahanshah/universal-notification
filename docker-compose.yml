@@ -75,6 +75,7 @@ services:
       - ./notification-api/src:/usr/src/app/src
       - ./notification-api/config:/usr/src/app/config # Mount config for easy changes
       - ./notification-api/models:/usr/src/app/models # Mount models
+      - ./clientList.json:/usr/src/app/clientList.json
       # Might need others like migrations if run from container
     environment:
       # Pass runtime environment variables
@@ -173,7 +174,43 @@ services:
       - notification_network
     command: >
       sh -c "if [ \"$NODE_ENV\" = \"development\" ]; then npm install nodemon && npx nodemon src/connector.js; else node src/connector.js; fi"
-
+# --- Email Connector Service ---
+  sms-connector:
+    build:
+      context: ./sms-connector
+      args:
+        dockerfile: Dockerfile
+        NODE_ENV: ${NODE_ENV:-development}
+    container_name: sms_connector_service
+    volumes:
+      - ./sms-connector/src:/usr/src/app/src
+      - ./sms-connector/config:/usr/src/app/config
+      - ./sms-connector/models:/usr/src/app/models
+    environment:
+      NODE_ENV: ${NODE_ENV:-development}
+      # RabbitMQ connection
+      RABBITMQ_URL: amqp://${RABBITMQ_DEFAULT_USER:-user}:${RABBITMQ_DEFAULT_PASS:-password}@rabbitmq:5672
+      RABBITMQ_EXCHANGE_NAME: notifications_exchange
+      RABBITMQ_QUEUE_NAME: sms_queue
+      RABBITMQ_BINDING_KEY: sms
+      # Database connection
+      DB_HOST: postgres
+      POSTGRES_DB: ${POSTGRES_DB:-notifications_db}
+      POSTGRES_USER: ${POSTGRES_USER:-user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
+      # AWS config
+      AWS_REGION: ${AWS_REGION}
+      AWS_S3_BUCKET: ${AWS_S3_BUCKET}
+      MAX_PROCESSING_ATTEMPTS: 3
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    networks:
+      - notification_network
+    command: >
+      sh -c "if [ \"$NODE_ENV\" = \"development\" ]; then npm install nodemon && npx nodemon src/connector.js; else node src/connector.js; fi"
 # --- Volumes Definition ---
 volumes:
   # rabbitmq_data:
