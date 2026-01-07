@@ -1,6 +1,13 @@
 name: Build & Push Docker Images
 
 on:
+  workflow_dispatch:
+    inputs:
+      service:
+        description: "Service to build (email-connector, notification-api, slack-connector, sms-connector or all)"
+        required: true
+        default: "all"
+
   push:
     branches:
       # - development
