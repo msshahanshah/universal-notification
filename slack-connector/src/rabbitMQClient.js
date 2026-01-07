@@ -56,7 +56,6 @@ module.exports = (db) => {
                     channel.nack(msg, false, false); // Don't requeue
                     return;
                 }
-
                 // Idempotency: Check current status
                 if (notificationRecord.status === 'sent') {
                     logger.warn(`Notification already marked as sent. Acknowledging message.`, { messageId, dbId: notificationRecord.id });

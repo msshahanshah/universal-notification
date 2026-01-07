@@ -119,14 +119,12 @@ module.exports = (RABBITMQ_URL, rabbitConfig) => {
                     channel.nack(msg, false, false);
                     return;
                 }
-
                 if (notificationRecord.status === "sent") {
                     logger.warn(`Notification already marked as sent. Acknowledging message.`, { messageId, dbId: notificationRecord.id });
                     await transaction.commit();
                     channel.ack(msg);
                     return;
                 }
-
                 if (notificationRecord.status === "processing") {
                     logger.warn(`Notification is already being processed. Acknowledging message.`, { messageId, dbId: notificationRecord.id });
                     await transaction.commit();
@@ -143,7 +141,6 @@ module.exports = (RABBITMQ_URL, rabbitConfig) => {
                     channel.ack(msg);
                     return;
                 }
-
                 logger.info(`Updating notification status to 'processing'`, { messageId, dbId: notificationRecord.id, attempt: notificationRecord.attempts + 1 });
                 notificationRecord.status = 'processing';
                 notificationRecord.attempts += 1;

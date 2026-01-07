@@ -152,7 +152,7 @@ if (cluster.isMaster) {
                 logger.error(`Worker: No configuration found for client`);
                 process.exit(1);
             }
-
+            
             clients = await loadClientConfigs();
             const clientConfigList = clients.filter(c => c.SERVER_PORT === +process.env.SERVER_PORT);
 

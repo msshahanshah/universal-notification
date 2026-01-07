@@ -14,7 +14,6 @@ class EmailSender {
     }
 
     async initialize() {
-
         // Determine which email service to use (default to AWS SES if configured)
         if (this.clientConfig?.AWS?.USER_NAME) {
             await this.setupAmazonSES();

@@ -32,7 +32,6 @@ async function closeConnections(clientId) {
         logger.error('Failed to close connections:', { error: error.message });
     }
 }
-
 module.exports = {
     connectAndConsume,
     closeConnections
