@@ -236,9 +236,11 @@ services:
       RABBITMQ_HOST_OVERRIDE: rabbitmq
       RABBITMQ_PORT_OVERRIDE: 5672
     depends_on:
-      rabbitmq:
+      - rabbitmq
+      # rabbitmq:
         # condition: service_healthy
-      postgres:
+      - postgres
+      # postgres:
         # condition: service_healthy
     networks:
       - notification_network
