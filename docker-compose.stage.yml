@@ -51,8 +51,10 @@ services:
       start_period: 30s
     networks:
       - notification_network
-    restart: always
+    # restart: always
     deploy:
+      restart_policy:
+        condition: any
       resources:
         limits:
           cpus: '2'
@@ -94,8 +96,10 @@ services:
         # condition: service_healthy
     networks:
       - notification_network
-    restart: always
+    # restart: always
     deploy:
+      restart_policy:
+        condition: any
       resources:
         limits:
           cpus: '1'
@@ -144,8 +148,10 @@ services:
       #   condition: service_healthy
     networks:
       - notification_network
-    restart: always
+    # restart: always
     deploy:
+      restart_policy:
+        condition: any
       resources:
         limits:
           cpus: '0.5'
@@ -197,8 +203,10 @@ services:
       #   condition: service_healthy
     networks:
       - notification_network
-    restart: always
+    # restart: always
     deploy:
+      restart_policy:
+        condition: any
       resources:
         limits:
           cpus: '0.5'
@@ -250,8 +258,10 @@ services:
         # condition: service_healthy
     networks:
       - notification_network
-    restart: always
+    # restart: always
     deploy:
+      restart_policy:
+        condition: any
       resources:
         limits:
           cpus: '0.5'
@@ -276,4 +286,4 @@ volumes:
 # --- Network Definition ---
 networks:
   notification_network:
-    driver: bridge
+    driver: overlay
