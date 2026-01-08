@@ -86,10 +86,12 @@ services:
       RABBITMQ_HOST_OVERRIDE: rabbitmq
       RABBITMQ_PORT_OVERRIDE: 5672
     depends_on:
-      rabbitmq:
-        condition: service_healthy
-      postgres:
-        condition: service_healthy
+      - rabbitmq
+      - postgres
+      # rabbitmq:
+        # condition: service_healthy
+      # postgres:
+        # condition: service_healthy
     networks:
       - notification_network
     restart: always
@@ -134,10 +136,12 @@ services:
       RABBITMQ_HOST_OVERRIDE: rabbitmq
       RABBITMQ_PORT_OVERRIDE: 5672
     depends_on:
-      rabbitmq:
-        condition: service_healthy
-      postgres:
-        condition: service_healthy
+      - rabbitmq
+      - postgres
+      # rabbitmq:
+      #   condition: service_healthy
+      # postgres:
+      #   condition: service_healthy
     networks:
       - notification_network
     restart: always
@@ -185,10 +189,12 @@ services:
       RABBITMQ_HOST_OVERRIDE: rabbitmq
       RABBITMQ_PORT_OVERRIDE: 5672
     depends_on:
-      rabbitmq:
-        condition: service_healthy
-      postgres:
-        condition: service_healthy
+      - rabbitmq
+      - postgres
+      # rabbitmq:
+      #   condition: service_healthy
+      # postgres:
+      #   condition: service_healthy
     networks:
       - notification_network
     restart: always
@@ -237,9 +243,9 @@ services:
       RABBITMQ_PORT_OVERRIDE: 5672
     depends_on:
       - rabbitmq
+      - postgres
       # rabbitmq:
         # condition: service_healthy
-      - postgres
       # postgres:
         # condition: service_healthy
     networks:
