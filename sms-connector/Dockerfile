@@ -10,7 +10,7 @@ COPY package*.json ./
 RUN npm install
 # copy env files
 COPY env.sample .env
-COPY ../.env ../.env
+
 
 # Install dependencies
 RUN npm install

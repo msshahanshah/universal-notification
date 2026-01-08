@@ -6,7 +6,7 @@ const { ConnectionManager } = require("../utillity/connectionManager");
 
 const creatingNotificationRecord = async (clientId, service, destination, content, templateId = null) => {
     logger.info(`Creating notification record in DB`, { clientId, service, destination, content, templateId });
-    let dbConnect=await global.connectionManager.getModels(clientId);
+    let dbConnect = await global.connectionManager.getModels(clientId);
     return await dbConnect.Notification.create({
         messageId: uuidv4(),
         service: service,
@@ -34,16 +34,16 @@ const creatingNotificationRecord = async (clientId, service, destination, conten
         return {
             statusCode: 500,
             message: 'Failed to create notification record in database.',
-            messageId,
+            error: dbError.message
         }
     });
 
 }
 const publishingNotificationRequest = async (notificationRecord) => {
     let { service, destination, content, messageId, clientId } = notificationRecord;
-    let rabbitConnect=await global.connectionManager.getRabbitMQ(clientId);
-    if(rabbitConnect){
-       return await rabbitConnect.publishMessage(service, {
+    let rabbitConnect = await global.connectionManager.getRabbitMQ(clientId);
+    if (rabbitConnect) {
+        return await rabbitConnect.publishMessage(service, {
             service, destination, content, messageId, clientId,
             timestamp: new Date().toISOString(),
         });

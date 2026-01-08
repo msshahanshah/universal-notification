@@ -1,19 +1,7 @@
 const { Sequelize } = require('sequelize');
-const fs = require('fs').promises;
 const path = require('path');
 const Umzug = require('umzug');
-
-async function loadClientConfigs() {
-    try {
-        const clientListPath = path.join(__dirname, '../../../clientList.json');
-        console.log('Loading client configurations from:', clientListPath);
-        const clientData = await fs.readFile(clientListPath, 'utf-8');
-        return JSON.parse(clientData);
-    } catch (error) {
-        console.error('Failed to load client configurations:', error);
-        throw error;
-    }
-}
+const { loadClientConfigs } = require('./loadClientConfigs');
 
 async function runMigrations(sequelize, clientId) {
     // Ensure schema exists

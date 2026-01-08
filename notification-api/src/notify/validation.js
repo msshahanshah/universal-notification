@@ -3,7 +3,8 @@ require('dotenv').config({ path: require('path').resolve(__dirname, '../../../.e
 // Define the validation schema
 
 console.log('Environment Variables:', require('path').resolve(__dirname, '../../../.env'));
-const services = process.env.SERVICE.split(',');
+// Default to all supported services if SERVICE env var is not set
+const services = process.env.SERVICE ? process.env.SERVICE.split(',') : ['slack', 'email', 'sms'];
 
 const validateSchema = Joi.object({
     service: Joi.string().valid(...services).required(),

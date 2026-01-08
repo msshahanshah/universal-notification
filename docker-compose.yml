@@ -1,3 +1,5 @@
+version: '3.8'
+
 services:
   # --- RabbitMQ ---
   rabbitmq:
@@ -7,39 +9,20 @@ services:
       - "5672:5672" # AMQP port
       - "15672:15672" # Management UI
     volumes:
-      - ./rabbitmq_data:/var/lib/rabbitmq/
+      - rabbitmq_data:/var/lib/rabbitmq/
     environment:
-      RABBITMQ_DEFAULT_USER: user # Keep simple credentials for local dev
-      RABBITMQ_DEFAULT_PASS: password
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER:-user}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS:-password}
     healthcheck: # Ensure RabbitMQ is ready before services connect
       test: ["CMD", "rabbitmqctl", "status"]
       interval: 10s
       timeout: 5s
       retries: 5
     networks:
-      - notification_network # Connect to custom network
-  #---- Client 2--------------
-  
-  rabbitmqx:
-    image: rabbitmq:3.11-management
-    container_name: rabbitmq_notifierx
-    ports:
-      - "5673:5672" # AMQP port
-      - "15673:15672" # Management UI
-    volumes:
-      - ./rabbitmq_data:/var/lib/rabbitmq/
-    environment:
-      RABBITMQ_DEFAULT_USER: user # Keep simple credentials for local dev
-      RABBITMQ_DEFAULT_PASS: password
-    healthcheck: # Ensure RabbitMQ is ready before services connect
-      test: ["CMD", "rabbitmqctl", "status"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    networks:
-      - notification_network # Connect to custom network
+      - notification_network
+    restart: unless-stopped
+
   # --- Postgres Database ---
-  
   postgres:
     image: postgres:15
     container_name: postgres_notifier
@@ -49,7 +32,7 @@ services:
       POSTGRES_USER: ${POSTGRES_USER:-user}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
     ports:
-      - "${POSTGRES_PORT:-5433}:5432" # Map host port from env or default 5432
+      - "${POSTGRES_PORT:-5433}:5432" # Map host port from env or default 5433
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck: # Ensure DB is ready before services connect
@@ -58,14 +41,15 @@ services:
       timeout: 5s
       retries: 5
     networks:
-      - notification_network # Connect to custom network
+      - notification_network
+    restart: unless-stopped
 
   # --- Notification API Service ---
   notification-api:
     build:
-      context: ./notification-api # Path to Dockerfile context
+      context: ./notification-api
       dockerfile: Dockerfile
-      args: # Pass build-time args like NODE_ENV
+      args:
         NODE_ENV: ${NODE_ENV:-development}
     container_name: notification_api_service
     ports:
@@ -73,10 +57,9 @@ services:
     volumes:
       # Mount code for development (optional, remove for production builds)
       - ./notification-api/src:/usr/src/app/src
-      - ./notification-api/config:/usr/src/app/config # Mount config for easy changes
-      - ./notification-api/models:/usr/src/app/models # Mount models
-      - ./clientList.json:/usr/src/app/clientList.json
-      # Might need others like migrations if run from container
+      - ./notification-api/config:/usr/src/app/config
+      - ./notification-api/models:/usr/src/app/models
+      - ./clientList.json:/usr/src/clientList.json
     environment:
       # Pass runtime environment variables
       NODE_ENV: ${NODE_ENV:-development}
@@ -85,20 +68,28 @@ services:
       RABBITMQ_URL: amqp://${RABBITMQ_DEFAULT_USER:-user}:${RABBITMQ_DEFAULT_PASS:-password}@rabbitmq:5672
       RABBITMQ_EXCHANGE_NAME: notifications_exchange
       # Database connection details use service name 'postgres'
-      DB_HOST: postgres # Service name in docker network
+      DB_HOST: postgres
       POSTGRES_DB: ${POSTGRES_DB:-notifications_db}
       POSTGRES_USER: ${POSTGRES_USER:-user}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
-      # Add any other necessary env vars
-    depends_on: # Wait for dependencies to be healthy
+      DB_HOST_OVERRIDE: postgres
+      DB_PORT_OVERRIDE: 5432
+      RABBITMQ_HOST_OVERRIDE: rabbitmq
+      RABBITMQ_PORT_OVERRIDE: 5672
+    depends_on:
       rabbitmq:
         condition: service_healthy
       postgres:
         condition: service_healthy
     networks:
-      - notification_network # Connect to custom network
-    command: > # Use nodemon for development, node for production
-      sh -c "if [ \"$NODE_ENV\" = \"development\" ]; then npm install nodemon && npx sequelize-cli db:migrate && npx nodemon src/server.js; else npx sequelize-cli db:migrate && node src/server.js; fi"
+      - notification_network
+    restart: unless-stopped
+    command: >
+      sh -c "if [ \"$$NODE_ENV\" = \"development\" ]; then 
+        npm install nodemon && npx sequelize-cli db:migrate && npx nodemon src/server.js; 
+      else 
+        npx sequelize-cli db:migrate && node src/server.js; 
+      fi"
 
   # --- Slack Connector Service ---
   slack-connector:
@@ -108,10 +99,11 @@ services:
       args:
         NODE_ENV: ${NODE_ENV:-development}
     container_name: slack_connector_service
-    volumes: # Mount code for development
+    volumes:
       - ./slack-connector/src:/usr/src/app/src
-      - ./slack-connector/config:/usr/src/app/config # Needs config/models sync
-      - ./slack-connector/models:/usr/src/app/models # Needs config/models sync
+      - ./slack-connector/config:/usr/src/app/config
+      - ./slack-connector/models:/usr/src/app/models
+      - ./clientList.json:/usr/src/clientList.json
     environment:
       NODE_ENV: ${NODE_ENV:-development}
       # RabbitMQ connection
@@ -125,8 +117,12 @@ services:
       POSTGRES_USER: ${POSTGRES_USER:-user}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
       # Slack Token (IMPORTANT: Use Docker secrets or env file in production)
-      SLACK_BOT_TOKEN: ${SLACK_BOT_TOKEN} # Pass the token from your host environment or a .env file
+      SLACK_BOT_TOKEN: ${SLACK_BOT_TOKEN}
       MAX_PROCESSING_ATTEMPTS: 3
+      DB_HOST_OVERRIDE: postgres
+      DB_PORT_OVERRIDE: 5432
+      RABBITMQ_HOST_OVERRIDE: rabbitmq
+      RABBITMQ_PORT_OVERRIDE: 5672
     depends_on:
       rabbitmq:
         condition: service_healthy
@@ -134,21 +130,27 @@ services:
         condition: service_healthy
     networks:
       - notification_network
-    command: > # Use nodemon for development
-      sh -c "if [ \"$NODE_ENV\" = \"development\" ]; then npm install nodemon && npx nodemon src/connector.js; else node src/connector.js; fi"
+    restart: unless-stopped
+    command: >
+      sh -c "if [ \"$$NODE_ENV\" = \"development\" ]; then 
+        npm install nodemon && npx nodemon src/index.js; 
+      else 
+        node src/index.js; 
+      fi"
 
   # --- Email Connector Service ---
   email-connector:
     build:
       context: ./email-connector
+      dockerfile: Dockerfile
       args:
-        dockerfile: Dockerfile
         NODE_ENV: ${NODE_ENV:-development}
     container_name: email_connector_service
     volumes:
       - ./email-connector/src:/usr/src/app/src
       - ./email-connector/config:/usr/src/app/config
       - ./email-connector/models:/usr/src/app/models
+      - ./clientList.json:/usr/src/clientList.json
     environment:
       NODE_ENV: ${NODE_ENV:-development}
       # RabbitMQ connection
@@ -165,6 +167,10 @@ services:
       AWS_REGION: ${AWS_REGION}
       AWS_S3_BUCKET: ${AWS_S3_BUCKET}
       MAX_PROCESSING_ATTEMPTS: 3
+      DB_HOST_OVERRIDE: postgres
+      DB_PORT_OVERRIDE: 5432
+      RABBITMQ_HOST_OVERRIDE: rabbitmq
+      RABBITMQ_PORT_OVERRIDE: 5672
     depends_on:
       rabbitmq:
         condition: service_healthy
@@ -172,20 +178,27 @@ services:
         condition: service_healthy
     networks:
       - notification_network
+    restart: unless-stopped
     command: >
-      sh -c "if [ \"$NODE_ENV\" = \"development\" ]; then npm install nodemon && npx nodemon src/connector.js; else node src/connector.js; fi"
-# --- Email Connector Service ---
+      sh -c "if [ \"$$NODE_ENV\" = \"development\" ]; then 
+        npm install nodemon && npx nodemon src/index.js; 
+      else 
+        node src/index.js; 
+      fi"
+
+  # --- SMS Connector Service ---
   sms-connector:
     build:
       context: ./sms-connector
+      dockerfile: Dockerfile
       args:
-        dockerfile: Dockerfile
         NODE_ENV: ${NODE_ENV:-development}
     container_name: sms_connector_service
     volumes:
       - ./sms-connector/src:/usr/src/app/src
       - ./sms-connector/config:/usr/src/app/config
       - ./sms-connector/models:/usr/src/app/models
+      - ./clientList.json:/usr/src/clientList.json
     environment:
       NODE_ENV: ${NODE_ENV:-development}
       # RabbitMQ connection
@@ -202,6 +215,10 @@ services:
       AWS_REGION: ${AWS_REGION}
       AWS_S3_BUCKET: ${AWS_S3_BUCKET}
       MAX_PROCESSING_ATTEMPTS: 3
+      DB_HOST_OVERRIDE: postgres
+      DB_PORT_OVERRIDE: 5432
+      RABBITMQ_HOST_OVERRIDE: rabbitmq
+      RABBITMQ_PORT_OVERRIDE: 5672
     depends_on:
       rabbitmq:
         condition: service_healthy
@@ -209,11 +226,16 @@ services:
         condition: service_healthy
     networks:
       - notification_network
+    restart: unless-stopped
     command: >
-      sh -c "if [ \"$NODE_ENV\" = \"development\" ]; then npm install nodemon && npx nodemon src/connector.js; else node src/connector.js; fi"
+      sh -c "if [ \"$$NODE_ENV\" = \"development\" ]; then 
+        npm install nodemon && npx nodemon src/index.js; 
+      else 
+        node src/index.js; 
+      fi"
 # --- Volumes Definition ---
 volumes:
-  # rabbitmq_data:
+  rabbitmq_data:
   postgres_data:
 
 # --- Network Definition ---

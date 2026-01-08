@@ -129,13 +129,20 @@ if (cluster.isMaster) {
             // Handle worker exit and restart
             cluster.on('exit', (worker, code, signal) => {
                 logger.warn(`Master: Worker ${worker.process.pid} exited with code ${code} (signal: ${signal})`);
-                const port = worker.process.env.SERVER_PORT;
-                const workerClientList = worker.process.env.clientList;
+                // Get port and client list from the worker's env that we set during fork
+                const workerEnv = worker.process.env;
+                const port = workerEnv.SERVER_PORT;
+                const workerClientList = workerEnv.clientList;
+
                 if (port && workerClientList) {
                     logger.info(`Master: Restarting worker for port ${port} (clients: ${workerClientList})...`);
                     cluster.fork({ SERVER_PORT: port, clientList: workerClientList });
                 } else {
-                    logger.error('Master: Unable to restart worker - missing configuration');
+                    logger.error('Master: Unable to restart worker - missing configuration', {
+                        port,
+                        workerClientList,
+                        pid: worker.process.pid
+                    });
                 }
             });
 
@@ -152,7 +159,7 @@ if (cluster.isMaster) {
                 logger.error(`Worker: No configuration found for client`);
                 process.exit(1);
             }
-            
+
             clients = await loadClientConfigs();
             const clientConfigList = clients.filter(c => c.SERVER_PORT === +process.env.SERVER_PORT);
 
