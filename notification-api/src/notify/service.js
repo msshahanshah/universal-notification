@@ -34,7 +34,7 @@ const creatingNotificationRecord = async (clientId, service, destination, conten
         return {
             statusCode: 500,
             message: 'Failed to create notification record in database.',
-            error: dbError.message
+            error: dbError.error
         }
     });
 

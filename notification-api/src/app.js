@@ -7,6 +7,8 @@ const express = require('express');
 const logger = require('./logger');
 
 const notificationRouter = require('./notify/route');
+const deliveryStatusRouter = require('./logs-api/route');
+const logRouter = require('./logs-api/route');
 
 
 const app = express();
@@ -25,9 +27,10 @@ app.get('/health', (req, res) => {
     logger.debug('Health check endpoint hit', { clientId: process.env.CLIENT_ID });
     res.status(200).send('OK');
 });
-app.use(notificationRouter)
+app.use(notificationRouter);
+app.use(logRouter);
 /**
- * Route for creating and publishing a notification request.
+ * Route for creating and publishing a notification request.`
  * @route POST /notify
  * @group Notification - Operations related to sending notifications
  * @param {string} service.body.required - The service to use for sending the notification (e.g., 'slack', 'email', 'telegram').

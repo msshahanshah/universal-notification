@@ -70,7 +70,7 @@ module.exports = (config) => {
         isConnecting = true;
 
         try {
-            const url = config.url||process.env.RABBITMQ_URL;
+            const url = config.url || process.env.RABBITMQ_URL;
             connection = await amqp.connect(url, { heartbeat: 30, timeout: 5000 });
             channel = await connection.createConfirmChannel();
 
@@ -154,6 +154,8 @@ module.exports = (config) => {
 
             const success = channel.publish(
                 config.exchange.name,
+                // config.services.exchange.name,
+                // "notifications_exchange",
                 service.ROUTING_KEY,
                 Buffer.from(JSON.stringify(message)),
                 { persistent: true }
@@ -162,6 +164,7 @@ module.exports = (config) => {
             await channel.waitForConfirms();
             return success;
         } catch (error) {
+            console.log(error);
             throw new RabbitMQError('Message publishing failed', {
                 error: error.message,
                 serviceType,
