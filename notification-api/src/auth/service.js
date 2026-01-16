@@ -1,27 +1,38 @@
-const { User } = require("../../models");
-
 const {
-  generateAccessAndRefreshToken,
-  generateAccessToken,
-  verifyRefreshToken,
+  verifyToken,
+  generateTokens,
+  TOKEN_TYPES,
 } = require("../../helpers/jwt.helper");
-const { comparePassword } = require("../../helpers/hashing.helper");
+const bcrypt = require("bcrypt");
+const globalDatabaseManager = require("../utillity/mainDatabase");
 
 const login = async (username, password) => {
   try {
-    const user = await User.findOne({
-      where: { username },
+    username = username.toLowerCase();
+    const globalDb = await globalDatabaseManager.getModels();
+
+    const user = await globalDb.User.findOne({
+      where: { username: username },
     });
 
     if (!user) {
-      throw new { message: "Invalid username or password", statusCode: 401 }();
+      throw { message: "Invalid username or password", statusCode: 401 };
     }
 
     // compare password
+    const isCorrect = await bcrypt.compare(password, user.password);
+    if (!isCorrect) {
+      throw {
+        message: "Incorrect username or password",
+        statusCode: 401,
+      };
+    }
 
     const payload = { id: user.id, username: user.username };
-    const { accessToken, refreshToken } =
-      generateAccessAndRefreshToken(payload);
+    const { accessToken, refreshToken } = generateTokens(payload, {
+      access: true,
+      refresh: true,
+    });
 
     return {
       accessToken,
@@ -34,14 +45,27 @@ const login = async (username, password) => {
 
 const generateNewAccessToken = async (refreshToken) => {
   try {
-    const payload = verifyRefreshToken(refreshToken);
+    const payload = verifyToken(refreshToken, TOKEN_TYPES.REFRESH);
+
     if (!payload) {
-      throw new { error: "Unauthorized", statusCode: 401 }();
+      throw { error: "Unauthorized", statusCode: 401 };
     }
 
-    return { accessToken: generateAccessToken(payload) };
+    const globalDb = await globalDatabaseManager.getModels();
+
+    const user = await globalDb.User.findOne({
+      where: { username: payload.username },
+    });
+
+    if (!user) {
+      throw { message: "user no longer exists", statusCode: 404 };
+    }
+
+    const newPayload = { id: user.id, username: user.username };
+    const token = generateTokens(newPayload, { access: true });
+    return token.accessToken;
   } catch (error) {
-    throw err;
+    throw { message: "invalid refresh token", statusCode: 401 };
   }
 };
 

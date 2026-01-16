@@ -1,36 +1,25 @@
 "use strict";
 
+const generatePassword = require("../helpers/generatePassword.helper");
+
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up(queryInterface, Sequelize) {
-    const defaultUsers = [
-      {
-        username: 'admin@gkmit',
-        email: "dummy@gkmit.com",
-        password: "",
-      },
-      {
-        email: "dummy@accel.com",
-        password: "",
-      },
-    ];
-    /**
-     * Add seed commands here.
-     *
-     * Example:
-     * await queryInterface.bulkInsert('People', [{
-     *   name: 'John Doe',
-     *   isBetaMember: false
-     * }], {});
-     */
+    const defaultUsername = ["gkmit", "accel"];
+
+    const defaultUsers = await Promise.all(
+      defaultUsername.map(async (user) => {
+        return {
+          username: user,
+          password: await generatePassword(user),
+        };
+      })
+    );
+
+    await queryInterface.bulkInsert("users", defaultUsers);
   },
 
   async down(queryInterface, Sequelize) {
-    /**
-     * Add commands to revert seed here.
-     *
-     * Example:
-     * await queryInterface.bulkDelete('People', null, {});
-     */
+    await queryInterface.bulkDelete("users");
   },
 };

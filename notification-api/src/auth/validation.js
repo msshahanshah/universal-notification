@@ -1,6 +1,11 @@
 const Joi = require("joi");
 
-const loginValidateSchema = Joi.object({
+const baseOptions = {
+  abortEarly: false,
+  stripUnknown: true,
+};
+
+const loginSchema = Joi.object({
   username: Joi.string().trim().min(3).max(30).required().messages({
     "string.base": "Username must be a string",
     "string.empty": "Username cannot be empty",
@@ -18,30 +23,32 @@ const loginValidateSchema = Joi.object({
   }),
 })
   .required()
-  .unknown(false)
-  .messages({
-    "object.base": "Request body must be a valid JSON object",
-    "object.unknown": "Unknown field is not allowed",
-  });
+  .unknown(false);
 
-module.exports = loginValidateSchema;
+const refreshSchema = Joi.object({
+  refreshToken: Joi.string().trim().required().messages({
+    "string.empty": "Refresh token cannot be empty",
+    "any.required": "Refresh token is required",
+  }),
+})
+  .required()
+  .unknown(false);
 
-// Middleware to validate the request
-const loginValidateRequest = (req, res, next) => {
-  // if (!req.body || Object.keys(req.body).length === 0) {
-  //   return res.status(400).json({
-  //     message: "Request body is required",
-  //   });
-  // }
-  const { error } = loginValidateSchema.validate(req.body, {
-    abortEarly: false,
-  });
+const validateRequest = (schema) => (req, res, next) => {
+  const { error, value } = schema.validate(req.body, baseOptions);
+
   if (error) {
-    return res
-      .status(400)
-      .json({ errors: error.details.map((err) => err.message) });
+    return res.status(400).json({
+      errors: error.details.map((err) => err.message),
+    });
   }
 
+  // sanitized payload
+  req.body = value;
   next();
 };
-module.exports = loginValidateRequest;
+
+module.exports = {
+  loginValidateRequest: validateRequest(loginSchema),
+  refreshValidateRequest: validateRequest(refreshSchema),
+};

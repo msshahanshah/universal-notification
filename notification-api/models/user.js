@@ -46,7 +46,7 @@ module.exports = (sequelize, schemaName) => {
       timestamps: true, // Enable createdAt and updatedAt fields
       underscored: true,
       tableName: "users", // Explicit table name for clarity
-      schema: schemaName.toLowerCase(), // Use lowercase schema name
+      schema: "public", // Use lowercase schema name
     }
   );
 

@@ -1,4 +1,4 @@
-'use strict';
+"use strict";
 
 /**
  * @typedef {import('sequelize').QueryInterface} QueryInterface
@@ -11,14 +11,14 @@
  */
 module.exports = {
   /**
-   * @param {QueryInterface} queryInterface 
-   * @param {Sequelize} Sequelize 
+   * @param {QueryInterface} queryInterface
+   * @param {Sequelize} Sequelize
    */
-  async up(queryInterface, Sequelize,schemaName) {
-    const tableName={
-      tableName: 'notifications',
+  async up(queryInterface, Sequelize, schemaName) {
+    const tableName = {
+      tableName: "notifications",
       schema: schemaName,
-    }
+    };
     await queryInterface.createTable(tableName, {
       id: {
         type: Sequelize.INTEGER,
@@ -26,38 +26,38 @@ module.exports = {
         allowNull: false,
         autoIncrement: true,
       },
-      messageId: { 
+      messageId: {
         type: Sequelize.UUID,
         allowNull: false,
         unique: true,
       },
-      service: { 
+      service: {
         type: Sequelize.STRING,
         allowNull: false,
       },
-      destination: { 
+      destination: {
         type: Sequelize.STRING,
         allowNull: false,
       },
-      content: { 
+      content: {
         type: Sequelize.JSONB,
         allowNull: false,
       },
-      status: { 
+      status: {
         type: Sequelize.STRING,
         allowNull: false,
-        defaultValue: 'pending',
+        defaultValue: "pending",
       },
-      attempts: { 
+      attempts: {
         type: Sequelize.INTEGER,
         allowNull: false,
         defaultValue: 0,
       },
-      connectorResponse: { 
+      connectorResponse: {
         type: Sequelize.TEXT,
         allowNull: true,
       },
-      templateId: { 
+      templateId: {
         type: Sequelize.STRING,
         allowNull: true,
       },
@@ -74,16 +74,16 @@ module.exports = {
     });
 
     // Add indexes for better query performance
-    await queryInterface.addIndex(tableName, ['messageId'], { unique: true });
-    await queryInterface.addIndex(tableName, ['status']);
-    await queryInterface.addIndex(tableName, ['service', 'status']);
+    await queryInterface.addIndex(tableName, ["messageId"], { unique: true });
+    await queryInterface.addIndex(tableName, ["status"]);
+    await queryInterface.addIndex(tableName, ["service", "status"]);
   },
 
   /**
-   * @param {QueryInterface} queryInterface 
-   * @param {Sequelize} Sequelize 
+   * @param {QueryInterface} queryInterface
+   * @param {Sequelize} Sequelize
    */
   async down(queryInterface, Sequelize) {
-    await queryInterface.dropTable(tableName);
-  }
+    await queryInterface.dropTable("notifications");
+  },
 };

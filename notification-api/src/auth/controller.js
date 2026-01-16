@@ -21,9 +21,18 @@ const login = async (req, res) => {
 
 const refresh = async (req, res) => {
   try {
-    return await authService.generateNewAccessToken(req.body, refreshToken);
+    const { refreshToken } = req.body;
+    const newAccessToken = await authService.generateNewAccessToken(
+      refreshToken
+    );
+    return res.status(200).json({
+      message: "refresh successful",
+      accessToken: newAccessToken,
+    });
   } catch (err) {
-    throw err;
+    return res.status(err.statusCode || 500).json({
+      message: err.message || "Internal Server Error",
+    });
   }
 };
 

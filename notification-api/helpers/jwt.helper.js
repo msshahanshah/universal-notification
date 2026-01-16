@@ -1,57 +1,54 @@
 const jwt = require("jsonwebtoken");
+require("dotenv").config();
 
-const dotenv = require("dotenv");
-dotenv.config();
-
-const generateAccessToken = (payload) => {
-  try {
-    return jwt.sign(payload, process.env.ACCESS_TOKEN_SECRET, {
-      expiresIn: process.env.ACCESS_TOKEN_TIME,
-    });
-  } catch (error) {
-    throw error;
-  }
+const TOKEN_TYPES = {
+  ACCESS: "access",
+  REFRESH: "refresh",
 };
 
-const generateRefreshToken = (payload) => {
-  try {
-    return jwt.sign(payload, process.env.REFRESH_TOKEN_SECRET, {
-      expiresIn: process.env.REFRESH_TOKEN_TIME,
-    });
-  } catch (error) {
-    throw error;
-  }
+const tokenConfig = {
+  [TOKEN_TYPES.ACCESS]: {
+    secret: process.env.ACCESS_TOKEN_SECRET,
+    expiresIn: process.env.ACCESS_TOKEN_TIME,
+  },
+  [TOKEN_TYPES.REFRESH]: {
+    secret: process.env.REFRESH_TOKEN_SECRET,
+    expiresIn: process.env.REFRESH_TOKEN_TIME,
+  },
 };
 
-const verifyAccessToken = (token) => {
-  try {
-    return jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
-  } catch (error) {
-    throw error;
-  }
+const signToken = (payload, type) => {
+  const config = tokenConfig[type];
+  if (!config) throw new Error("Invalid token type");
+
+  return jwt.sign(payload, config.secret, {
+    expiresIn: config.expiresIn,
+  });
 };
 
-const verifyRefreshToken = (token) => {
-  try {
-    return jwt.verify(token, process.env.REFRESH_TOKEN_SECRET);
-  } catch (error) {
-    throw error;
-  }
+const verifyToken = (token, type) => {
+  const config = tokenConfig[type];
+  if (!config) throw new Error("Invalid token type");
+
+  return jwt.verify(token, config.secret);
 };
 
-const generateAccessAndRefreshToken = (payload) => {
-  try {
-    const accessToken = generateAccessToken(payload);
-    const refreshToken = generateRefreshToken(payload);
-    return { accessToken, refreshToken };
-  } catch (error) {
-    throw error;
+const generateTokens = (payload, options = { access: true, refresh: true }) => {
+  const tokens = {};
+
+  if (options.access) {
+    tokens.accessToken = signToken(payload, TOKEN_TYPES.ACCESS);
   }
+
+  if (options.refresh) {
+    tokens.refreshToken = signToken(payload, TOKEN_TYPES.REFRESH);
+  }
+  return tokens;
 };
+
 module.exports = {
-  generateAccessToken,
-  generateRefreshToken,
-  verifyAccessToken,
-  verifyRefreshToken,
-  generateAccessAndRefreshToken,
+  TOKEN_TYPES,
+  signToken,
+  verifyToken,
+  generateTokens,
 };
