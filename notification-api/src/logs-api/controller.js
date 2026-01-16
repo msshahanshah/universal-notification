@@ -1,4 +1,4 @@
-const viewDeliveryStatus = require("./service");
+const { viewDeliveryStatus, viewMessageLogs } = require("./service");
 
 const deliveryStatus = async (req, res, next) => {
     try {
@@ -24,4 +24,43 @@ const deliveryStatus = async (req, res, next) => {
     }
 }
 
-module.exports = deliveryStatus;
+const messageLogs = async (req, res) => {
+    try {
+        // const { service, status, page, limit } = req.validated.query;
+
+        const {
+            service = null,
+            status = null,
+            page = 1,
+            limit = 10,
+        } = req.validated.query;
+
+        const idClient = req.header('X-Client-Id');
+        console.log(idClient);
+
+        const { data, totalPages } = await viewMessageLogs(idClient, service, status, page, limit);
+        return res.status(200).send({
+            status: "success",
+            message: "Data fetched successfully",
+            data,
+            pagination: {
+                page,
+                limit,
+                totalPages
+            }
+        });
+    } catch (error) {
+        console.log(error);
+        if (error.message === 'Not authorized') {
+            return res.status(404).send({
+                message: error.message
+            })
+        }
+
+        return res.status(500).send({
+            message: "Internal Server Error"
+        })
+    }
+}
+
+module.exports = { deliveryStatus, messageLogs };
