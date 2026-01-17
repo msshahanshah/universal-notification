@@ -9,8 +9,10 @@ const deliveryStatus = async (req, res, next) => {
 
         res.status(200).json({
             status: "success",
-            message: "Data fetch successfully",
-            data: result
+            data: {
+                messageId : result.messageId,
+                deliveryStatus: result.status
+            }
         })
     } catch (error) {
         if (error.parent?.code === "22P02") {
