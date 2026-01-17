@@ -1,6 +1,6 @@
 "use strict";
 
-const generatePassword = require("../helpers/generatePassword.helper");
+const defaultPassword = require("../helpers/defaultPassword.helper");
 
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
@@ -11,7 +11,7 @@ module.exports = {
       defaultUsername.map(async (user) => {
         return {
           username: user,
-          password: await generatePassword(user),
+          password: await defaultPassword(user),
         };
       })
     );
