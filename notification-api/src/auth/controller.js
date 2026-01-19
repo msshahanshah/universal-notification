@@ -10,8 +10,10 @@ const login = async (req, res) => {
     return res.status(200).json({
       success: true,
       message: "login successful",
-      accessToken,
-      refreshToken,
+      data: {
+        accessToken,
+        refreshToken,
+      },
     });
   } catch (err) {
     return res.status(err.statusCode || 500).json({
@@ -30,7 +32,9 @@ const refresh = async (req, res) => {
     return res.status(200).json({
       success: true,
       message: "refresh successful",
-      accessToken: newAccessToken,
+      data: {
+        accessToken: newAccessToken,
+      },
     });
   } catch (err) {
     return res.status(err.statusCode || 500).json({

@@ -49,7 +49,6 @@ const validateSchema = Joi.object({
   destination: Joi.string()
     .custom((value, helpers) => {
       const service = helpers.state.ancestors[0].service;
-      console.log(value, service);
       // Regex for single or comma-separated values (alphanumeric with optional underscores)
       const baseRegex = /^(\w+)(,\w+)*$/;
 

@@ -12,7 +12,6 @@ const {
 } = require("./service");
 
 const notify = async (req, res) => {
-  console.log(req, "here");
   const { service, destination, message, subject, body, fromEmail } = req.body;
   let content = {};
   if (message) {
@@ -24,12 +23,12 @@ const notify = async (req, res) => {
   }
 
   const clientID = req.headers["x-client-id"];
-  console.log(clientID);
+
   const notificationRecord = await creatingNotificationRecord(
     clientID,
     service,
     destination,
-    content,
+    content
   );
   if (notificationRecord.statusCode) {
     return res.status(notificationRecord.statusCode).json({
