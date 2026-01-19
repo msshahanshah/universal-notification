@@ -1,5 +1,3 @@
-const { error } = require('winston');
-const { off } = require('../app');
 const { serializeLogs } = require('./serialization');
 
 const viewDeliveryStatus = async (messageId, clientId) => {

@@ -1,5 +1,4 @@
 const Joi = require('joi');
-const { query } = require('winston');
 
 const validateLogsSchema = Joi.object({
   service: Joi.string().valid('email', 'slack', 'sms').optional().messages({
