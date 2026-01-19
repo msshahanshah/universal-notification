@@ -86,9 +86,9 @@ services:
     restart: unless-stopped
     command: >
       sh -c "if [ \"$$NODE_ENV\" = \"development\" ]; then 
-        npm install nodemon && npx sequelize-cli db:migrate && npx nodemon src/server.js; 
+        npm install nodemon && npm run migrate && npx nodemon src/server.js; 
       else 
-        npx sequelize-cli db:migrate && node src/server.js; 
+        npm run migrate && node src/server.js; 
       fi"
 
   # --- Slack Connector Service ---
