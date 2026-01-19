@@ -126,6 +126,8 @@ dist
 
 # Stores VSCode versions used for testing VSCode extensions
 .vscode-test
+.vscode
+
 
 # yarn v2
 .yarn/cache
@@ -138,3 +140,9 @@ rabbitmq_data
 
 .DS_Store
 Docker.raw
+
+# package-lock.json
+package-lock.json
+
+
+default_credentials.txt

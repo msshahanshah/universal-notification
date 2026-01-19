@@ -1,4 +1,4 @@
-const { serializeLogs } = require('./serialization');
+const { serializeLogs } = require("./serialization");
 
 const viewDeliveryStatus = async (messageId, clientId) => {
   let dbConnect = await global.connectionManager.getModels(clientId);
@@ -7,7 +7,7 @@ const viewDeliveryStatus = async (messageId, clientId) => {
   });
 
   if (!data) {
-    throw new Error('Message not found');
+    throw new Error("Message not found");
   }
 
   return {
@@ -27,7 +27,7 @@ const viewMessageLogs = async (idClient, service, status, page, limit) => {
   }
 
   if (!idClient) {
-    throw new Error('Not authorized');
+    throw new Error("Not authorized");
   }
 
   let dbConnect = await global.connectionManager.getModels(idClient);
