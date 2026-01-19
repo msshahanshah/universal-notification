@@ -12,4 +12,4 @@ const serializeLogs = (rows) => {
   });
 };
 
-module.exports = serializeLogs;
+module.exports = {serializeLogs};
