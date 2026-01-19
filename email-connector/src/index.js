@@ -23,8 +23,8 @@ if (cluster.isMaster) {
             cluster.on('exit', (worker, code, signal) => {
                 logger.warn(`Master: Worker ${worker.process.pid} exited with code ${code} (signal: ${signal})`);
                 // Retrieve the original fork parameters from the worker
-                const port = worker.process.env.SERVER_PORT;
-                const workerClientList = worker.process.env.clientList;
+                const port = worker.SERVER_PORT;
+                const workerClientList = worker.clientList;
                 if (port && workerClientList) {
                     logger.info(`Master: Restarting worker for port ${port} (clients: ${workerClientList})...`);
                     cluster.fork({ SERVER_PORT: port, clientList: workerClientList });

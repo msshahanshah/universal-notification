@@ -3,15 +3,17 @@
  * Main application file for the Notification API.
  * Sets up the Express server, defines routes, and handles request logic.
  */
-const express = require('express');
-const logger = require('./logger');
+const express = require("express");
+const logger = require("./logger");
 
-const notificationRouter = require('./notify/route');
+const notificationRouter = require("./notify/route");
+const logRouter = require("./logs-api/route");
 
+const authRouter = require("./auth/route");
 
 const app = express();
 
-// Middleware
+// Global Middlewares
 app.use(express.json());
 
 /**
@@ -21,13 +23,19 @@ app.use(express.json());
  * @returns {object} 200 - An indicator that the API is healthy.
  * @returns {Error}  default - Unexpected error
  */
-app.get('/health', (req, res) => {
-    logger.debug('Health check endpoint hit', { clientId: process.env.CLIENT_ID });
-    res.status(200).send('OK');
+app.get("/health", (req, res) => {
+  console.log("reqarfg");
+  logger.debug("Health check endpoint hit", {
+    clientId: process.env.CLIENT_ID,
+  });
+  res.status(200).send("OK");
 });
-app.use(notificationRouter)
+app.use(notificationRouter);
+app.use(logRouter);
+app.use(authRouter);
+
 /**
- * Route for creating and publishing a notification request.
+ * Route for creating and publishing a notification request.`
  * @route POST /notify
  * @group Notification - Operations related to sending notifications
  * @param {string} service.body.required - The service to use for sending the notification (e.g., 'slack', 'email', 'telegram').
@@ -41,7 +49,6 @@ app.use(notificationRouter)
  * @returns {object} 500 - Internal server error, failed to queue notification.
  */
 
-
 // Update Error Handling Middleware
 /**
  * Error handling middleware.
@@ -51,8 +58,13 @@ app.use(notificationRouter)
  * @param {function} next - The next middleware function.
  */
 app.use((err, req, res, next) => {
-    logger.error('Unhandled error:', { error: err.message, stack: err.stack, url: req.originalUrl, method: req.method });
-    res.status(500).send('Something broke!');
+  logger.error("Unhandled error:", {
+    error: err.message,
+    stack: err.stack,
+    url: req.originalUrl,
+    method: req.method,
+  });
+  res.status(500).send("Something broke!");
 });
 
 module.exports = app;

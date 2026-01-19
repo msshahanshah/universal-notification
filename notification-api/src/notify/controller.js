@@ -6,43 +6,49 @@
  * @property {string} target - The target for the notification.
  */
 
-const { creatingNotificationRecord, publishingNotificationRequest } = require("./service");
+const {
+  creatingNotificationRecord,
+  publishingNotificationRequest,
+} = require("./service");
 
 const notify = async (req, res) => {
-    const { service, destination, message, subject, body,fromEmail } = req.body;
-    let content = {}
-    if(message){
-        content.message=message
-    }else {
-        content.subject=subject
-        content.body=body
-        content.fromEmail=fromEmail
-    }
+  console.log(req, "here");
+  const { service, destination, message, subject, body, fromEmail } = req.body;
+  let content = {};
+  if (message) {
+    content.message = message;
+  } else {
+    content.subject = subject;
+    content.body = body;
+    content.fromEmail = fromEmail;
+  }
 
-    const clientID = req.headers['x-client-id'];
-    
-    const notificationRecord = await creatingNotificationRecord(clientID, service, destination, content)
-    if (notificationRecord.statusCode) {
-        return res.status(notificationRecord.statusCode).json({
-            error: notificationRecord.message,
-            messageId: notificationRecord.messageId,
-        });
-    }
-    notificationRecord.clientId=clientID
-    let result = await publishingNotificationRequest(notificationRecord)
-
-    return res.status(202).json({
-        status: 'accepted',
-        message: `Notification request accepted ${result ? 'and queued.' : ''}`,
-        messageId: notificationRecord.messageId, // Return the ID to the client
+  const clientID = req.headers["x-client-id"];
+  console.log(clientID);
+  const notificationRecord = await creatingNotificationRecord(
+    clientID,
+    service,
+    destination,
+    content,
+  );
+  if (notificationRecord.statusCode) {
+    return res.status(notificationRecord.statusCode).json({
+      error: notificationRecord.message,
+      messageId: notificationRecord.messageId,
     });
-}
+  }
+  notificationRecord.clientId = clientID;
+  let result = await publishingNotificationRequest(notificationRecord);
+
+  return res.status(202).json({
+    status: "accepted",
+    message: `Notification request accepted ${result ? "and queued." : ""}`,
+    messageId: notificationRecord.messageId, // Return the ID to the client
+  });
+};
 module.exports = notify;
 
-
 // app.post('/notify', async (req, res) => {
-
-
 
 //     // Validation
 //     if (!service || !targetChannel || !message) {
@@ -77,12 +83,7 @@ module.exports = notify;
 //         });
 //     }
 
-
-
-
-
 //     try {
-
 
 //         res.status(202).json({
 //             status: 'accepted',
