@@ -35,8 +35,8 @@ module.exports = {
       const defaultUsers = await Promise.all(
         defaultUsername.map(async (user) => {
           return {
-            username: `${user}@admin`,
-            password: await defaultPassword(user),
+            username: `admin@${user}`,
+            password: await defaultPassword(`admin@${user}`),
           };
         })
       );
