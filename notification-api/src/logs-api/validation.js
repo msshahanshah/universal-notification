@@ -44,4 +44,4 @@ const validateLogsQuery = (schema) => (req, res, next) => {
   next();
 };
 
-module.exports = { validateLogsQuery, validateLogsSchema };
+module.exports = { validateLogsQuery: validateLogsQuery(validateLogsSchema) };
