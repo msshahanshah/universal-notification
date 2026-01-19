@@ -1,4 +1,5 @@
 const Joi = require('joi');
+const { query } = require('winston');
 
 const validateLogsSchema = Joi.object({
   service: Joi.string().valid('email', 'slack', 'sms').optional().messages({
@@ -29,18 +30,16 @@ const validateLogsSchema = Joi.object({
 const validateLogsQuery = (schema) => (req, res, next) => {
   const { error, value } = schema.validate(req.query, {
     abortEarly: false,
-    convert: true, // convert strings to numbers
+    convert: true,
   });
 
   if (error) {
+    const err = error.details[0].message;
     return res.status(400).json({
-      errors: error.details.map((d) => d.message),
+      message: err,
     });
   }
-
-  // Ensure req.validated object exists
-  req.validated = req.validated || {};
-  req.validated.query = value;
+  req.query = value;
 
   next();
 };
