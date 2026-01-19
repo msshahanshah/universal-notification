@@ -35,7 +35,7 @@ const validateLogsQuery = (schema) => (req, res, next) => {
   if (error) {
     const err = error.details[0].message;
     return res.status(400).json({
-      success: false
+      success: false,
       message: err,
     });
   }
