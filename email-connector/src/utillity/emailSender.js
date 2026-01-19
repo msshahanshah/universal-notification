@@ -1,7 +1,6 @@
 const nodemailer = require('nodemailer');
 const sgMail = require('@sendgrid/mail');
 const Mailgun = require('mailgun.js');
-const formData = require('form-data');
 const logger = require('../logger');
 
 // Email service configuration
@@ -35,9 +34,9 @@ class EmailSender {
 
   async setupAmazonSES() {
     const { USER_NAME, PASSWORD, REGION } = this.clientConfig.AWS;
-    const sesHost = `email-smtp.${REGION || 'us-east-1'}.amazonaws.com`;
+    const sesHost = `email-smtp.${REGION || 'ap-south-1'}.amazonaws.com`;
 
-    this.transporter = nodemailer.createTransport({
+    const awsTransporter = nodemailer.createTransport({
       host: sesHost,
       port: 465,
       secure: true,
@@ -46,6 +45,26 @@ class EmailSender {
         pass: PASSWORD,
       },
     });
+
+    // Standardize the interface so it matches SendGrid/Mailgun
+    this.transporter = {
+      sendMailAWS: async (mailOptions) => {
+        const info = {
+          from: mailOptions.from,
+          to: mailOptions.to,
+          subject: mailOptions.subject,
+          text: mailOptions.text,
+          html: mailOptions.html,
+        };
+        try {
+          return awsTransporter.sendMail(mailOptions);
+        } catch (err) {
+          console.error('AWS ses mail send failed:');
+          throw err;
+        }
+      },
+    };
+
     this.provider = 'AmazonSES';
   }
 
@@ -78,7 +97,7 @@ class EmailSender {
 
     const mg = mailgun.client({
       username: 'api', // always "api" for Mailgun
-      key: mgConfig.API_KEY, // api key from client json 
+      key: mgConfig.API_KEY, // api key from client json
       url: 'https://api.mailgun.net', // this is url for US region
     });
 
@@ -151,7 +170,13 @@ class EmailSender {
     };
 
     try {
-      const result = await this.transporter.sendMail(mailOptions);
+      const result = null;
+      console.log(this.provider);
+      if (this.provider === 'AmazonSES') {
+        const result = await this.transporter.sendMailAWS(mailOptions);
+      } else {
+        const result = await this.transporter.sendMail(mailOptions);
+      }
       logger.info(`Email sent via ${this.provider}`, { to, subject });
       return result;
     } catch (error) {
