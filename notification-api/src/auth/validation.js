@@ -39,11 +39,10 @@ const validateRequest = (schema) => (req, res, next) => {
 
   if (error) {
     return res.status(400).json({
-      errors: error.details.map((err) => err.message),
+      message: error.details[0].message,
     });
   }
 
-  // sanitized payload
   req.body = value;
   next();
 };
