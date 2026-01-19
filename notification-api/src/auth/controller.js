@@ -8,12 +8,14 @@ const login = async (req, res) => {
       password
     );
     return res.status(200).json({
+      success: true,
       message: "login successful",
       accessToken,
       refreshToken,
     });
   } catch (err) {
     return res.status(err.statusCode || 500).json({
+      success: false,
       message: err.message || "Internal Server Error",
     });
   }
@@ -26,11 +28,13 @@ const refresh = async (req, res) => {
       refreshToken
     );
     return res.status(200).json({
+      success: true,
       message: "refresh successful",
       accessToken: newAccessToken,
     });
   } catch (err) {
     return res.status(err.statusCode || 500).json({
+      success: false,
       message: err.message || "Internal Server Error",
     });
   }

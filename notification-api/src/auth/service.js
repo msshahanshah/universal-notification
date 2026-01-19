@@ -48,7 +48,7 @@ const generateNewAccessToken = async (refreshToken) => {
     const payload = verifyToken(refreshToken, TOKEN_TYPES.REFRESH);
 
     if (!payload) {
-      throw { error: "Unauthorized", statusCode: 401 };
+      throw { message: "Unauthorized", statusCode: 401 };
     }
 
     const globalDb = await globalDatabaseManager.getModels();

@@ -7,10 +7,8 @@ const express = require("express");
 const logger = require("./logger");
 
 const notificationRouter = require("./notify/route");
-const deliveryStatusRouter = require("./logs-api/route");
 const logRouter = require("./logs-api/route");
 
-const notificationRouter = require("./notify/route");
 const authRouter = require("./auth/route");
 
 const app = express();
