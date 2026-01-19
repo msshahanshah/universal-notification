@@ -15,7 +15,12 @@ module.exports = {
    * @param {Sequelize} Sequelize
    */
   async up(queryInterface, Sequelize, schemaName) {
-    await queryInterface.createTable("users", {
+    const tableSchema = "public";
+    const tableName = {
+      tableName: "users",
+      schema: tableSchema,
+    };
+    await queryInterface.createTable(tableName, {
       id: {
         type: Sequelize.INTEGER,
         primaryKey: true,

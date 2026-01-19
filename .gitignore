@@ -140,3 +140,9 @@ rabbitmq_data
 
 .DS_Store
 Docker.raw
+
+# package-lock.json
+package-lock.json
+
+
+default_credentials.txt
