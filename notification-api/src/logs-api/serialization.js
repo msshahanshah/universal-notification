@@ -13,7 +13,7 @@ const serializeLogs = (rows) => {
       message: log.content?.message || null,
       status: log.status,
       attempts: log.attempts,
-      timestamp: log.createdAt
+      messageDate: log.createdAt
     };
   });
 };
