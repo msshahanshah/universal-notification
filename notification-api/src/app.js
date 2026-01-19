@@ -13,7 +13,7 @@ const authRouter = require("./auth/route");
 
 const app = express();
 
-// Middleware
+// Global Middlewares
 app.use(express.json());
 
 /**

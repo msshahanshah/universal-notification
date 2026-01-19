@@ -26,11 +26,11 @@ async function startServer(clientConfigList) {
     for (const clientItem of clientConfigList) {
       await connectionManager.initializeSequelize(
         clientItem.DBCONFIG,
-        clientItem.ID,
+        clientItem.ID
       );
       await connectionManager.initializeRabbitMQ(
         clientItem.RABBITMQ,
-        clientItem.ID,
+        clientItem.ID
       );
     }
     global.connectionManager = connectionManager;
@@ -38,7 +38,7 @@ async function startServer(clientConfigList) {
     // Start HTTP Server
     server = app.listen(process.env.SERVER_PORT, () => {
       logger.info(
-        `[${process.env.clientList}] Notification API listening on port ${process.env.SERVER_PORT} in ${config.env} mode`,
+        `[${process.env.clientList}] Notification API listening on port ${process.env.SERVER_PORT} in ${config.env} mode`
       );
     });
     return server;
@@ -74,7 +74,7 @@ async function shutdown(exitCode = 0, clientId = "unknown", server) {
         });
         setTimeout(
           () => reject(new Error("HTTP server close timeout")),
-          10000,
+          10000
         ).unref();
       } else {
         logger.info(`[${clientId}] HTTP server already closed.`);
@@ -90,7 +90,7 @@ async function shutdown(exitCode = 0, clientId = "unknown", server) {
   }
 
   logger.info(
-    `[${clientId}] Shutdown complete. Exiting with code ${exitCode}.`,
+    `[${clientId}] Shutdown complete. Exiting with code ${exitCode}.`
   );
   process.exit(exitCode);
 }
@@ -110,6 +110,7 @@ if (cluster.isMaster) {
         const proxy = httpProxy.createProxyServer({});
 
         const masterApp = express();
+        masterApp.use(require("cors")());
 
         masterApp.use((req, res, next) => {
           const clientId = req.headers["x-client-id"];
@@ -122,7 +123,7 @@ if (cluster.isMaster) {
           }
 
           logger.info(
-            `Routing request for client ${clientId} to port ${client.SERVER_PORT}`,
+            `Routing request for client ${clientId} to port ${client.SERVER_PORT}`
           );
           proxy.web(
             req,
@@ -131,7 +132,7 @@ if (cluster.isMaster) {
             (err) => {
               logger.error("Proxy error", { error: err.message });
               res.status(500).json({ error: "Failed to route request" });
-            },
+            }
           );
         });
 
@@ -153,14 +154,14 @@ if (cluster.isMaster) {
           .join(",");
         const worker = cluster.fork({ SERVER_PORT: port, clientList });
         logger.info(
-          `Master: Forked worker for client ${clientList} (PID: ${worker.process.pid})`,
+          `Master: Forked worker for client ${clientList} (PID: ${worker.process.pid})`
         );
       });
 
       // Handle worker exit and restart
       cluster.on("exit", (worker, code, signal) => {
         logger.warn(
-          `Master: Worker ${worker.process.pid} exited with code ${code} (signal: ${signal})`,
+          `Master: Worker ${worker.process.pid} exited with code ${code} (signal: ${signal})`
         );
         // Get port and client list from the worker's env that we set during fork
         // const workerEnv = worker.process.env;
@@ -169,7 +170,7 @@ if (cluster.isMaster) {
 
         if (port && workerClientList) {
           logger.info(
-            `Master: Restarting worker for port ${port} (clients: ${workerClientList})...`,
+            `Master: Restarting worker for port ${port} (clients: ${workerClientList})...`
           );
           cluster.fork({ SERVER_PORT: port, clientList: workerClientList });
         } else {
@@ -179,7 +180,7 @@ if (cluster.isMaster) {
               port,
               workerClientList,
               pid: worker.process.pid,
-            },
+            }
           );
         }
       });
@@ -199,7 +200,7 @@ if (cluster.isMaster) {
 
       clients = await loadClientConfigs();
       const clientConfigList = clients.filter(
-        (c) => c.SERVER_PORT === +process.env.SERVER_PORT,
+        (c) => c.SERVER_PORT === +process.env.SERVER_PORT
       );
 
       let server = await startServer(clientConfigList);
@@ -228,7 +229,7 @@ if (cluster.isMaster) {
     } catch (error) {
       logger.error(
         `Worker: Failed to start for client ${process.env.clientList}:`,
-        { error: error.message },
+        { error: error.message }
       );
       process.exit(1);
     }
