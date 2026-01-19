@@ -48,7 +48,7 @@ class EmailSender {
 
     // Standardize the interface so it matches SendGrid/Mailgun
     this.transporter = {
-      sendMailAWS: async (mailOptions) => {
+      sendMail: async (mailOptions) => {
         const info = {
           from: mailOptions.from,
           to: mailOptions.to,
@@ -57,7 +57,7 @@ class EmailSender {
           html: mailOptions.html,
         };
         try {
-          return awsTransporter.sendMail(mailOptions);
+          return awsTransporter.sendMail(info);
         } catch (err) {
           console.error('AWS ses mail send failed:');
           throw err;
@@ -170,13 +170,7 @@ class EmailSender {
     };
 
     try {
-      const result = null;
-      console.log(this.provider);
-      if (this.provider === 'AmazonSES') {
-        const result = await this.transporter.sendMailAWS(mailOptions);
-      } else {
-        const result = await this.transporter.sendMail(mailOptions);
-      }
+      const result = await this.transporter.sendMail(mailOptions);
       logger.info(`Email sent via ${this.provider}`, { to, subject });
       return result;
     } catch (error) {
