@@ -1,4 +1,4 @@
-version: '3.8'
+version: "3.8"
 
 services:
   # --- RabbitMQ ---
@@ -6,7 +6,7 @@ services:
     image: rabbitmq:3.11-management
     container_name: rabbitmq_notifier
     ports:
-      - "5672:5672" # AMQP port
+      - "5673:5672" # AMQP port
       - "15672:15672" # Management UI
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq/
@@ -36,7 +36,11 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck: # Ensure DB is ready before services connect
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-user} -d ${POSTGRES_DB:-notifications_db}"]
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${POSTGRES_USER:-user} -d ${POSTGRES_DB:-notifications_db}",
+        ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -86,9 +90,9 @@ services:
     restart: unless-stopped
     command: >
       sh -c "if [ \"$$NODE_ENV\" = \"development\" ]; then 
-        npm install nodemon && npx sequelize-cli db:migrate && npx nodemon src/server.js; 
+        npm install nodemon && npm run migrate && npx nodemon src/server.js; 
       else 
-        npx sequelize-cli db:migrate && node src/server.js; 
+        npm run migrate && node src/server.js; 
       fi"
 
   # --- Slack Connector Service ---
