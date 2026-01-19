@@ -88,8 +88,8 @@ class EmailSender {
           from: mailOptions.from ?? `Vidit <noreply@${mgConfig.DOMAIN}>`,
           to: mailOptions.to,
           subject: mailOptions.subject,
-          text: mailOptions.text ?? "Hello Vidit",
-          html: mailOptions.html ?? "<h1>Hello Vidit</h1>",
+          text: mailOptions.text ?? "Hello Universal Notification",
+          html: mailOptions.html ?? "<h1>Hello Universal Notification</h1>",
         };
 
         try {
