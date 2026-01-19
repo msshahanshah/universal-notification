@@ -1,6 +1,4 @@
-const { error } = require("winston");
-const { off } = require("../app");
-const serializeLogs = require("./serialization");
+const { serializeLogs } = require("./serialization");
 
 const viewDeliveryStatus = async (messageId, clientId) => {
   let dbConnect = await global.connectionManager.getModels(clientId);
@@ -22,7 +20,7 @@ const viewMessageLogs = async (idClient, service, status, page, limit) => {
   const offset = (page - 1) * limit;
   const where = {};
   if (service) {
-    where.service = service; // filter based on service
+    where.service = service;
   }
   if (status) {
     where.status = status;

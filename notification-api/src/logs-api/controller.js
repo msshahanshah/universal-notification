@@ -8,7 +8,7 @@ const deliveryStatus = async (req, res, next) => {
         const result = await viewDeliveryStatus(messageId, clientId);
 
         res.status(200).json({
-            status: "success",
+            success: true,
             data: {
                 messageId : result.messageId,
                 deliveryStatus: result.status
@@ -16,33 +16,31 @@ const deliveryStatus = async (req, res, next) => {
         })
     } catch (error) {
         if (error.parent?.code === "22P02") {
-            return res.status(400).json({ error: "Message id is not valid" })
+            return res.status(400).json({ error: "Message id is not valid", success: false })
         }
         if (error.message === "Message not found") {
-            return res.status(404).json({ error: error.message });
+            return res.status(404).json({ error: error.message, success: false });
         }
 
-        return res.status(500).json({ error: error.message });
+        return res.status(500).json({ error: error.message, success: false });
     }
 }
 
 const messageLogs = async (req, res) => {
     try {
-        // const { service, status, page, limit } = req.validated.query;
-
         const {
             service = null,
             status = null,
             page = 1,
             limit = 10,
-        } = req.validated.query;
+        } = req.query;
 
         const idClient = req.header('X-Client-Id');
         console.log(idClient);
 
         const { data, totalPages } = await viewMessageLogs(idClient, service, status, page, limit);
         return res.status(200).send({
-            status: "success",
+            success: true,
             message: "Data fetched successfully",
             data,
             pagination: {
@@ -52,15 +50,16 @@ const messageLogs = async (req, res) => {
             }
         });
     } catch (error) {
-        console.log(error);
         if (error.message === 'Not authorized') {
-            return res.status(404).send({
-                message: error.message
+            return res.status(401).send({
+                message: error.message,
+                success: false         
             })
         }
 
         return res.status(500).send({
-            message: "Internal Server Error"
+            message: "Internal Server Error",
+            success: false
         })
     }
 }
