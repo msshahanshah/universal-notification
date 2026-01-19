@@ -33,7 +33,6 @@ const messageLogs = async (req, res) => {
     const { service = null, status = null, page = 1, limit = 10 } = req.query;
 
     const idClient = req.header("X-Client-Id");
-    console.log(idClient);
 
     const { data, totalPages } = await viewMessageLogs(
       idClient,

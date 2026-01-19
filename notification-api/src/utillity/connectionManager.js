@@ -189,7 +189,6 @@ class ConnectionManager {
       await sequelize.authenticate();
 
       const db = await require("../../models")(sequelize, clientId);
-      console.log(clientId);
       this.modelCache.set(clientId, db);
     } catch (error) {
       throw new ConnectionError(

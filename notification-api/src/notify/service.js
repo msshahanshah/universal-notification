@@ -8,7 +8,7 @@ const creatingNotificationRecord = async (
   service,
   destination,
   content,
-  templateId = null,
+  templateId = null
 ) => {
   logger.info(`Creating notification record in DB`, {
     clientId,
@@ -18,7 +18,6 @@ const creatingNotificationRecord = async (
     templateId,
   });
   let dbConnect = await global.connectionManager.getModels(clientId);
-  console.log(dbConnect);
   //saving the records in db
   return await dbConnect.Notification.create({
     messageId: uuidv4(),
@@ -33,7 +32,7 @@ const creatingNotificationRecord = async (
       console.log(record, "records");
       logger.info(
         `Notification record created successfully`,
-        record.dataValues,
+        record.dataValues
       );
       return record.dataValues;
     })

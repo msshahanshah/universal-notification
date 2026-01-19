@@ -24,7 +24,6 @@ app.use(express.json());
  * @returns {Error}  default - Unexpected error
  */
 app.get("/health", (req, res) => {
-  console.log("reqarfg");
   logger.debug("Health check endpoint hit", {
     clientId: process.env.CLIENT_ID,
   });
