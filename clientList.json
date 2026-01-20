@@ -13,11 +13,9 @@
       }
     },
     "EMAIL": {
-      "AWS": {
-        "USER_NAME": "****",
-        "PASSWORD": "****",
-        "SENDER_EMAIL": "****",
-        "REGION": "****"
+      "MAILGUN": {
+        "API_KEY": "xxxx",
+        "DOMAIN": "xxxx"
       },
       "RABBITMQ": {
         "EXCHANGE_NAME": "notifications_exchange",
@@ -28,9 +26,9 @@
     },
     "SMS": {
       "TWILIO": {
-        "ACCOUNT_SID": "xxxx",
-        "AUTH_TOKEN": "xxxx",
-        "FROM_NUMBER": "+1111"
+        "ACCOUNT_SID": "ACXXXX",
+        "AUTH_TOKEN": "XXXX",
+        "FROM_NUMBER": "+111111111"
       },
       "RABBITMQ": {
         "EXCHANGE_NAME": "notifications_exchange",
@@ -43,8 +41,8 @@
       "HOST": "localhost",
       "PORT": 5432,
       "NAME": "notifications_db",
-      "USER": "vidit",
-      "PASSWORD": "vidit123"
+      "USER": "dikshant",
+      "PASSWORD": "postgres"
     },
     "RABBITMQ": {
       "HOST": "localhost",
@@ -71,9 +69,11 @@
       }
     },
     "EMAIL": {
-      "MAILGUN": {
-        "API_KEY": "xxxx",
-        "DOMAIN": "xxxx"
+      "AWS": {
+        "USER_NAME": "xxxx",
+        "PASSWORD": "xxxx",
+        "SENDER_EMAIL": "test@mail.com",
+        "REGION": "ap-south-1"
       },
       "RABBITMQ": {
         "EXCHANGE_NAME": "notifications_exchange",
@@ -83,10 +83,10 @@
       }
     },
     "SMS": {
-      "TEWILIO": {
-        "ACCOUNT_SID": "YOUR_TWILIO_ACCOUNT_SID",
-        "AUTH_TOKEN": "YOUR_TWILIO_AUTH_TOKEN",
-        "FROM_NUMBER": "YOUR_TWILIO_PHONE_NUMBER"
+      "TWILIO": {
+        "ACCOUNT_SID": "ACXXXX",
+        "AUTH_TOKEN": "XXXX",
+        "FROM_NUMBER": "+111111111"
       },
       "RABBITMQ": {
         "EXCHANGE_NAME": "notifications_exchange",
@@ -99,8 +99,8 @@
       "HOST": "localhost",
       "PORT": 5432,
       "NAME": "notifications_db",
-      "USER": "vidit",
-      "PASSWORD": "vidit123"
+      "USER": "dikshant",
+      "PASSWORD": "postgres"
     },
     "RABBITMQ": {
       "HOST": "localhost",
