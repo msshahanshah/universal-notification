@@ -1,7 +1,6 @@
 const nodemailer = require("nodemailer");
 const sgMail = require("@sendgrid/mail");
 const Mailgun = require("mailgun.js");
-const formData = require("form-data");
 const logger = require("../logger");
 
 // Email service configuration
