@@ -1,7 +1,6 @@
 const nodemailer = require("nodemailer");
 const sgMail = require("@sendgrid/mail");
 const Mailgun = require("mailgun.js");
-const formData = require("form-data");
 const logger = require("../logger");
 
 // Email service configuration
@@ -35,9 +34,9 @@ class EmailSender {
 
   async setupAmazonSES() {
     const { USER_NAME, PASSWORD, REGION } = this.clientConfig.AWS;
-    const sesHost = `email-smtp.${REGION || "us-east-1"}.amazonaws.com`;
+    const sesHost = `email-smtp.${REGION || 'ap-south-1'}.amazonaws.com`;
 
-    this.transporter = nodemailer.createTransport({
+    const awsTransporter = nodemailer.createTransport({
       host: sesHost,
       port: 465,
       secure: true,
@@ -46,7 +45,27 @@ class EmailSender {
         pass: PASSWORD,
       },
     });
-    this.provider = "AmazonSES";
+
+    // Standardize the interface so it matches SendGrid/Mailgun
+    this.transporter = {
+      sendMail: async (mailOptions) => {
+        const info = {
+          from: mailOptions.from,
+          to: mailOptions.to,
+          subject: mailOptions.subject,
+          text: mailOptions.text,
+          html: mailOptions.html,
+        };
+        try {
+          return awsTransporter.sendMail(info);
+        } catch (err) {
+          console.error('AWS ses mail send failed:');
+          throw err;
+        }
+      },
+    };
+
+    this.provider = 'AmazonSES';
   }
 
   async setupSendGrid() {
