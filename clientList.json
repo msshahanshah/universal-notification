@@ -13,9 +13,11 @@
       }
     },
     "EMAIL": {
-      "MAILGUN": {
-        "API_KEY": "xxxx",
-        "DOMAIN": "xxxx"
+      "AWS": {
+        "USER_NAME": "****",
+        "PASSWORD": "****",
+        "SENDER_EMAIL": "****",
+        "REGION": "****"
       },
       "RABBITMQ": {
         "EXCHANGE_NAME": "notifications_exchange",
@@ -41,8 +43,8 @@
       "HOST": "localhost",
       "PORT": 5432,
       "NAME": "notifications_db",
-      "USER": "dikshant",
-      "PASSWORD": "postgres"
+      "USER": "vidit",
+      "PASSWORD": "vidit123"
     },
     "RABBITMQ": {
       "HOST": "localhost",
@@ -69,10 +71,9 @@
       }
     },
     "EMAIL": {
-      "AWS": {
-        "USER_NAME": "Demo",
-        "PASSWORD": "Demo",
-        "SENDER_EMAIL": "Demo@yourdomain.com"
+      "MAILGUN": {
+        "API_KEY": "xxxx",
+        "DOMAIN": "xxxx"
       },
       "RABBITMQ": {
         "EXCHANGE_NAME": "notifications_exchange",
@@ -98,8 +99,8 @@
       "HOST": "localhost",
       "PORT": 5432,
       "NAME": "notifications_db",
-      "USER": "dikshant",
-      "PASSWORD": "postgres"
+      "USER": "vidit",
+      "PASSWORD": "vidit123"
     },
     "RABBITMQ": {
       "HOST": "localhost",
