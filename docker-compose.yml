@@ -89,11 +89,12 @@ services:
       - notification_network
     restart: unless-stopped
     command: >
-      sh -c "if [ \"$$NODE_ENV\" = \"development\" ]; then 
-        npm install nodemon && npm run migrate && npx nodemon src/server.js; 
-      else 
-        npm run migrate && node src/server.js; 
-      fi"
+      sh -c "touch helpers/default_credentials.txt &&
+       if [ \"$$NODE_ENV\" = \"development\" ]; then 
+         npm install nodemon && npm run migrate && npx nodemon src/server.js; 
+       else 
+         npm run migrate && node src/server.js; 
+       fi"
 
   # --- Slack Connector Service ---
   slack-connector:
