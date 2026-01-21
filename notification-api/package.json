@@ -13,6 +13,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@aws-sdk/client-secrets-manager": "^3.971.0",
     "amqplib": "^0.10.7",
     "bcrypt": "^6.0.0",
     "cors": "^2.8.5",
