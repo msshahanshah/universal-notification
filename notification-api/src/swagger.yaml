@@ -1,0 +1,322 @@
+openapi: 3.0.3
+info:
+  title: Universal Notifier API
+  description: API specification generated from Postman collection
+  version: 1.0.0
+
+servers:
+  - url: https://{baseURL}
+    variables:
+      baseURL:
+        default: localhost:3000
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    LoginRequest:
+      type: object
+      required: [username, password]
+      properties:
+        username:
+          type: string
+        password:
+          type: string
+
+    RefreshRequest:
+      type: object
+      required: [refreshToken]
+      properties:
+        refreshToken:
+          type: string
+
+    NotifySms:
+      type: object
+      required: [service, message, destination]
+      properties:
+        service:
+          type: string
+          enum: [sms]
+          example: sms
+        message:
+          type: string
+          example: Hello Vidit, how are you
+        destination:
+          type: string
+          example: "+919929797900"
+
+    NotifySlack:
+      type: object
+      required: [service, message, destination]
+      properties:
+        service:
+          type: string
+          enum: [slack]
+          example: slack
+        message:
+          type: string
+          example: Good Morning, Guys
+        destination:
+          type: string
+          example: C08Q1E9E10R
+
+    NotifyEmail:
+      type: object
+      required: [service, destination, subject, body, fromEmail]
+      properties:
+        service:
+          type: string
+          enum: [email]
+          example: email
+        destination:
+          type: string
+          example: user@example.com
+        subject:
+          type: string
+          example: Hi This is recent mail
+        body:
+          type: string
+          example: Email body content
+        fromEmail:
+          type: string
+          example: sender@example.com
+
+paths:
+  /health:
+    get:
+      summary: Health check
+      tags: [System]
+      parameters:
+        - name: X-Client-Id
+          in: header
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Service is healthy
+
+  /login:
+    post:
+      summary: User login
+      tags: [Auth]
+      parameters:
+        - name: X-Client-Id
+          in: header
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginRequest"
+      responses:
+        "200":
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: login successful
+                  data:
+                    type: object
+                    properties:
+                      refreshToken:
+                        type: string
+                      accessToken:
+                        type: string
+
+  /refresh:
+    post:
+      summary: Refresh access token
+      tags: [Auth]
+      parameters:
+        - name: X-Client-Id
+          in: header
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RefreshRequest"
+      responses:
+        "200":
+          description: Refresh successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: refresh successful
+                  data:
+                    type: object
+                    properties:
+                      accessToken:
+                        type: string
+
+  /delivery-status/{messageId}:
+    get:
+      summary: Get delivery status
+      tags: [Status]
+      parameters:
+        - name: X-Client-Id
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: messageId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Delivery status returned
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      messageId:
+                        type: string
+                      deliveryStatus:
+                        type: string
+                        example: pending
+
+  /notify:
+    post:
+      summary: Send notification (SMS / Slack / Email)
+      tags: [Notification]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: X-Client-Id
+          in: header
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              oneOf:
+                - $ref: "#/components/schemas/NotifySms"
+                - $ref: "#/components/schemas/NotifySlack"
+                - $ref: "#/components/schemas/NotifyEmail"
+              discriminator:
+                propertyName: service
+      responses:
+        "200":
+          description: Notification accepted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: accepted
+                  message:
+                    type: string
+                    example: Notification request accepted and queued.
+                  messageId:
+                    type: string
+
+  /logs:
+    get:
+      summary: Get notification logs
+      tags: [Logs]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: X-Client-Id
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: status
+          in: query
+          schema:
+            type: string
+        - name: page
+          in: query
+          schema:
+            type: number
+        - name: limit
+          in: query
+          schema:
+            type: number
+        - name: service
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Logs fetched successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Data fetched successfully
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: number
+                        messageId:
+                          type: string
+                        service:
+                          type: string
+                        destination:
+                          type: string
+                        status:
+                          type: string
+                        attempts:
+                          type: number
+                        messageDate:
+                          type: string
+                          format: date-time
+                  pagination:
+                    type: object
+                    properties:
+                      page:
+                        type: number
+                      limit:
+                        type: number
+                      totalPages:
+                        type: number
