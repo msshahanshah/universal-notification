@@ -47,7 +47,7 @@ const messageLogs = async (req, res) => {
       data,
       pagination: {
         page: +page,
-        totalRows: data.length,
+        limit: data.length,
         totalPages,
       },
     });
