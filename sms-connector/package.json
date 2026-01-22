@@ -8,6 +8,8 @@
     "test": "node __tests__/index.test.js"
   },
   "dependencies": {
+    "@grpc/grpc-js": "^1.14.3",
+    "@grpc/proto-loader": "^0.8.0",
     "amqplib": "^0.10.8",
     "dotenv": "^16.4.1",
     "handlebars": "^4.7.7",

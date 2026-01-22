@@ -44,6 +44,7 @@ async function loadClientConfigs() {
                 ID: client.ID,
                 SERVER_PORT: client.SERVER_PORT || 3000,
                 ENABLED_SERVERICES: client.ENABLED_SERVERICES || [],
+                SMS: client.SMS,
                 DBCONFIG: dbConfig,
                 RABBITMQ: rabbitConfig,
             };

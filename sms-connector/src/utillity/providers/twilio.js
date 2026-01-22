@@ -1,18 +1,31 @@
 const twilio = require("twilio");
 
 class TwilioProvider {
-  constructor(config) {
-    this.from = config.FROM_NUMBER;
-    this.client = twilio(config.ACCOUNT_SID, config.AUTH_TOKEN);
-  }
+    constructor(config) {
+        this.from = config.FROM_NUMBER;
+        this.client = twilio(config.ACCOUNT_SID, config.AUTH_TOKEN);
+        this.accountSID = config.ACCOUNT_SID
+    }
 
-  async send({ to, message }) {
-    return this.client.messages.create({
-      body: message,
-      from: this.from,
-      to,
-    });
-  }
+    async send({ to, message }) {
+        return this.client.messages.create({
+            body: message,
+            from: this.from,
+            to,
+        });
+    }
+
+    async getBalance() {
+        try {
+            const balance = await this.client.api.v2010.accounts(this.accountSID).balance.fetch();
+            // const usage = await this.client.usage.records.list({ limit: 10 });
+            // console.log(usage)
+            // console.log(balance);
+            return balance;
+        } catch (error) {
+            console.error("Error fetching balance:", error.message);
+        }
+    }
 }
 
 module.exports = TwilioProvider;
