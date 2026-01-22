@@ -46,12 +46,13 @@ const messageLogs = async (req, res) => {
       message: "Data fetched successfully",
       data,
       pagination: {
-        page,
-        limit,
+        page: +page,
+        totalRows: data.length,
         totalPages,
       },
     });
   } catch (error) {
+    console.log(error);
     if (error.message === "Not authorized") {
       return res.status(401).send({
         message: error.message,
