@@ -18,6 +18,7 @@ class SmsSender {
         };
 
         for (const [key, ProviderClass] of Object.entries(providers)) {
+            console.log(ProviderClass);
             if (this.clientConfig?.[key]) {
                 const instance = new ProviderClass(this.clientConfig[key]);
                 this.sender = instance.send.bind(instance);
