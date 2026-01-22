@@ -410,7 +410,7 @@ paths:
                     properties:
                       page:
                         type: number
-                      totalRows:
+                      limit:
                         type: number
                       totalPages:
                         type: number
