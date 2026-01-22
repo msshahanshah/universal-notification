@@ -1,7 +1,8 @@
 openapi: 3.0.3
 info:
   title: Universal Notifier API
-  description: API specification generated from Postman collection
+  description: |
+    API specification for the Universal Notifier.
   version: 1.0.0
 
 servers:
@@ -62,11 +63,12 @@ components:
           example: Good Morning, Guys
         destination:
           type: string
-          example: C08Q1E9E10R
+          example: C08Q1E38E10R
 
     NotifyEmail:
       type: object
       required: [service, destination, subject, body, fromEmail]
+      additionalProperties: false
       properties:
         service:
           type: string
@@ -74,16 +76,32 @@ components:
           example: email
         destination:
           type: string
-          example: user@example.com
+          example: khandelwal7vidit@gmail.com
         subject:
           type: string
-          example: Hi This is recent mail
+          example: Hi This is recent mail from vidit khandelwal.
         body:
           type: string
-          example: Email body content
+          example: Good Morning Dikshant, Please look into this email.
         fromEmail:
           type: string
-          example: sender@example.com
+          example: imvidit7@gmail.com
+        cc:
+          type: string
+          example: "imvidit7@gmail.com , imvidit8@gmail.com" 
+        bcc:
+          type: string
+          example: "imvidit2@gmail.com , imvidit3@gmail.com" 
+
+    ErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        message:
+          type: string
+          example: "Error detail here"
 
 paths:
   /health:
@@ -208,6 +226,33 @@ paths:
                       deliveryStatus:
                         type: string
                         example: pending
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Not Found - Message ID does not exist
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                success: false
+                message: "Message ID not found"
 
   /notify:
     post:
@@ -232,9 +277,35 @@ paths:
                 - $ref: "#/components/schemas/NotifyEmail"
               discriminator:
                 propertyName: service
+
+            examples:
+              sms:
+                summary: SMS Notification
+                value:
+                  service: sms
+                  message: "Hello Vidit, how are you"
+                  destination: "+919929797900"
+
+              slack:
+                summary: Slack Notification
+                value:
+                  service: slack
+                  message: "Good Morning, Guys"
+                  destination: "C08Q1E9E10R"
+
+              email:
+                summary: Email Notification
+                value:
+                  service: email
+                  destination: "user@example.com"
+                  subject: "Recent Mail"
+                  body: "Email body content"
+                  fromEmail: "sender@example.com"
+                  cc: "imvidit7@gmail.com , imvidit8@gmail.com" 
+                  bcc: "imvidit2@gmail.com , imvidit3@gmail.com" 
       responses:
         "200":
-          description: Notification accepted
+          description: Accepted
           content:
             application/json:
               schema:
@@ -248,6 +319,25 @@ paths:
                     example: Notification request accepted and queued.
                   messageId:
                     type: string
+                    example: "7ec67efd-21e1-4189-aa8e-25686a6f8845"
+        "400":
+          description: Bad Request / Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
 
   /logs:
     get:
@@ -265,18 +355,22 @@ paths:
           in: query
           schema:
             type: string
+            enum: [pending, processing, failed, sent]
         - name: page
           in: query
           schema:
-            type: number
+            type: integer
+            minimum: 0
         - name: limit
           in: query
           schema:
-            type: number
+            type: integer
+            minimum: 0
         - name: service
           in: query
           schema:
             type: string
+            enum: [slack, email, sms]
       responses:
         "200":
           description: Logs fetched successfully
@@ -316,7 +410,25 @@ paths:
                     properties:
                       page:
                         type: number
-                      limit:
+                      totalRows:
                         type: number
                       totalPages:
                         type: number
+        "400":
+          description: Bad Request - Invalid query parameters
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
