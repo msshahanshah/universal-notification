@@ -10,5 +10,4 @@ const notificationRouter = express.Router();
 
 notificationRouter.post("/notify", validateRequest, notify);
 
-
 module.exports = notificationRouter;
