@@ -18,6 +18,8 @@
     "@aws-sdk/s3-presigned-post": "^3.974.0",
     "@aws-sdk/client-secrets-manager": "^3.971.0",
     "@universal-notifier/secret-manager": "github:gkmit-dikshant/aws-secret-manager-package",
+    "@grpc/grpc-js": "^1.14.3",
+    "@grpc/proto-loader": "^0.8.0",
     "amqplib": "^0.10.7",
     "axios": "^1.13.2",
     "bcrypt": "^6.0.0",

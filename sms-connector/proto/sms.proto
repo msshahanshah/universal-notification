@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+package sms;
+
+service SmsService {
+  rpc GetBalance (BalanceRequest) returns (BalanceResponse);
+}
+
+message BalanceRequest {
+  string clientId = 1;
+}
+
+message BalanceResponse {
+  string provider = 1;
+  string balance = 2;
+  string currency = 3;
+}
