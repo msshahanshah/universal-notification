@@ -22,6 +22,9 @@ services:
       - notification_network
     restart: unless-stopped
 
+
+
+
   # --- Postgres Database ---
   postgres:
     image: postgres:15
@@ -88,13 +91,7 @@ services:
     networks:
       - notification_network
     restart: unless-stopped
-    command: >
-      sh -c "touch helpers/default_credentials.txt &&
-       if [ \"$$NODE_ENV\" = \"development\" ]; then 
-         npm install nodemon && npm run migrate && npx nodemon src/server.js; 
-       else 
-         npm run migrate && node src/server.js; 
-       fi"
+    command: ["api"]
 
   # --- Slack Connector Service ---
   slack-connector:
@@ -136,12 +133,7 @@ services:
     networks:
       - notification_network
     restart: unless-stopped
-    command: >
-      sh -c "if [ \"$$NODE_ENV\" = \"development\" ]; then 
-        npm install nodemon && npx nodemon src/index.js; 
-      else 
-        node src/index.js; 
-      fi"
+    command: ["slack"]
 
   # --- Email Connector Service ---
   email-connector:
@@ -184,12 +176,7 @@ services:
     networks:
       - notification_network
     restart: unless-stopped
-    command: >
-      sh -c "if [ \"$$NODE_ENV\" = \"development\" ]; then 
-        npm install nodemon && npx nodemon src/index.js; 
-      else 
-        node src/index.js; 
-      fi"
+    command: ["email"]
 
   # --- SMS Connector Service ---
   sms-connector:
@@ -232,12 +219,7 @@ services:
     networks:
       - notification_network
     restart: unless-stopped
-    command: >
-      sh -c "if [ \"$$NODE_ENV\" = \"development\" ]; then 
-        npm install nodemon && npx nodemon src/index.js; 
-      else 
-        node src/index.js; 
-      fi"
+    command: ["sms"]
 # --- Volumes Definition ---
 volumes:
   rabbitmq_data:
