@@ -23,6 +23,7 @@
     "http-proxy": "^1.18.1",
     "joi": "^17.13.3",
     "jsonwebtoken": "^9.0.3",
+    "libphonenumber-js": "^1.12.35",
     "pg": "^8.14.1",
     "pg-hstore": "^2.3.4",
     "sequelize": "^6.37.7",

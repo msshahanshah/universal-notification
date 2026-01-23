@@ -21,6 +21,7 @@ async function connectAndConsume(clientConfigList) {
         }));
 
         // Make connectionManager available globally for rabbitMQClient
+        console.log(connectionManager)
         global.connectionManager = connectionManager;
         logger.info('All connections initialized successfully.');
     } catch (error) {

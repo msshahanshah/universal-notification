@@ -11,6 +11,7 @@
     "@grpc/grpc-js": "^1.14.3",
     "@grpc/proto-loader": "^0.8.0",
     "amqplib": "^0.10.8",
+    "axios": "^1.13.2",
     "dotenv": "^16.4.1",
     "handlebars": "^4.7.7",
     "lru-cache": "^11.1.0",

@@ -4,9 +4,9 @@ const SMSManager = require("./manager/sms");
 
 class ConnectionManager {
     constructor() {
-     
+
     }
-    async initialize(clientConfig,clientId) {
+    async initialize(clientConfig, clientId) {
         await DatabaseManager.initializeSequelize(clientConfig?.DBCONFIG, clientId);
         await SMSManager.initializeSMSSender(clientConfig?.SMS, clientId);
     }
@@ -28,8 +28,8 @@ class ConnectionManager {
         return await RabbitMQManager.getRabbitMQ(clientId);
     }
 
-    async getSMSSender(clientId) {
-        return await SMSManager.getSMSSender(clientId);
+    async getSMSSender(clientId, provider) {
+        return await SMSManager.getSMSSender(clientId, provider);
     }
 
     async closeAllTypeConnection(clientId) {

@@ -8,6 +8,7 @@ class TwilioProvider {
     }
 
     async send({ to, message }) {
+        console.log("message from Twilio");
         return this.client.messages.create({
             body: message,
             from: this.from,
@@ -18,9 +19,6 @@ class TwilioProvider {
     async getBalance() {
         try {
             const balance = await this.client.api.v2010.accounts(this.accountSID).balance.fetch();
-            // const usage = await this.client.usage.records.list({ limit: 10 });
-            // console.log(usage)
-            // console.log(balance);
             return balance;
         } catch (error) {
             console.error("Error fetching balance:", error.message);

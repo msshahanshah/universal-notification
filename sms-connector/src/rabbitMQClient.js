@@ -88,6 +88,7 @@ module.exports = (RABBITMQ_URL, rabbitConfig) => {
             logger.warn('Connection manager not initialized, skipping message');
             return;
         }
+        console.log(global.connectionManager);
         if (msg === null) {
             logger.warn("Consumer received null message, possibly cancelled.");
             return;
@@ -96,10 +97,9 @@ module.exports = (RABBITMQ_URL, rabbitConfig) => {
         let notificationData;
         let notificationRecord;
         const messageContent = msg.content.toString();
-
         try {
             notificationData = JSON.parse(messageContent);
-            const { clientId, messageId, content, destination } = notificationData;
+            const { clientId, messageId, content, destination, provider } = notificationData;
 
             if (!clientId || !messageId || !content || !content.message || !destination) {
                 logger.error("Invalid message format received from queue", { messageId, clientId });
@@ -164,7 +164,8 @@ module.exports = (RABBITMQ_URL, rabbitConfig) => {
             }
 
             try {
-                let smsConnect = await global.connectionManager.getSMSSender(clientId);
+                console.log(clientId, provider);
+                let smsConnect = await global.connectionManager.getSMSSender(clientId, provider);
                 await smsConnect.sendSms({ to: destination, message: content.message });
                 await dbConnect.Notification.update(
                     { status: "sent" },

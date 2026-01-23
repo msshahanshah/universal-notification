@@ -1,11 +1,12 @@
 const TextlocalProvider = require("./providers/textlocal");
 const MSG91Provider = require("./providers/msg91");
 const TwilioProvider = require("./providers/twilio");
+const Fast2SMS = require("./providers/fast2sms");
 
 class SmsSender {
-    constructor(clientConfig) {
+    constructor(clientConfig, provider = "DEFAULT") {
         this.clientConfig = clientConfig;
-        this.provider = null;
+        this.provider = provider?.toUpperCase();
         this.sender = null;
         this.stat = null;
     }
@@ -15,21 +16,55 @@ class SmsSender {
             TEXTLOCAL: TextlocalProvider,
             MSG91: MSG91Provider,
             TWILIO: TwilioProvider,
-        };
-
-        for (const [key, ProviderClass] of Object.entries(providers)) {
-            console.log(ProviderClass);
-            if (this.clientConfig?.[key]) {
-                const instance = new ProviderClass(this.clientConfig[key]);
-                this.sender = instance.send.bind(instance);
-                this.stat = instance.getBalance.bind(instance);
-                this.provider = key;
-                return;
-            }
         }
 
-        // throw new Error('No valid SMS service configuration found');
+        // console.log(this.provider);
+        let selectedProvider = this.provider
+        if (selectedProvider === "DEFAULT") {
+            const defaultProviderEntry = Object.entries(this.clientConfig)
+                .find(([key, value]) => value?.default === true);
+            if (!defaultProviderEntry) {
+                throw new Error("No default SMS provider found in clientConfig");
+            }
+            selectedProvider = defaultProviderEntry[0].toUpperCase();
+        }
+        const ProviderClass = providers[selectedProvider];
+
+        if (!ProviderClass) {
+            throw new Error(`Unknown SMS provider: ${this.provider}`);
+        }
+
+        const providerConfig = this.clientConfig?.[selectedProvider];
+        if (!providerConfig) {
+            throw new Error(
+                `Configuration not found for provider ${this.provider}`
+            );
+        }
+        const instance = new ProviderClass(providerConfig);
+
+        this.sender = instance.send.bind(instance);
+        this.stat = instance.getBalance.bind(instance);
     }
+    // async initialize() {
+    //     const providers = {
+    //         TEXTLOCAL: TextlocalProvider,
+    //         MSG91: MSG91Provider,
+    //         TWILIO: TwilioProvider,
+    //     };
+
+    //     for (const [key, ProviderClass] of Object.entries(providers)) {
+    //         console.log(ProviderClass);
+    //         if (this.clientConfig?.[key]) {
+    //             const instance = new ProviderClass(this.clientConfig[key]);
+    //             this.sender = instance.send.bind(instance);
+    //             this.stat = instance.getBalance.bind(instance);
+    //             this.provider = key;
+    //             return;
+    //         }
+    //     }
+
+    //     // throw new Error('No valid SMS service configuration found');
+    // }
 
     async sendSms({ to, message }) {
         if (!this.sender) throw new Error("SMS sender not initialized");
