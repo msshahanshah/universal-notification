@@ -3,9 +3,7 @@ const cluster = require("cluster");
 const logger = require("./logger");
 const config = require("./config"); // Environment variables or default configs
 const { connectAndConsume, closeConnections } = require("./connector");
-const {
-  loadClientSecret,
-} = require("../../notification-api/src/utillity/awsSecretManager");
+const { SecretManager } = require("@universal-notifier/secret-manager");
 
 /**
  * Loads client configurations from clientList.json and merges with defaults.
@@ -13,7 +11,7 @@ const {
  */
 async function loadClientConfigs() {
   try {
-    const clients = await loadClientSecret(secretName);
+    const clients = await SecretManager.getSecrets();
 
     const defaultConfig = {
       DBCONFIG: {

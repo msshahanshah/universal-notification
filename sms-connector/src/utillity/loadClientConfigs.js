@@ -1,7 +1,5 @@
 const logger = require("../logger");
-const {
-  loadClientSecret,
-} = require("../../../notification-api/src/utillity/awsSecretManager");
+const { SecretManager } = require("@universal-notifier/secret-manager");
 
 /**
  * Loads client configurations from clientList.json and merges with defaults from .env.
@@ -9,7 +7,7 @@ const {
  */
 async function loadClientConfigs() {
   try {
-    const clients = await loadClientSecret();
+    const clients = await SecretManager.getSecrets();
 
     // Default configurations from .env
     const defaultConfig = {
