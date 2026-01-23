@@ -2,6 +2,8 @@ const logger = require("../logger");
 const { v4: uuidv4 } = require("uuid");
 const { publishMessage } = require("../rabbitMQClient");
 const { ConnectionManager } = require("../utillity/connectionManager");
+const { parsePhoneNumber, default: parsePhoneNumberFromString } = require("libphonenumber-js");
+
 
 const creatingNotificationRecord = async (
   clientId,
@@ -18,7 +20,6 @@ const creatingNotificationRecord = async (
     templateId,
   });
   let dbConnect = await global.connectionManager.getModels(clientId);
-  //saving the records in db
   return await dbConnect.Notification.create({
     messageId: uuidv4(),
     service: service,
@@ -29,7 +30,6 @@ const creatingNotificationRecord = async (
     templateId: templateId,
   })
     .then((record) => {
-      console.log(record, "records");
       logger.info(
         `Notification record created successfully`,
         record.dataValues
@@ -56,10 +56,30 @@ const creatingNotificationRecord = async (
       };
     });
 };
+
+const selectProvider = async (service, destination, clientId) => {
+  try {
+    const countryCode = parsePhoneNumberFromString(destination).countryCallingCode;
+    let dbConnect = await global.connectionManager.getModels(clientId);
+    const provider = await dbConnect.RoutingRule.findOne({
+      where: {
+        service: service.toUpperCase(),
+        match_value: countryCode
+      }
+    })
+    return provider?.provider;
+  } catch (error) {
+    return {
+      statusCode: 400,
+      message: error.message,
+    };
+  }
+}
+
 const publishingNotificationRequest = async (notificationRecord) => {
-  console.log(notificationRecord);
   let { service, destination, content, messageId, clientId } =
     notificationRecord;
+  const provider = await selectProvider(service, destination, clientId);
   let rabbitConnect = await global.connectionManager.getRabbitMQ(clientId);
   if (rabbitConnect) {
     const result = await rabbitConnect.publishMessage(service, {
@@ -69,6 +89,7 @@ const publishingNotificationRequest = async (notificationRecord) => {
       messageId,
       clientId,
       timestamp: new Date().toISOString(),
+      provider
     });
 
     return result;

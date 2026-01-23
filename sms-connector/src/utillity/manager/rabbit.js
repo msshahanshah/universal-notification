@@ -31,6 +31,7 @@ class RabbitMQManager {
         await rabbit.connectRabbitMQ();
         logger.info(`[${clientId}] RabbitMQ connection successful.`);
         this.rabbitCache.set(clientId, rabbit);
+        // set here clientId + provider as a key
     }
 
     async getRabbitMQ(clientId) {
