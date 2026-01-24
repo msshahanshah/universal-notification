@@ -2,21 +2,26 @@ const logger = require("../logger");
 const { v4: uuidv4 } = require("uuid");
 const { publishMessage } = require("../rabbitMQClient");
 const { ConnectionManager } = require("../utillity/connectionManager");
+const {
+  RabbitMQManager,
+  SecretManager,
+} = require("@universal-notifier/secret-manager");
+const rabbitManager = require("../utillity/rabbit");
 
 const creatingNotificationRecord = async (
   clientId,
   service,
   destination,
   content,
-  templateId = null
+  templateId = null,
 ) => {
-  logger.info(`Creating notification record in DB`, {
-    clientId,
-    service,
-    destination,
-    content,
-    templateId,
-  });
+  // logger.info(`Creating notification record in DB`, {
+  //   clientId,
+  //   service,
+  //   destination,
+  //   content,
+  //   templateId,
+  // });
   let dbConnect = await global.connectionManager.getModels(clientId);
   //saving the records in db
   return await dbConnect.Notification.create({
@@ -32,7 +37,7 @@ const creatingNotificationRecord = async (
       console.log(record, "records");
       logger.info(
         `Notification record created successfully`,
-        record.dataValues
+        record.dataValues,
       );
       return record.dataValues;
     })
@@ -57,10 +62,14 @@ const creatingNotificationRecord = async (
     });
 };
 const publishingNotificationRequest = async (notificationRecord) => {
-  console.log(notificationRecord);
+  // console.log(notificationRecord);
   let { service, destination, content, messageId, clientId } =
     notificationRecord;
-  let rabbitConnect = await global.connectionManager.getRabbitMQ(clientId);
+  // const clientsConfig = SecretManager.getSecrets();
+
+  // console.log(rabbitManager);
+  const rabbitConnect = await rabbitManager.getClient(clientId);
+  console.log(rabbitConnect);
   if (rabbitConnect) {
     const result = await rabbitConnect.publishMessage(service, {
       service,
