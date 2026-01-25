@@ -13,7 +13,7 @@ const {
 } = require('./service');
 
 const { generatePreSignedUrl } = require('../../helpers/preSignedUrl');
-const { downloadS3File } = require('../../helpers/downloadFile');
+const { downloadS3File } = require('../../helpers/fileOperation');
 
 const notify = async (req, res) => {
   const {

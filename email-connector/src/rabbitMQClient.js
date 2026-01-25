@@ -2,6 +2,9 @@ const logger = require('./logger');
 const amqp = require('amqplib');
 require('dotenv').config();
 const path = require('path');
+const {
+  deleteLocalFile,
+} = require('../../notification-api/helpers/fileOperation');
 
 const MAX_PROCESSING_ATTEMPTS = parseInt(
   process.env.MAX_PROCESSING_ATTEMPTS || '3',
@@ -238,12 +241,12 @@ module.exports = (RABBITMQ_URL, rabbitConfig) => {
         }
 
         const dir =
-          content.attachments === true
+          attachments === true
             ? path.join(__dirname, 'uploads', `${fileId}.${content.extension}`)
             : undefined;
         logger.info(
           'Directory where rabbut mq picking media (if attachements === true)',
-          {dir},
+          { dir },
         );
         let emailConnect =
           await global.connectionManager.getEmailSender(clientId);
@@ -273,6 +276,7 @@ module.exports = (RABBITMQ_URL, rabbitConfig) => {
           dbId: notificationRecord.id,
         });
         channel.ack(msg);
+        if (attachments) await deleteLocalFile(dir);
       } catch (processingError) {
         logger.error('Error processing email', {
           messageId,

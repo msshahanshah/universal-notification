@@ -2,7 +2,6 @@ const fse = require('fs-extra');
 const axios = require('axios');
 const path = require('path');
 const logger = require('../src/logger');
-const { stack } = require('sequelize/lib/utils');
 
 const downloadS3File = async (s3Url, fileName, extension) => {
   const downloadDir = path.resolve(
@@ -40,14 +39,34 @@ const downloadS3File = async (s3Url, fileName, extension) => {
       });
 
       writer.on('error', (err) => {
-        logger.error('File Stream error:', {errorMessage: err.message, stack: err.stack});
+        logger.error('File Stream error:', {
+          errorMessage: err.message,
+          stack: err.stack,
+        });
         reject(err);
       });
     });
   } catch (err) {
-    logger.error('Axios request failed:', {errorMessage: err.message, stack: err.stack})
+    logger.error('Axios request failed:', {
+      errorMessage: err.message,
+      stack: err.stack,
+    });
     throw err;
   }
 };
 
-module.exports = { downloadS3File };
+const deleteLocalFile = async (filePath) => {
+  if (!filePath || typeof filePath !== 'string') {
+    logger.error('Deletion skipped: Invalid path provided');
+    return;
+  }
+
+  try {
+    await fse.remove(filePath);
+    logger.info('File successfully deleted', { filePath });
+  } catch (error) {
+    logger.error('Error in deleting file', error.message);
+  }
+};
+
+module.exports = { downloadS3File, deleteLocalFile };
