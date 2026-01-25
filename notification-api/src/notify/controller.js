@@ -9,10 +9,25 @@
 const {
   creatingNotificationRecord,
   publishingNotificationRequest,
-} = require("./service");
+  getNotificationData,
+} = require('./service');
+
+const { generatePreSignedUrl } = require('../../helpers/preSignedUrl');
+const { downloadS3File } = require('../../helpers/downloadFile');
 
 const notify = async (req, res) => {
-  const { service, destination, message, subject, body, fromEmail } = req.body;
+  const {
+    service,
+    destination,
+    message,
+    subject,
+    body,
+    fromEmail,
+    cc,
+    bcc,
+    attachments,
+    extension,
+  } = req.body;
   let content = {};
   if (message) {
     content.message = message;
@@ -20,15 +35,22 @@ const notify = async (req, res) => {
     content.subject = subject;
     content.body = body;
     content.fromEmail = fromEmail;
+    content.cc = cc;
+    content.bcc = bcc;
   }
 
-  const clientID = req.headers["x-client-id"];
+  if ('attachments' in req.body) {
+    content.attachments = attachments;
+    content.extension = extension;
+  }
+
+  const clientID = req.headers['x-client-id'];
 
   const notificationRecord = await creatingNotificationRecord(
     clientID,
     service,
     destination,
-    content
+    content,
   );
   if (notificationRecord.statusCode) {
     return res.status(notificationRecord.statusCode).json({
@@ -36,16 +58,124 @@ const notify = async (req, res) => {
       messageId: notificationRecord.messageId,
     });
   }
-  notificationRecord.clientId = clientID;
-  let result = await publishingNotificationRequest(notificationRecord);
 
-  return res.status(202).json({
-    status: "accepted",
-    message: `Notification request accepted ${result ? "and queued." : ""}`,
-    messageId: notificationRecord.messageId, // Return the ID to the client
-  });
+  const { url, fields } = await generatePreSignedUrl(
+    clientID,
+    notificationRecord.messageId,
+  );
+
+  let result;
+
+  if (!attachments) {
+    notificationRecord.clientId = clientID;
+    result = await publishingNotificationRequest(notificationRecord);
+  }
+
+  const response = attachments
+    ? {
+        success: true,
+        message: `Waiting for file upload on URL (expiry 5 mins). Message Id: ${notificationRecord.messageId}`,
+        url: url,
+        fields: fields,
+      }
+    : {
+        success: true,
+        message: `Notification request accepted ${result ? 'and queued.' : ''}`,
+        messageId: notificationRecord.messageId, // Return the ID to the client
+      };
+
+  return res.status(202).json(response);
 };
-module.exports = notify;
+
+const notifyWithEmailAttachment = async (req, res) => {
+  try {
+    const { media } = req.body;
+    if (!media) {
+      throw new Error('Please send media (S3 URL)');
+    }
+
+    const headers = req.headers;
+    console.log("Req from aws lambda", headers);
+
+    const parts = media.split('/');
+    const fileName = parts.slice(-2).join('/');
+    const messageId = parts.pop();
+
+    const clientID = req.headers['x-client-id'];
+
+    const notificationData = await getNotificationData(messageId, clientID);
+    let content = {
+      subject: notificationData.subject,
+      body: notificationData.body,
+      fromEmail: notificationData.fromEmail,
+      media: media,
+      extension: notificationData.extension,
+      attachments: notificationData.attachments
+    };
+
+    if (notificationData.cc) {
+      content.cc = notificationData.cc;
+    }
+
+    if (notificationData.bcc) {
+      content.bcc = notificationData.bcc;
+    }
+
+    const service = notificationData.service;
+    const destination = notificationData.destination;
+
+    const path = await downloadS3File(
+      media,
+      fileName,
+      notificationData.extension,
+    );
+
+    const notificationRecord = await creatingNotificationRecord(
+      clientID,
+      service,
+      destination,
+      content,
+    );
+    if (notificationRecord.statusCode) {
+      return res.status(notificationRecord.statusCode).json({
+        error: notificationRecord.message,
+        messageId: notificationRecord.messageId,
+      });
+    }
+
+    notificationRecord.clientId = clientID;
+    notificationRecord.fileId = messageId;
+    result = await publishingNotificationRequest(notificationRecord);
+
+    return res.status(202).json({
+      status: 'accepted',
+      message: `Notification request accepted ${result ? 'and queued.' : ''}`,
+      messageId: notificationRecord.messageId, // Return the ID to the client
+    });
+  } catch (err) {
+    console.log('Error in notifying with email attachement', err.message);
+    if (err.message === 'Please send media (S3 URL)') {
+      return res.status(400).json({
+        success: false,
+        message: err.message,
+      });
+    }
+
+    if (err.message === 'No message found with this MessageID') {
+      return res.status(404).json({
+        success: false,
+        message: err.message,
+      });
+    }
+
+    return res.status(500).json({
+      success: false,
+      message: 'Internal Server Error',
+    });
+  }
+};
+
+module.exports = { notify, notifyWithEmailAttachment };
 
 // app.post('/notify', async (req, res) => {
 
