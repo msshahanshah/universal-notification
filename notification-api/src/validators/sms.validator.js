@@ -27,7 +27,6 @@ const smsValidation = {
       // Format regex: +<countryCode><10-digit-number>
       const phoneRegex = /^\+[0-9]{1,3}[0-9]{10}$/;
 
-      // Duplicate check
       const unique = new Set(numbers);
       if (unique.size !== numbers.length) {
         return helpers.message("Duplicate phone numbers are not allowed");
@@ -36,7 +35,7 @@ const smsValidation = {
       for (const number of numbers) {
         if (!phoneRegex.test(number)) {
           return helpers.message(
-            `Invalid phone number format: ${number}. Use +<countryCode><10-digit-number>`,
+            `Invalid phone number format: ${number}. Use +<countryCode><10-digit-number> and for multiple phone numbers use comma separate`,
           );
         }
 

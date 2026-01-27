@@ -17,13 +17,22 @@ const authValidation = {
       "any.required": "Username is required",
     }),
 
-  password: Joi.string().min(8).max(12).required().messages({
-    "string.base": "Password must be a string",
-    "string.empty": "Password cannot be empty",
-    "string.min": "Password must be at least 8 characters long",
-    "string.max": "Password must not exceed 12 characters",
-    "any.required": "Password is required",
-  }),
+  password: Joi.string()
+    .min(8)
+    .max(12)
+    .pattern(
+      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,12}$/,
+    )
+    .required()
+    .messages({
+      "string.base": "Password must be a string",
+      "string.empty": "Password cannot be empty",
+      "string.min": "Password must be at least 8 characters long",
+      "string.max": "Password must not exceed 12 characters",
+      "string.pattern.base":
+        "Password must include at least one uppercase letter, one lowercase letter, one number, and one special character",
+      "any.required": "Password is required",
+    }),
 };
 
 module.exports = authValidation;

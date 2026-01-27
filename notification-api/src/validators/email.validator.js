@@ -1,100 +1,109 @@
 const Joi = require("joi");
 
-const emailValidation = {
-  destination: Joi.string().custom((value, helpers) => {
-    const regex = /^([\w.-]+@[\w.-]+\.\w+)(,[\w.-]+@[\w.-]+\.\w+)*$/;
-    if (!regex.test(value)) {
+const emailRegex =
+  /^(?=.{6,254}$)[a-zA-Z0-9._%+-]+@[a-zA-Z0-9-]+\.(com|in|org)$/;
+
+const validateEmailList = (value, helpers, fieldName) => {
+  const emails = value.split(",").map((e) => e.trim());
+
+  if (fieldName === "fromEmail" && emails.length > 1) {
+    return helpers.message(`In fromEmail field there can be only one email.`);
+  }
+  const unique = new Set(emails);
+  if (unique.size !== emails.length) {
+    return helpers.message(
+      `There are duplicate emails in ${fieldName}. Each email must be unique.`,
+    );
+  }
+
+  for (const email of emails) {
+    if (!email) {
       return helpers.message(
-        "Destination must be a single valid email or comma-separated emails for Email service",
+        `One of the emails in ${fieldName} is empty. Please provide a valid email and for multiple emails use comma separate`,
       );
     }
-    return value;
+
+    if (email.length < 6) {
+      return helpers.message(
+        `Email "${email}" in ${fieldName} is too short. Minimum length is 6 characters.`,
+      );
+    }
+
+    if (email.length > 254) {
+      return helpers.message(
+        `Email "${email}" in ${fieldName} is too long. Maximum length is 254 characters.`,
+      );
+    }
+
+    if (!emailRegex.test(email)) {
+      return helpers.message(`Email "${email}" in ${fieldName} is invalid.`);
+    }
+  }
+
+  return value;
+};
+
+const emailValidation = {
+  destination: Joi.when("service", {
+    is: "email",
+    then: Joi.string()
+      .required()
+      .custom((value, helpers) =>
+        validateEmailList(value, helpers, "destination"),
+      )
+      .messages({
+        "string.empty": "In destination email is required.",
+        "any.required": "In destination email is required for email service.",
+      }),
+    otherwise: Joi.forbidden(),
   }),
 
-  subject: Joi.string().when("service", {
+  subject: Joi.when("service", {
     is: "email",
-    then: Joi.string().required().messages({
-      "string.empty": "Subject is required for Email service",
+    then: Joi.string().trim().min(1).max(255).required().messages({
+      "string.empty": "Subject is required for email service.",
+      "string.max": "Subject must not exceed 255 characters.",
     }),
     otherwise: Joi.forbidden(),
   }),
-  body: Joi.string().when("service", {
+
+  body: Joi.when("service", {
     is: "email",
-    then: Joi.string().required().messages({
-      "string.empty": "Body is required for Email service",
+    then: Joi.string().trim().min(1).required().messages({
+      "string.empty": "Body is required for email service.",
     }),
     otherwise: Joi.forbidden(),
   }),
 
-  fromEmail: Joi.string().when("service", {
+  fromEmail: Joi.when("service", {
     is: "email",
-    then: Joi.string().email().required().messages({
-      "string.empty": "From email is required for Email service",
-      "string.email": "From email must be a valid email address",
-    }),
+    then: Joi.string()
+      .required()
+      .custom((value, helpers) =>
+        validateEmailList(value, helpers, "fromEmail"),
+      )
+      .messages({
+        "string.empty": "In fromEmail email is required.",
+        "any.required": "In fromEmail email is required for email service.",
+      }),
     otherwise: Joi.forbidden(),
   }),
 
   cc: Joi.when("service", {
     is: "email",
-    then: Joi.string().custom((value, helpers) => {
-      const emailRegex = /^[\w.-]+@[\w.-]+\.\w+$/;
-      const arr = value
-        .trim()
-        .split(",")
-        .map((str) => {
-          if (str !== "") {
-            return str;
-          }
-        });
-      let result = "";
-      for (let i = 0; i < arr.length; i++) {
-        if (typeof arr[i] === "string" && arr[i].trim() !== "") {
-          const email = arr[i].trim();
-          if (emailRegex.test(email)) {
-            result += email;
-            result += ",";
-          }
-        }
-      }
-
-      if (result.length === 0) {
-        return helpers.message("There is no valid email in cc.");
-      }
-
-      return result;
-    }),
+    then: Joi.string()
+      .custom((value, helpers) => validateEmailList(value, helpers, "cc"))
+      .optional(),
     otherwise: Joi.forbidden(),
   }),
+
   bcc: Joi.when("service", {
     is: "email",
-    then: Joi.string().custom((value, helpers) => {
-      const emailRegex = /^[\w.-]+@[\w.-]+\.\w+$/;
-      const arr = value
-        .trim()
-        .split(",")
-        .map((str) => {
-          if (str !== "") {
-            return str;
-          }
-        });
-      let result = "";
-      for (let i = 0; i < arr.length; i++) {
-        if (typeof arr[i] === "string" && arr[i].trim() !== "") {
-          const email = arr[i].trim();
-          if (emailRegex.test(email)) {
-            result += email;
-            result += ",";
-          }
-        }
-      }
-
-      if (result.length === 0) {
-        return helpers.message("There is no valid email in bcc.");
-      }
-      return result;
-    }),
+    then: Joi.string()
+      .custom((value, helpers) => validateEmailList(value, helpers, "bcc"))
+      .optional(),
     otherwise: Joi.forbidden(),
   }),
 };
+
 module.exports = emailValidation;
