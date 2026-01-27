@@ -26,14 +26,16 @@ async function connectAndConsume(clientConfigList) {
         // Get database for this client
         const db = await connectionManager.getModels(clientItem.ID);
 
-        // Create SMS sender function
-        const smsSender = await connectionManager.getSMSSender(clientItem.ID);
-
         // Start consuming with package consumer
         await rabbitClient.consume({
           service: "sms",
           sender: async (payload) => {
-            await smsSender.sendSms(payload);
+            const { to, message, provider } = payload;
+            const fn = await connectionManager.getSMSSender(
+              clientItem.ID,
+              provider,
+            );
+            await fn.sendSms({ to, message });
           },
           db,
           maxProcessAttemptCount: 3,

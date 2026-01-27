@@ -28,7 +28,6 @@ async function connectAndConsume(clientConfigList) {
         await rabbitClient.consume({
           service: "email",
           sender: (payload) => {
-            console.log("consuming email >>>");
             return emailSender.sendEmail(payload);
           },
           db,

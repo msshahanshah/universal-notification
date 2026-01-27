@@ -10,10 +10,10 @@ const {
   creatingNotificationRecord,
   publishingNotificationRequest,
   getNotificationData,
-} = require('./service');
+} = require("./service");
 
-const { generatePreSignedUrl } = require('../../helpers/preSignedUrl');
-const { downloadS3File } = require('../../helpers/fileOperation');
+const { generatePreSignedUrl } = require("../../helpers/preSignedUrl.helper");
+const { downloadS3File } = require("../../helpers/fileOperation.helper");
 
 const notify = async (req, res) => {
   const {
@@ -39,12 +39,12 @@ const notify = async (req, res) => {
     content.bcc = bcc;
   }
 
-  if ('attachments' in req.body) {
+  if ("attachments" in req.body) {
     content.attachments = attachments;
     content.extension = extension;
   }
 
-  const clientID = req.headers['x-client-id'];
+  const clientID = req.headers["x-client-id"];
 
   const notificationRecord = await creatingNotificationRecord(
     clientID,
@@ -80,7 +80,7 @@ const notify = async (req, res) => {
       }
     : {
         success: true,
-        message: `Notification request accepted ${result ? 'and queued.' : ''}`,
+        message: `Notification request accepted ${result ? "and queued." : ""}`,
         messageId: notificationRecord.messageId, // Return the ID to the client
       };
 
@@ -91,17 +91,16 @@ const notifyWithEmailAttachment = async (req, res) => {
   try {
     const { media } = req.body;
     if (!media) {
-      throw new Error('Please send media (S3 URL)');
+      throw new Error("Please send media (S3 URL)");
     }
 
     const headers = req.headers;
-    console.log("Req from aws lambda", headers);
 
-    const parts = media.split('/');
-    const fileName = parts.slice(-2).join('/');
+    const parts = media.split("/");
+    const fileName = parts.slice(-2).join("/");
     const messageId = parts.pop();
 
-    const clientID = req.headers['x-client-id'];
+    const clientID = req.headers["x-client-id"];
 
     const notificationData = await getNotificationData(messageId, clientID);
     let content = {
@@ -110,7 +109,7 @@ const notifyWithEmailAttachment = async (req, res) => {
       fromEmail: notificationData.fromEmail,
       media: media,
       extension: notificationData.extension,
-      attachments: notificationData.attachments
+      attachments: notificationData.attachments,
     };
 
     if (notificationData.cc) {
@@ -148,20 +147,20 @@ const notifyWithEmailAttachment = async (req, res) => {
     result = await publishingNotificationRequest(notificationRecord);
 
     return res.status(202).json({
-      status: 'accepted',
-      message: `Notification request accepted ${result ? 'and queued.' : ''}`,
+      status: "accepted",
+      message: `Notification request accepted ${result ? "and queued." : ""}`,
       messageId: notificationRecord.messageId, // Return the ID to the client
     });
   } catch (err) {
-    console.log('Error in notifying with email attachement', err.message);
-    if (err.message === 'Please send media (S3 URL)') {
+    console.log("Error in notifying with email attachement", err.message);
+    if (err.message === "Please send media (S3 URL)") {
       return res.status(400).json({
         success: false,
         message: err.message,
       });
     }
 
-    if (err.message === 'No message found with this MessageID') {
+    if (err.message === "No message found with this MessageID") {
       return res.status(404).json({
         success: false,
         message: err.message,
@@ -170,7 +169,7 @@ const notifyWithEmailAttachment = async (req, res) => {
 
     return res.status(500).json({
       success: false,
-      message: 'Internal Server Error',
+      message: "Internal Server Error",
     });
   }
 };

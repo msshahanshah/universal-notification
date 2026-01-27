@@ -15,12 +15,13 @@ class SmsSender {
       TEXTLOCAL: TextlocalProvider,
       MSG91: MSG91Provider,
       TWILIO: TwilioProvider,
-    }
+    };
 
-    let selectedProvider = this.provider
+    let selectedProvider = this.provider;
     if (selectedProvider === "DEFAULT") {
-      const defaultProviderEntry = Object.entries(this.clientConfig)
-        .find(([key, value]) => value?.default === true);
+      const defaultProviderEntry = Object.entries(this.clientConfig).find(
+        ([key, value]) => value?.default === true,
+      );
       if (!defaultProviderEntry) {
         throw new Error("No default SMS provider found in clientConfig");
       }
@@ -34,9 +35,7 @@ class SmsSender {
 
     const providerConfig = this.clientConfig?.[selectedProvider];
     if (!providerConfig) {
-      throw new Error(
-        `Configuration not found for provider ${this.provider}`
-      );
+      throw new Error(`Configuration not found for provider ${this.provider}`);
     }
     const instance = new ProviderClass(providerConfig);
 
@@ -50,13 +49,13 @@ class SmsSender {
       const result = await this.sender({ to, message });
       console.log(
         `SMS sent via ${this.provider}:`,
-        result.data || result.sid || result
+        result.data || result.sid || result,
       );
       return result;
     } catch (error) {
       console.error(
         `Error sending SMS via ${this.provider}:`,
-        error.response?.data || error.message
+        error.response?.data || error.message,
       );
       throw error;
     }
