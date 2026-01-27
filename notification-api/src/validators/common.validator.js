@@ -1,7 +1,7 @@
 const Joi = require("joi");
 const baseOptions = {
   abortEarly: false,
-  stripUnknown: true,
+  stripUnknown: false,
 };
 
 const commonValidation = {

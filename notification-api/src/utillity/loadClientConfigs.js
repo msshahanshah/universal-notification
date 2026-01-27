@@ -21,7 +21,7 @@ async function fetchSecrets() {
 async function loadClientConfigs() {
   try {
     const clients = await fetchSecrets();
-    console.log("clients", clients);
+
     // Default configurations from .env
     const defaultConfig = {
       DBCONFIG: {
