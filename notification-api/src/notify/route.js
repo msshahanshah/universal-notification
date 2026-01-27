@@ -6,9 +6,9 @@
 const express = require("express");
 const validateRequest = require("./validation");
 const notify = require("./controller");
+const auth = require("../middleware/auth.middleware");
 const notificationRouter = express.Router();
 
-notificationRouter.post("/notify", validateRequest, notify);
-
+notificationRouter.post("/notify", auth, validateRequest, notify);
 
 module.exports = notificationRouter;
