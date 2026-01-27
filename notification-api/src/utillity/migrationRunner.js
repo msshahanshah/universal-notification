@@ -8,18 +8,34 @@ async function runMigrations(sequelize, clientId) {
   const schemaName = clientId.toLowerCase();
 
   await sequelize.query(`CREATE SCHEMA IF NOT EXISTS ${schemaName}`);
+  console.log("path >>", path.join(__dirname, "../../migrations"));
+
+  const MigrationMeta = sequelize.define(
+    "SequelizeMeta",
+    { name: { type: Sequelize.STRING, allowNull: false, primaryKey: true } },
+    { tableName: "SequelizeMeta", schema: schemaName, timestamps: false },
+  );
   const umzug = new Umzug({
     migrations: {
       path: path.join(__dirname, "../../migrations"),
       params: [sequelize.getQueryInterface(), Sequelize, schemaName],
     },
     storage: "sequelize",
-    storageOptions: {
-      sequelize: sequelize,
-    },
+    storageOptions: { sequelize: sequelize, model: MigrationMeta },
   });
+
   try {
     console.log(`Running migrations for client: ${clientId}`);
+    const pending = await umzug.pending();
+    console.log(
+      `Pending migrations for ${clientId}:`,
+      pending.map((m) => m.file),
+    );
+    if (pending.length === 0) {
+      console.log(
+        `No pending migrations found for ${clientId}. Check your SequelizeMeta table!`,
+      );
+    }
     await umzug.up();
     console.log(`Migrations completed for client: ${clientId}`);
   } catch (error) {
@@ -46,7 +62,10 @@ async function migrateAllDatabases() {
       };
       const clientSequelize = new Sequelize(clientConfig);
 
-      clientSequelize.authenticate();
+      await clientSequelize.authenticate();
+      const schemaName = client.ID.toLowerCase();
+      await clientSequelize.query(`SET search_path TO ${schemaName}, public`);
+
       await runMigrations(clientSequelize, client.ID);
       await clientSequelize.close();
     }

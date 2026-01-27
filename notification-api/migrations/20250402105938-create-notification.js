@@ -15,6 +15,7 @@ module.exports = {
    * @param {Sequelize} Sequelize
    */
   async up(queryInterface, Sequelize, schemaName) {
+    console.log("schemaTesting", schemaName);
     const tableName = {
       tableName: "notifications",
       schema: schemaName,
