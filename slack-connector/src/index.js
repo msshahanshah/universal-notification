@@ -88,13 +88,13 @@ if (cluster.isMaster) {
           rabbitMQUrl: RABBITMQ_URL,
         });
         logger.info(
-          `Master: Forked worker for client ${client.ID} (PID: ${worker.process.pid})`
+          `Master: Forked worker for client ${client.ID} (PID: ${worker.process.pid})`,
         );
       });
 
       cluster.on("exit", (worker, code, signal) => {
         logger.warn(
-          `Master: Worker ${worker.process.pid} exited with code ${code} (signal: ${signal})`
+          `Master: Worker ${worker.process.pid} exited with code ${code} (signal: ${signal})`,
         );
         const workerData = workerDataMap.get(worker.id);
         if (workerData) {
@@ -108,7 +108,7 @@ if (cluster.isMaster) {
           workerDataMap.delete(worker.id);
         } else {
           logger.error(
-            "Master: Unable to restart worker - missing worker data"
+            "Master: Unable to restart worker - missing worker data",
           );
         }
       });
@@ -150,7 +150,7 @@ if (cluster.isMaster) {
     } catch (error) {
       logger.error(
         `Worker: Failed to start for client ${process.env.CLIENT_ID}:`,
-        { error: error.message }
+        { error: error.message },
       );
       process.exit(1);
     }
