@@ -56,7 +56,6 @@ const validateRequest = (req, res, next) => {
     req.body.extension = extension_mimetype_map[value.mimetype];
   }
   req.body = value;
-  console.log(value);
   next();
 };
 module.exports = validateRequest;
