@@ -64,11 +64,11 @@ async function connectAndConsume(client) {
 
     await rabbitClient.consume({
       service: "slackbot",
-      sender: async (payload) => {
+      sender: async (payload, messageId) => {
         if (process.env.NODE_ENV === "testing") {
           await database.Notification.update(
             { status: "sent" },
-            { where: { messageId: payload.messageId } },
+            { where: { messageId: messageId } },
           );
         }
         await sendSlackMessage(
