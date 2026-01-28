@@ -94,6 +94,9 @@ const publishingNotificationRequest = async (notificationRecord) => {
 
   const rabbitConnect = await rabbitManager.getClient(clientId);
 
+  if (service.toLowerCase() === "slack") {
+    service = "slackbot";
+  }
   if (rabbitConnect) {
     const result = await rabbitConnect.publishMessage(service, {
       service,
