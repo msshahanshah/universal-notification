@@ -223,7 +223,6 @@ class EmailSender {
           },
           messageId: '<45a87056-a3cc-2120-e7f7-fed8a783d5c5@gmail.com>',
         };
-
         logger.info(`Email.... sent via ${this.provider}`, { to, subject });
         return result;
       } else {
