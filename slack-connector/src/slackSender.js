@@ -5,9 +5,9 @@ const logger = require('./logger');
 
 let slackClient = null;
 
-function getSlackClient() {
+function getSlackClient(botToken) {
     if (!slackClient) {
-        const tokenFromConfig = config.slack.botToken; // Get token from config
+        const tokenFromConfig =botToken  // Get token from config
 
         // --- TEMPORARY DEBUG LOGGING ---
         // Log only a portion to avoid exposing the full token in logs
@@ -15,18 +15,18 @@ function getSlackClient() {
         logger.info(`Initializing Slack WebClient. Token snippet from config: [${tokenSnippet}]`);
         // --------------------------------
 
-        if (!config.slack.botToken) {
+        if (!botToken) {
             logger.error('Slack Bot Token (SLACK_BOT_TOKEN) is not configured!');
             throw new Error('Missing Slack configuration: Bot Token');
         }
-        slackClient = new WebClient(config.slack.botToken);
+        slackClient = new WebClient(botToken);
          logger.info('Slack WebClient initialized.');
     }
     return slackClient;
 }
 
-async function sendSlackMessage(channel, message, messageId) {
-    const client = getSlackClient(); // Get initialized client
+async function sendSlackMessage(authToken,channel, message, messageId) {
+    const client = getSlackClient(authToken); // Get initialized client
 
     logger.debug(`Attempting to send message to Slack channel: ${channel}`, { messageId });
 

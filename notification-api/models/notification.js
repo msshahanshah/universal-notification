@@ -1,51 +1,91 @@
-// ./notification-api/models/notification.js
 'use strict';
-const { Model } = require('sequelize');
 
-module.exports = (sequelize, DataTypes) => {
+const { Model, DataTypes } = require('sequelize');
+
+module.exports = (sequelize,schemaName) => {
+  /**
+   * @class Notification
+   * @extends Model
+   * @classdesc Represents a notification entity in the database.
+   */
   class Notification extends Model {
+    /**
+     * @method associate
+     * @description Defines associations with other models (if any).
+     * @param {Object} models - The collection of models in the application.
+     */
     static associate(models) {
-      // define association here if needed in the future
+      // Define associations here if needed in the future
     }
   }
-  Notification.init({
-    // id: is automatically added by sequelize if not defined here
-    messageId: {
+
+  Notification.init(
+    {
+      // Primary key for the notification
+      id: {
+        type: DataTypes.INTEGER,
+        primaryKey: true,
+        allowNull: false,
+        autoIncrement: true, // Automatically increment the ID
+      },      
+      // Unique identifier for the notification
+      messageId: {
         type: DataTypes.UUID,
         allowNull: false,
-        unique: true
-    },
-    service: {
-        type: DataTypes.STRING,
-        allowNull: false
-    },
-    target: {
-        type: DataTypes.STRING,
-        allowNull: false
-    },
-    content: {
-        type: DataTypes.TEXT,
-        allowNull: false
-    },
-    status: {
+        unique: true,
+      },
+      // Service responsible for sending the notification
+      service: {
         type: DataTypes.STRING,
         allowNull: false,
-        defaultValue: 'pending' // pending, processing, sent, failed
-    },
-    attempts: {
+      },
+
+      // Destination address (e.g., email, phone number)
+      destination: {
+        type: DataTypes.STRING,
+        allowNull: false,
+      },
+
+      // Content of the notification (stored as JSON)
+      content: {
+        type: DataTypes.JSONB,
+        allowNull: false,
+      },
+
+      // Status of the notification (e.g., pending, sent, failed)
+      status: {
+        type: DataTypes.STRING,
+        allowNull: false,
+        defaultValue: 'pending', // Default status
+      },
+
+      // Number of attempts made to send the notification
+      attempts: {
         type: DataTypes.INTEGER,
         allowNull: false,
-        defaultValue: 0
-    },
-    connectorResponse: {
+        defaultValue: 0,
+      },
+
+      // Response from the connector (if any)
+      connectorResponse: {
         type: DataTypes.TEXT,
-        allowNull: true
+        allowNull: true,
+      },
+
+      // ID of the template used for the notification (optional)
+      templateId: {
+        type: DataTypes.STRING,
+        allowNull: true,
+      },
+    },
+    {
+      sequelize,
+      modelName: 'Notification',
+      timestamps: true, // Enable createdAt and updatedAt fields
+      tableName: 'notifications', // Explicit table name for clarity
+      schema:schemaName.toLowerCase(), // Use lowercase schema name
     }
-    // createdAt and updatedAt are automatically handled by Sequelize if timestamps: true (default)
-  }, {
-    sequelize,
-    modelName: 'Notification',
-    // timestamps: true // This is the default
-  });
+  );
+
   return Notification;
 };

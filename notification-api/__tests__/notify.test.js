@@ -1,4 +1,7 @@
 // ./notification-api/__tests__/notify.test.js
+/**
+ * @fileoverview Tests for the /notify endpoint of the notification-api.
+ */
 const request = require('supertest');
 const { v4: uuidv4 } = require('uuid'); // Import uuid
 const app = require('../src/app'); // Express app
@@ -52,6 +55,10 @@ jest.mock('../src/logger', () => ({
 }));
 
 // --- Test Suite ---
+/**
+ * @description Test suite for the POST /notify endpoint.
+ * Tests various scenarios including success, validation errors, database errors, and RabbitMQ publishing errors.
+ */
 describe('POST /notify Endpoint', () => {
     const BASE_URL = '/notify';
     const validPayload = {
@@ -72,6 +79,7 @@ describe('POST /notify Endpoint', () => {
             messageId: testMessageId,
             service: validPayload.service,
             target: validPayload.channel,
+            templateId: undefined,
             content: validPayload.message,
             status: 'pending',
             attempts: 0,
@@ -84,6 +92,12 @@ describe('POST /notify Endpoint', () => {
     });
 
     // --- Success Scenario ---
+    /**
+     * @test {POST /notify}
+     * @description Should return 202, create a 'pending' DB record, and publish a message for a valid request.
+     * Verifies that the database record is created with the correct information,
+     * the message is published to RabbitMQ, and the correct response is returned.
+     */
     it('should return 202, create DB record (pending), and publish message for valid request', async () => {
         const response = await request(app)
             .post(BASE_URL)
@@ -102,9 +116,11 @@ describe('POST /notify Endpoint', () => {
         expect(Notification.create).toHaveBeenCalledWith({
             messageId: testMessageId,
             service: validPayload.service.toLowerCase(),
+            templateId: undefined,
             target: validPayload.channel,
             content: validPayload.message,
             status: 'pending',
+            templateId: undefined,
             attempts: 0,
         });
 
@@ -114,6 +130,7 @@ describe('POST /notify Endpoint', () => {
             validPayload.service.toLowerCase(), // routing key
             expect.objectContaining({ // message payload
                 dbId: 1, // Check if DB ID is included
+                templateId: undefined,
                 messageId: testMessageId,
                 service: validPayload.service.toLowerCase(),
                 channel: validPayload.channel,
@@ -128,6 +145,12 @@ describe('POST /notify Endpoint', () => {
     });
 
     // --- Validation Error Scenarios ---
+    /**
+     * @test {POST /notify}
+     * @description Should return 400 if any of the required fields (service, channel, message) are missing.
+     * @param {string} field - The missing field.
+     * @param {object} payload - The payload with the missing field.
+     */
     test.each([
         ['service', { channel: '#c', message: 'm' }],
         ['channel', { service: 's', message: 'm' }],
@@ -144,6 +167,11 @@ describe('POST /notify Endpoint', () => {
         expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining('Validation failed: Missing fields'), expect.any(Object));
     });
 
+    /**
+     * @test {POST /notify}
+     * @description Should return 400 if an invalid service name is provided.
+     * Verifies that the correct error message is returned and no database or RabbitMQ interaction occurs.
+     */
     it('should return 400 Bad Request for invalid service name', async () => {
         const invalidPayload = { ...validPayload, service: 'invalidService' };
         await request(app)
@@ -158,6 +186,11 @@ describe('POST /notify Endpoint', () => {
     });
 
     // --- Database Error Scenario ---
+    /**
+     * @test {POST /notify}
+     * @description Should return 500 if database create operation fails.
+     * Simulates a database error and verifies that the correct error response is returned and no message is published.
+     */
     it('should return 500 if database create fails', async () => {
         const dbError = new Error('DB Connection Error');
         Notification.create.mockRejectedValueOnce(dbError); // Simulate DB create failure
@@ -168,12 +201,18 @@ describe('POST /notify Endpoint', () => {
             .expect('Content-Type', /json/)
             .expect(500);
 
-        expect(response.body).toEqual({ error: 'Failed to save notification request.' });
+        expect(response.body).toEqual({ error: 'Failed to save notification request to database.' });
         expect(Notification.create).toHaveBeenCalledTimes(1);
         expect(rabbitMQClient.publishMessage).not.toHaveBeenCalled(); // Should not publish if DB fails
         expect(logger.error).toHaveBeenCalledWith(expect.stringContaining('Database error: Failed to create notification record'), expect.any(Object));
     });
 
+    /**
+     * @test {POST /notify}
+     * @description Should return 409 if database create fails with a unique constraint error.
+     * Simulates a database unique constraint error and verifies that the correct conflict response is returned
+     * with the messageId, no message is published and that proper logging occurs.
+     */
     it('should return 409 if database create fails with unique constraint error', async () => {
         const dbError = new Error('Unique constraint violation');
         dbError.name = 'SequelizeUniqueConstraintError'; // Simulate specific Sequelize error
@@ -196,6 +235,12 @@ describe('POST /notify Endpoint', () => {
     });
 
     // --- RabbitMQ Publishing Error Scenario ---
+    /**
+     * @test {POST /notify}
+     * @description Should return 500 and update the DB status to 'failed' if RabbitMQ publishing fails.
+     * Simulates a RabbitMQ publish error and verifies that the correct error response is returned,
+     * the database status is updated, and the error is logged.
+     */
     it('should return 500 and update DB status to failed if publishing fails', async () => {
         const publishError = new Error('RabbitMQ unavailable');
         rabbitMQClient.publishMessage.mockRejectedValueOnce(publishError); // Simulate publish failure
@@ -228,6 +273,10 @@ describe('POST /notify Endpoint', () => {
         expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining("Updated notification status to 'failed' due to publish error"), expect.any(Object));
     });
 
+     /**
+      * @test {GET /health}
+      * @description Should return 200 OK when calling the health check endpoint.
+      */
      // Test Health Check endpoint
      it('GET /health should return 200 OK', async () => {
         const response = await request(app)
