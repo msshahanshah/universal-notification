@@ -14,6 +14,14 @@ class TwilioProvider {
     });
   }
 
+  async dummySend({ to, message }) {
+    return {
+      body: "This is dummy message",
+      from: this.from,
+      to
+    }
+  }
+
   async getBalance() {
     try {
       const balance = await this.client.api.v2010
