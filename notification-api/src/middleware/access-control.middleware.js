@@ -10,7 +10,7 @@ const accessControl = (req, res, next) => {
         req.user.clientId = X_Client_ID.toLowerCase();
         next();
     } else {
-        return res.status(401).json({ success: false, message: 'Invalid client ID' });
+        return res.status(403).json({ success: false, message: 'Permission Denied' });
     }
 }
 
