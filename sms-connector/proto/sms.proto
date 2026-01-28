@@ -8,6 +8,7 @@ service SmsService {
 
 message BalanceRequest {
   string clientId = 1;
+  string provider = 2;
 }
 
 message BalanceResponse {

@@ -14,18 +14,33 @@ const smsPackage = grpcObj.sms;
 
 async function GetBalance(call, callback) {
     try {
+        const metadata = call.metadata;
+        const callerKey = metadata.get("x-internal-key")?.[0];
+
+        if (callerKey !== process.env.INTERNAL_GRPC_KEY) {
+            const errorMeta = new grpc.Metadata();
+            errorMeta.add("error-code", 401);
+            errorMeta.add("message", "Unauthorized");
+            return callback({
+                code: grpc.status.PERMISSION_DENIED,
+                message: "Unauthorized caller",
+                metadata: errorMeta
+            });
+        }
+
         const clientId = call.request.clientId;
+        const provider = call.request.provider
 
         const clientList = await loadClientConfigs();
         const smsConfig = clientList.find(c => c.ID === clientId)?.SMS;
+
         if (!smsConfig) {
             return callback({
                 code: grpc.status.NOT_FOUND,
                 message: "SMS config not found"
             });
         }
-
-        const smsSender = new SmsSender(smsConfig);
+        const smsSender = new SmsSender(smsConfig, provider);
         await smsSender.initialize();
 
         const balance = await smsSender.stat();
@@ -43,6 +58,7 @@ async function GetBalance(call, callback) {
         });
     }
 }
+
 
 function startServer() {
     const server = new grpc.Server();

@@ -1,14 +1,21 @@
-const { status } = require("@grpc/grpc-js");
 const grpcClient = require("../gRPC/grpc.client");
+const grpc = require('@grpc/grpc-js');
 
 const getBalance = async (req, res) => {
     try {
         const clientId = req.headers["x-client-id"];
+        const { provider } = req.query;
 
-        grpcClient.GetBalance({ clientId }, (err, response) => {
+        const metadata = new grpc.Metadata();
+        metadata.add("x-internal-key", process.env.INTERNAL_GRPC_KEY);
+        
+        grpcClient.GetBalance({ clientId, provider: provider ? provider.toUpperCase() : undefined }, metadata, (err, response) => {
             if (err) {
                 console.error("gRPC error:", err);
-                return res.status(500).json({ status: false, message: err.message });
+                return res.status(+err.metadata?.get("error-code")?.[0] || 500).json({
+                    success: false, 
+                    message: err.metadata?.get("message")?.[0] || err.message
+                });
             }
             return res.json({
                 success: true,
@@ -23,7 +30,7 @@ const getBalance = async (req, res) => {
         });
 
     } catch (error) {
-        return res.status(500).json({ error: error.message });
+        return res.status(500).json({ success: false, message: error.message });
     }
 };
 
