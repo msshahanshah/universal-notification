@@ -1,44 +1,49 @@
 const Joi = require("joi");
 const emailRegex =
-  /^(?=.{6,254}$)[a-zA-Z0-9._%+-]+@[a-zA-Z0-9-]+\.(com|in|org)$/;
+  /^(?=.{6,254}$)[a-z0-9._%+-]+@[a-z0-9-]+\.[a-z]{2,}$/i;
 const ALLOWED_MIMETYPES = [
   "application/pdf",
   "image/x-png",
   "image/x-citrix-jpeg",
 ];
+
 const validateEmailList = (value, helpers, fieldName) => {
-  const emails = value.split(",").map((e) => e.trim());
+  const isValueEmpty = !value || value.trim().length === 0;
+  const mandatoryFields = ["fromEmail", "destination"];
+
+  if (isValueEmpty) {
+    return mandatoryFields.includes(fieldName) 
+      ? helpers.message(`${fieldName} is required and cannot be empty.`) 
+      : value;
+  }
+
+  let emails = value
+    .split(",")
+    .map((e) => e.trim().toLowerCase())
+    .filter((e) => e.length > 0);
+
+  if (emails.length === 0) {
+    return mandatoryFields.includes(fieldName)
+      ? helpers.message(`At least one valid email is required for ${fieldName}.`)
+      : "";
+  }
+
   if (fieldName === "fromEmail" && emails.length > 1) {
-    return helpers.message(`In fromEmail field there can be only one email.`);
+    return helpers.message(`The fromEmail field can only contain a single email.`);
   }
-  const unique = new Set(emails);
-  if (unique.size !== emails.length) {
-    return helpers.message(
-      `There are duplicate emails in ${fieldName}. Each email must be unique.`,
-    );
-  }
-  for (const email of emails) {
-    if (!email) {
-      return helpers.message(
-        `One of the emails in ${fieldName} is empty. Please provide a valid email and for multiple emails use comma separate`,
-      );
-    }
-    if (email.length < 6) {
-      return helpers.message(
-        `Email "${email}" in ${fieldName} is too short. Minimum length is 6 characters.`,
-      );
-    }
-    if (email.length > 254) {
-      return helpers.message(
-        `Email "${email}" in ${fieldName} is too long. Maximum length is 254 characters.`,
-      );
-    }
-    if (!emailRegex.test(email)) {
+
+  const uniqueEmails = [...new Set(emails)];
+
+  for (const email of uniqueEmails) {
+    if (email.length > 254 || !emailRegex.test(email)) {
       return helpers.message(`Email "${email}" in ${fieldName} is invalid.`);
     }
   }
-  return value;
+
+  return uniqueEmails.join(", ");
 };
+
+
 const emailValidation = {
   destination: Joi.when("service", {
     is: "email",
