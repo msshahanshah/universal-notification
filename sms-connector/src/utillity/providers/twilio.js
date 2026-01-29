@@ -16,9 +16,7 @@ class TwilioProvider {
 
   async dummySend({ to, message }) {
     return {
-      body: "This is dummy message",
-      from: this.from,
-      to
+      message: "This is a dummy message"
     }
   }
 

@@ -13,4 +13,4 @@ notificationRouter.post("/notify", auth, validateRequest, notify);
 
 notificationRouter.post("/notify-with-attachment", auth, notifyWithEmailAttachment);
 
-module.exports = notificationRouter;
+module.exports = notificationRouter;  
