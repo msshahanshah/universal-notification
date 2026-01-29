@@ -8,7 +8,7 @@ const creatingNotificationRecord = async (
   service,
   destination,
   content,
-  templateId = null
+  templateId = null,
 ) => {
   logger.info(`Creating notification record in DB`, {
     clientId,
@@ -29,10 +29,9 @@ const creatingNotificationRecord = async (
     templateId: templateId,
   })
     .then((record) => {
-      console.log(record, "records");
       logger.info(
         `Notification record created successfully`,
-        record.dataValues
+        record.dataValues,
       );
       return record.dataValues;
     })
@@ -57,7 +56,6 @@ const creatingNotificationRecord = async (
     });
 };
 const publishingNotificationRequest = async (notificationRecord) => {
-  console.log(notificationRecord);
   let { service, destination, content, messageId, clientId } =
     notificationRecord;
   let rabbitConnect = await global.connectionManager.getRabbitMQ(clientId);
