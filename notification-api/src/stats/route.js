@@ -1,7 +1,8 @@
 const express = require("express");
-const {  getBalance } = require("./controller");
+const { getBalance, viewBalance } = require("./controller");
 const statRouter = express.Router();
 
-statRouter.get("/balance", getBalance);
+statRouter.get("/refresh-balance", getBalance);
+statRouter.get("/balance", viewBalance);
 
 module.exports = statRouter;

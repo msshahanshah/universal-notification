@@ -1,5 +1,6 @@
 const grpcClient = require("../gRPC/grpc.client");
 const grpc = require('@grpc/grpc-js');
+const fetchBalance = require("./service")
 
 const getBalance = async (req, res) => {
     try {
@@ -8,12 +9,12 @@ const getBalance = async (req, res) => {
 
         const metadata = new grpc.Metadata();
         metadata.add("x-internal-key", process.env.INTERNAL_GRPC_KEY);
-        
+
         grpcClient.GetBalance({ clientId, provider: provider ? provider.toUpperCase() : undefined }, metadata, (err, response) => {
             if (err) {
                 console.error("gRPC error:", err);
                 return res.status(+err.metadata?.get("error-code")?.[0] || 500).json({
-                    success: false, 
+                    success: false,
                     message: err.metadata?.get("message")?.[0] || err.message
                 });
             }
@@ -34,4 +35,23 @@ const getBalance = async (req, res) => {
     }
 };
 
-module.exports = { getBalance };
+const viewBalance = async (req, res) => {
+    try {
+        const clientId = req.headers["x-client-id"];
+        const response = await fetchBalance(clientId, "SMS", "TWILIO");
+        return res.json({
+            success: true,
+            message: "Balance fetched successfully",
+            data: {
+                provider: response.provider,
+                label: "Amount",
+                balance: response.balance,
+                currency: response.type
+            }
+        });
+    } catch (error) {
+        return res.status(500).json({ success: false, message: error.message })
+    }
+}
+
+module.exports = { getBalance, viewBalance };
