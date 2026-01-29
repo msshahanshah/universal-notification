@@ -98,7 +98,10 @@ const notifyWithEmailAttachment = async (req, res) => {
 
     const parts = media.split("/");
     const fileName = parts.slice(-2).join("/");
-    const messageId = parts.pop();
+    let messageId = parts.pop();
+    messageId = messageId.split('.')[0];
+
+    console.log(messageId);
 
     const clientID = req.headers["x-client-id"];
 
@@ -110,6 +113,7 @@ const notifyWithEmailAttachment = async (req, res) => {
       media: media,
       extension: notificationData.extension,
       attachments: notificationData.attachments,
+      fileId: messageId
     };
 
     if (notificationData.cc) {
