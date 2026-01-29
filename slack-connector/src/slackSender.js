@@ -38,7 +38,7 @@ async function sendSlackMessage(authToken, channel, message, messageId) {
     if (process.env.NODE_ENV === "testing") {
       const result = {
         ok: true,
-        channel: "C0A34343RGF6K",
+        channel: "C0A665655RGF6K",
         ts: "1769585676.071389",
         message: {
           user: "U08LH6S3667",
