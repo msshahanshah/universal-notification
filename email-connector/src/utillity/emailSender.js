@@ -188,7 +188,7 @@ class EmailSender {
     try {
       if (process.env.NODE_ENV === 'testing') {
         const result = {
-          accepted: ['khandelwal7vidit@gmail.com'],
+          accepted: ['test@gmail.com'],
           rejected: [],
           ehlo: ['8BITMIME', 'AUTH PLAIN LOGIN', 'Ok'],
           envelopeTime: 95,
@@ -197,8 +197,8 @@ class EmailSender {
           response:
             '250 Ok 0109019c03052734-b7820738-bb36-420f-88ee-f3ca02161911-000000',
           envelope: {
-            from: 'imvidit7@gmail.com',
-            to: ['khandelwal7vidit@gmail.com'],
+            from: 'noreply@gmail.com',
+            to: ['test@gmail.com'],
           },
           messageId: '<45a87056-a3cc-2120-e7f7-fed8a783d5c5@gmail.com>',
         };
