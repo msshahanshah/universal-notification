@@ -89,6 +89,7 @@ const publishingNotificationRequest = async (notificationRecord) => {
     messageId,
     clientId,
     fileId = undefined,
+    attachments
   } = notificationRecord;
   const provider = await selectProvider(service, destination, clientId);
 
@@ -107,6 +108,7 @@ const publishingNotificationRequest = async (notificationRecord) => {
       timestamp: new Date().toISOString(),
       provider,
       fileId,
+      attachments
     });
 
     return result;
