@@ -1,6 +1,6 @@
 const amqp = require("amqplib");
 const logger = require("./logger");
-const { Sequelize } = require("sequelize");
+const { Sequelize, where } = require("sequelize");
 const rabbitManager = require("./rabbit");
 const { sendSlackMessage } = require("./slackSender");
 
@@ -66,6 +66,14 @@ async function connectAndConsume(client) {
       service: "slackbot",
       sender: async (payload, messageId) => {
         if (process.env.NODE_ENV === "testing") {
+          const message = await database.Notification.findOne({
+            where: { messageId: messageId },
+          });
+
+          if (!message) {
+            logger.error("Message not found for messageId : " + messageId);
+            return;
+          }
           await database.Notification.update(
             { status: "sent" },
             { where: { messageId: messageId } },
