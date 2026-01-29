@@ -88,10 +88,10 @@ components:
           example: imvidit7@gmail.com
         cc:
           type: string
-          example: "imvidit7@gmail.com , imvidit8@gmail.com" 
+          example: "imvidit7@gmail.com , imvidit8@gmail.com"
         bcc:
           type: string
-          example: "imvidit2@gmail.com , imvidit3@gmail.com" 
+          example: "imvidit2@gmail.com , imvidit3@gmail.com"
 
     ErrorResponse:
       type: object
@@ -196,7 +196,7 @@ paths:
     get:
       summary: Get delivery status
       tags: [Status]
-       security:
+      security:
         - bearerAuth: []
       parameters:
         - name: X-Client-Id
@@ -303,8 +303,8 @@ paths:
                   subject: "Recent Mail"
                   body: "Email body content"
                   fromEmail: "sender@example.com"
-                  cc: "imvidit7@gmail.com , imvidit8@gmail.com" 
-                  bcc: "imvidit2@gmail.com , imvidit3@gmail.com" 
+                  cc: "imvidit7@gmail.com , imvidit8@gmail.com"
+                  bcc: "imvidit2@gmail.com , imvidit3@gmail.com"
       responses:
         "200":
           description: Accepted
