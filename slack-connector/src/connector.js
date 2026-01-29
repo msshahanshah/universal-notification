@@ -1,6 +1,6 @@
 const amqp = require("amqplib");
 const logger = require("./logger");
-const { Sequelize, where } = require("sequelize");
+const { Sequelize } = require("sequelize");
 const rabbitManager = require("./rabbit");
 const { sendSlackMessage } = require("./slackSender");
 
