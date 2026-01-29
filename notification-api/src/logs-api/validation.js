@@ -6,10 +6,13 @@ const {
 
 const validateLogsSchema = Joi.object({
   service: commonValidation.service,
-  status: Joi.string().valid("pending", "sent", "failed").optional().messages({
-    "any.only": "Status must be one of: pending, sent, failed.",
-    "string.base": "Status must be a string.",
-  }),
+  status: Joi.string()
+    .valid("pending", "sent", "failed", "processing")
+    .optional()
+    .messages({
+      "any.only": "Status must be one of: pending, sent, failed.",
+      "string.base": "Status must be a string.",
+    }),
   page: commonValidation.page,
   limit: commonValidation.limit,
 });
