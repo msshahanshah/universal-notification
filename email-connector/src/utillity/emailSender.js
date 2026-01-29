@@ -187,8 +187,6 @@ class EmailSender {
       );
     }
 
-    console.log("PATH", dir);
-
     const mailOptions = {
       from,
       to,
