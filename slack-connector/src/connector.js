@@ -15,6 +15,7 @@ let sequelize = null;
  * @param {string} clientId - Client identifier.
  * @returns {Sequelize} - Sequelize instance.
  */
+
 function initializeSequelize(dbConfig, clientId) {
   return new Sequelize({
     dialect: "postgres",
@@ -58,9 +59,18 @@ async function connectAndConsume(client) {
     const database = require("../models")(sequelize, Sequelize, clientId); // Initialize models for this client's Sequelize instance
 
     // consume rabbitmq
+
+    // if testing env
+
     await rabbitClient.consume({
       service: "slackbot",
-      sender: async (payload) => {
+      sender: async (payload, messageId) => {
+        if (process.env.NODE_ENV === "testing") {
+          await database.Notification.update(
+            { status: "sent" },
+            { where: { messageId: messageId } },
+          );
+        }
         await sendSlackMessage(
           client.SLACKBOT.TOKEN,
           payload.to,
