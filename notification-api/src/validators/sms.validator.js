@@ -16,7 +16,7 @@ const smsValidation = {
       }
 
       // Single phone number regex
-      const phoneRegex = /^\+(?:[1-9]|[1-9][0-9])[0-9]{10}$/;
+      const phoneRegex = /^\+(?:[1-9]|[1-9][0-9])[1-9][0-9]{9}$/;
 
       // Validate each number
       for (const number of numbers) {
