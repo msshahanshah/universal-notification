@@ -30,16 +30,15 @@ async function connectAndConsume(clientConfigList) {
         await rabbitClient.consume({
           service: "sms",
           sender: async (payload, messageId) => {
-            console.log("messageId >>>",messageId)
             if (process.env.NODE_ENV === "testing") {
               const message = await db.Notification.findOne({
                 where: { messageId }
               });
-              console.log(message);
               if (!message) {
-                throw new Error("Message Not found")
+                logger.error("Message Not Found")
+                return;
               }
-              db.Notification.update(
+              await db.Notification.update(
                 { status: "sent" },
                 { where: { messageId } }
               )
