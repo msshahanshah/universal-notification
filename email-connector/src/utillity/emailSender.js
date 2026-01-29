@@ -187,7 +187,7 @@ class EmailSender {
 
     try {
       if (process.env.NODE_ENV === 'testing') {
-        result = {
+        const result = {
           accepted: ['khandelwal7vidit@gmail.com'],
           rejected: [],
           ehlo: ['8BITMIME', 'AUTH PLAIN LOGIN', 'Ok'],
@@ -202,7 +202,8 @@ class EmailSender {
           },
           messageId: '<45a87056-a3cc-2120-e7f7-fed8a783d5c5@gmail.com>',
         };
-        logger.info(`Email sent via ${this.provider}`, { to, subject });
+        
+        logger.info(`Email.... sent via ${this.provider}`, { to, subject });
         return result;
       } else {
         const result = await this.transporter.sendMail(mailOptions);
