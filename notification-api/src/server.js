@@ -1,5 +1,5 @@
 const cluster = require("cluster");
-
+const path = require("path");
 const express = require("express");
 const httpProxy = require("http-proxy");
 const config = require("./config");
@@ -108,10 +108,16 @@ if (cluster.isMaster) {
       // Start master router
       try {
         const proxy = httpProxy.createProxyServer({});
-
+        const YAML = require("yamljs");
+        const swaggerUi = require("swagger-ui-express");
+        const swaggerDoc = YAML.load(path.join(__dirname, "swagger.yaml"));
         const masterApp = express();
         masterApp.use(require("cors")());
-
+        masterApp.use(
+          "/api-docs",
+          swaggerUi.serve,
+          swaggerUi.setup(swaggerDoc)
+        );
         masterApp.use((req, res, next) => {
           const clientId = req.headers["x-client-id"];
           const client = clients.find((c) => c.ID === clientId);

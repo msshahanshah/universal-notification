@@ -1,0 +1,436 @@
+openapi: 3.0.3
+info:
+  title: Universal Notifier API
+  description: |
+    API specification for the Universal Notifier.
+  version: 1.0.0
+
+servers:
+  - url: https://{baseURL}
+    variables:
+      baseURL:
+        default: localhost:3000
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    LoginRequest:
+      type: object
+      required: [username, password]
+      properties:
+        username:
+          type: string
+        password:
+          type: string
+
+    RefreshRequest:
+      type: object
+      required: [refreshToken]
+      properties:
+        refreshToken:
+          type: string
+
+    NotifySms:
+      type: object
+      required: [service, message, destination]
+      properties:
+        service:
+          type: string
+          enum: [sms]
+          example: sms
+        message:
+          type: string
+          example: Hello Vidit, how are you
+        destination:
+          type: string
+          example: "+919929797900"
+
+    NotifySlack:
+      type: object
+      required: [service, message, destination]
+      properties:
+        service:
+          type: string
+          enum: [slack]
+          example: slack
+        message:
+          type: string
+          example: Good Morning, Guys
+        destination:
+          type: string
+          example: C08Q1E38E10R
+
+    NotifyEmail:
+      type: object
+      required: [service, destination, subject, body, fromEmail]
+      additionalProperties: false
+      properties:
+        service:
+          type: string
+          enum: [email]
+          example: email
+        destination:
+          type: string
+          example: khandelwal7vidit@gmail.com
+        subject:
+          type: string
+          example: Hi This is recent mail from vidit khandelwal.
+        body:
+          type: string
+          example: Good Morning Dikshant, Please look into this email.
+        fromEmail:
+          type: string
+          example: imvidit7@gmail.com
+        cc:
+          type: string
+          example: "imvidit7@gmail.com , imvidit8@gmail.com" 
+        bcc:
+          type: string
+          example: "imvidit2@gmail.com , imvidit3@gmail.com" 
+
+    ErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        message:
+          type: string
+          example: "Error detail here"
+
+paths:
+  /health:
+    get:
+      summary: Health check
+      tags: [System]
+      parameters:
+        - name: X-Client-Id
+          in: header
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Service is healthy
+
+  /login:
+    post:
+      summary: User login
+      tags: [Auth]
+      parameters:
+        - name: X-Client-Id
+          in: header
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginRequest"
+      responses:
+        "200":
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: login successful
+                  data:
+                    type: object
+                    properties:
+                      refreshToken:
+                        type: string
+                      accessToken:
+                        type: string
+
+  /refresh:
+    post:
+      summary: Refresh access token
+      tags: [Auth]
+      parameters:
+        - name: X-Client-Id
+          in: header
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RefreshRequest"
+      responses:
+        "200":
+          description: Refresh successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: refresh successful
+                  data:
+                    type: object
+                    properties:
+                      accessToken:
+                        type: string
+
+  /delivery-status/{messageId}:
+    get:
+      summary: Get delivery status
+      tags: [Status]
+       security:
+        - bearerAuth: []
+      parameters:
+        - name: X-Client-Id
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: messageId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Delivery status returned
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      messageId:
+                        type: string
+                      deliveryStatus:
+                        type: string
+                        example: pending
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Not Found - Message ID does not exist
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                success: false
+                message: "Message ID not found"
+
+  /notify:
+    post:
+      summary: Send notification (SMS / Slack / Email)
+      tags: [Notification]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: X-Client-Id
+          in: header
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              oneOf:
+                - $ref: "#/components/schemas/NotifySms"
+                - $ref: "#/components/schemas/NotifySlack"
+                - $ref: "#/components/schemas/NotifyEmail"
+              discriminator:
+                propertyName: service
+
+            examples:
+              sms:
+                summary: SMS Notification
+                value:
+                  service: sms
+                  message: "Hello Vidit, how are you"
+                  destination: "+919929797900"
+
+              slack:
+                summary: Slack Notification
+                value:
+                  service: slack
+                  message: "Good Morning, Guys"
+                  destination: "C08Q1E9E10R"
+
+              email:
+                summary: Email Notification
+                value:
+                  service: email
+                  destination: "user@example.com"
+                  subject: "Recent Mail"
+                  body: "Email body content"
+                  fromEmail: "sender@example.com"
+                  cc: "imvidit7@gmail.com , imvidit8@gmail.com" 
+                  bcc: "imvidit2@gmail.com , imvidit3@gmail.com" 
+      responses:
+        "200":
+          description: Accepted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: accepted
+                  message:
+                    type: string
+                    example: Notification request accepted and queued.
+                  messageId:
+                    type: string
+                    example: "7ec67efd-21e1-4189-aa8e-25686a6f8845"
+        "400":
+          description: Bad Request / Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /logs:
+    get:
+      summary: Get notification logs
+      tags: [Logs]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: X-Client-Id
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [pending, processing, failed, sent]
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 0
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 0
+        - name: service
+          in: query
+          schema:
+            type: string
+            enum: [slack, email, sms]
+      responses:
+        "200":
+          description: Logs fetched successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Data fetched successfully
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: number
+                        messageId:
+                          type: string
+                        service:
+                          type: string
+                        destination:
+                          type: string
+                        status:
+                          type: string
+                        attempts:
+                          type: number
+                        messageDate:
+                          type: string
+                          format: date-time
+                  pagination:
+                    type: object
+                    properties:
+                      page:
+                        type: number
+                      limit:
+                        type: number
+                      totalPages:
+                        type: number
+        "400":
+          description: Bad Request - Invalid query parameters
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
