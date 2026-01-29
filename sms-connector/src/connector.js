@@ -35,9 +35,10 @@ async function connectAndConsume(clientConfigList) {
                 where: { messageId }
               });
               if (!message) {
-                throw new Error("Message Not found")
+                logger.error("Message not found");
+                return;
               }
-              db.Notification.update(
+              await db.Notification.update(
                 { status: "sent" },
                 { where: { messageId } }
               )
