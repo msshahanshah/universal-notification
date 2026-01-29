@@ -196,6 +196,8 @@ paths:
     get:
       summary: Get delivery status
       tags: [Status]
+       security:
+        - bearerAuth: []
       parameters:
         - name: X-Client-Id
           in: header
