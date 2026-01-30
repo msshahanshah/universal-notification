@@ -3,7 +3,9 @@ const sgMail = require('@sendgrid/mail');
 const Mailgun = require('mailgun.js');
 const logger = require('../logger');
 const path = require('path');
-const { deleteLocalFile } = require('../../../notification-api/helpers/fileOperation.helper');
+const {
+  deleteLocalFile,
+} = require('../../../notification-api/helpers/fileOperation.helper');
 
 // Email service configuration
 class EmailSender {
@@ -179,12 +181,7 @@ class EmailSender {
 
     let dir;
     if (attachments) {
-      dir = path.join(
-        __dirname,
-        '..',
-        'uploads',
-        `${fileId}.${extension}`,
-      );
+      dir = path.join(__dirname, '..', 'uploads', `${fileId}.${extension}`);
     }
 
     const mailOptions = {
@@ -210,14 +207,38 @@ class EmailSender {
     }
 
     try {
-      const result = await this.transporter.sendMail(mailOptions);
-      logger.info(`Email sent via ${this.provider}`, { to, subject });
-      if(attachments) {
-        logger.info(`Email sent successfully with attachements, picking local path, ${dir}`);
-        deleteLocalFile(dir);
-        logger.info(`Local file deleted successfully, picking local path, ${dir}`);
+      if (process.env.NODE_ENV === 'testing') {
+        const result = {
+          accepted: ['test@gmail.com'],
+          rejected: [],
+          ehlo: ['8BITMIME', 'AUTH PLAIN LOGIN', 'Ok'],
+          envelopeTime: 95,
+          messageTime: 197,
+          messageSize: 365,
+          response:
+            '250 Ok 0109019c03052734-b7820738-bb36-420f-88ee-f3ca02161911-000000',
+          envelope: {
+            from: 'noreply@gmail.com',
+            to: ['test@gmail.com'],
+          },
+          messageId: '<45a87056-a3cc-2120-e7f7-fed8a783d5c5@gmail.com>',
+        };
+        logger.info(`Email.... sent via ${this.provider}`, { to, subject });
+        return result;
+      } else {
+        const result = await this.transporter.sendMail(mailOptions);
+        logger.info(`Email sent via ${this.provider}`, { to, subject });
+        if (attachments) {
+          logger.info(
+            `Email sent successfully with attachements, picking local path, ${dir}`,
+          );
+          deleteLocalFile(dir);
+          logger.info(
+            `Local file deleted successfully, picking local path, ${dir}`,
+          );
+          return result;
+        }
       }
-      return result;
     } catch (error) {
       logger.error(`Error sending email via ${this.provider}:`, {
         error: error.message,
