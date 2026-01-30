@@ -12,7 +12,7 @@ const s3Client = new S3Client({
 const generatePreSignedUrl = async (clientId, messageId, attachements) => {
   try {
     const urls = await Promise.all(
-      attachements?.map((file) => {
+      attachements?.map(async (file) => {
         const fileKey = `uploads/${clientId}/${messageId}?${attachements.length}/${file}`; // clientId/messageId?size/file_name
         const params = {
           Bucket: process.env.AWS_S3_BUCKET_NAME,
@@ -23,7 +23,7 @@ const generatePreSignedUrl = async (clientId, messageId, attachements) => {
           //   "Content-Type": ""
           // }
         };
-        return createPresignedPost(s3Client, params);
+        return { [file]: await createPresignedPost(s3Client, params) };
       }),
     );
 
