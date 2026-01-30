@@ -46,8 +46,8 @@ const messageLogs = async (req, res) => {
       message: "Data fetched successfully",
       data,
       pagination: {
-        page,
-        limit,
+        page: +page,
+        limit: data.length,
         totalPages,
       },
     });
