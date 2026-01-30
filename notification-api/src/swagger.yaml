@@ -196,7 +196,7 @@ paths:
     get:
       summary: Get delivery status
       tags: [Status]
-       security:
+      security:
         - bearerAuth: []
       parameters:
         - name: X-Client-Id
@@ -434,3 +434,58 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
+
+  /balance:
+    get:
+      ummary: Get delivery status
+      tags: [Status]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: X-Client-Id
+          in: header
+          required: true
+          schema:
+          type: string
+
+        - name: service
+          in: query
+          required: true
+          schema:
+          type: string
+          description: Type of service (SMS, Email, Voice, etc.)
+
+        - name: provider
+          in: query
+          required: true
+          schema:
+          type: string
+          description: Provider used to send message (MSG91, Twilio, etc.)
+
+  /refresh-balance:
+    get:
+      summary: Get real-time balance
+      tags: [Status]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: X-Client-Id
+          in: header
+          required: true
+          schema:
+          type: string
+
+        - name: service
+          in: query
+          required: true
+          schema:
+          type: string
+          description: Type of service (SMS, Email, Voice, etc.)
+
+        - name: provider
+          in: query
+          required: true
+          schema:
+          type: string
+          description: Provider used to send message (MSG91, Twilio, etc.)
+      
