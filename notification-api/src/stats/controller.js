@@ -1,16 +1,29 @@
 const grpcClient = require("../gRPC/grpc.client");
 const grpc = require('@grpc/grpc-js');
-const fetchBalance = require("./service")
+const { fetchBalance, updateBalance } = require("./service")
+
+const labelMap = {
+    TWILIO: "Amount",
+    FAST2SMS: "Credits",
+    MSG91: "Wallet Amount",
+    DEFAULT: "Amount"
+};
 
 const getBalance = async (req, res) => {
     try {
         const clientId = req.headers["x-client-id"];
-        const { provider } = req.query;
+        const { service, provider } = req.query;
+
+        if (!service || !provider) {
+            const err = new Error("Service and provider are missing");
+            err.statusCode = 400;
+            throw err;
+        }
 
         const metadata = new grpc.Metadata();
         metadata.add("x-internal-key", process.env.INTERNAL_GRPC_KEY);
 
-        grpcClient.GetBalance({ clientId, provider: provider ? provider.toUpperCase() : undefined }, metadata, (err, response) => {
+        grpcClient.GetBalance({ clientId, provider: provider ? provider.toUpperCase() : undefined }, metadata, async (err, response) => {
             if (err) {
                 console.error("gRPC error:", err);
                 return res.status(+err.metadata?.get("error-code")?.[0] || 500).json({
@@ -18,39 +31,54 @@ const getBalance = async (req, res) => {
                     message: err.metadata?.get("message")?.[0] || err.message
                 });
             }
+
+            const prov = response.provider?.toUpperCase();
+            const label = labelMap[prov] || labelMap.DEFAULT;
+
+            await updateBalance(clientId, response, label, service.toUpperCase());
+
             return res.json({
                 success: true,
                 message: "Balance fetched successfully",
                 data: {
                     provider: response.provider,
-                    label: "Amount",
+                    label,
                     balance: response.balance,
-                    currency: response.currency
+                    currency: response?.currency
                 }
             });
         });
 
     } catch (error) {
-        return res.status(500).json({ success: false, message: error.message });
+        return res.status(error.statusCode || 500).json({ success: false, message: error.message });
     }
 };
 
 const viewBalance = async (req, res) => {
     try {
         const clientId = req.headers["x-client-id"];
-        const response = await fetchBalance(clientId, "SMS", "TWILIO");
+        const { service, provider } = req.query;
+
+        if (!service || !provider) {
+            const err = new Error("service and provider are required");
+            err.statusCode = 400;
+            throw err;
+        }
+
+        const response = await fetchBalance(clientId, service.toUpperCase(), provider.toUpperCase());
+        
         return res.json({
             success: true,
             message: "Balance fetched successfully",
             data: {
                 provider: response.provider,
-                label: "Amount",
+                label : response.balance_type,
                 balance: response.balance,
-                currency: response.type
+                currency: response.currency
             }
         });
     } catch (error) {
-        return res.status(500).json({ success: false, message: error.message })
+        return res.status(error.statusCode || 500).json({ success: false, message: error.message })
     }
 }
 

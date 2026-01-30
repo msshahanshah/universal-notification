@@ -1,4 +1,4 @@
-const viewBalance = async (clientId, service, provider) => {
+const fetchBalance = async (clientId, service, provider) => {
 
     if (!clientId || !service || !provider) {
         throw new Error("clientId, service and provider are required");
@@ -16,8 +16,25 @@ const viewBalance = async (clientId, service, provider) => {
         throw error;
     }
 
-   return balance;
-
+    return balance;
 }
 
-module.exports = viewBalance
+const updateBalance = async (clientId, response, label, service) => {
+
+    if (!clientId || !response?.provider || !service) {
+        const err = new Error("clientId, service, provider are required");
+        err.status = 400;
+        throw err;
+    }
+    const dbConnect = await global.connectionManager.getModels(clientId);
+
+    await dbConnect.Wallet.upsert({
+        code: clientId,
+        service,
+        provider: response.provider,
+        balance: response.balance,
+        balance_type: label,
+        currency: response?.currency 
+    });
+}
+module.exports = { fetchBalance, updateBalance }

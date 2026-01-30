@@ -33,7 +33,7 @@ app.get("/health", (req, res) => {
 app.use(notificationRouter);
 app.use(logRouter);
 app.use(authRouter);
-app.use(statRouter)
+app.use(statRouter);
 
 /**
  * Route for creating and publishing a notification request.`

@@ -39,9 +39,13 @@ module.exports = (sequelize, schemaName) => {
       type: DataTypes.STRING,
       allowNull: false,
     },
-    type: {
+    balance_type: {
       type: DataTypes.STRING,
       allowNull: false,
+    },
+    currency: {
+      type: DataTypes.STRING,
+      allowNull: true,
     },
     createdAt: {
       type: DataTypes.DATE,

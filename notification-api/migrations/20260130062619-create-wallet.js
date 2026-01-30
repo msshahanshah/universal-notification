@@ -26,7 +26,11 @@ module.exports = {
         type: Sequelize.STRING,
         allowNull: false,
       },
-      type: {
+      balance_type: {
+        type: Sequelize.STRING,
+        allowNull: false,
+      },
+      currency: {
         type: Sequelize.STRING,
         allowNull: true,
       },
