@@ -1,51 +1,44 @@
 const Joi = require("joi");
 
-const validateSlackList = (value, helpers, fieldName) => {
-  const channels = value.split(",").map((e) => e.trim());
-
-  const unique = new Set(channels);
-  if (unique.size !== channels.length) {
-    return helpers.message(
-      `Duplicate Channel IDs are not allowed in ${fieldName}.`,
-    );
-  }
-
-  for (const channel of channels) {
-    if (!channel) {
-      return helpers.message(`Empty Channel ID found in ${fieldName}.`);
-      return;
-    }
-
-    if (!/^[A-Za-z0-9_-]+$/.test(channel)) {
-      return helpers.message(
-        `Channel ID "${channel}" in ${fieldName} is invalid. Only letters, numbers, underscores, and hyphens are allowed and for multiple channels  use comma separate`,
-      );
-    }
-
-    if (channel.length < 1) {
-      return helpers.message(
-        `Channel ID "${channel}" in ${fieldName} is too short. Minimum length is 1 character`,
-      );
-    }
-    if (channel.length > 50) {
-      return helpers.message(
-        `Channel ID "${channel}" in ${fieldName} is too long. Maximum length is 50 characters`,
-      );
-    }
-  }
-
-  return value;
-};
+const regex = /^[CGD][A-Z0-9]{8,10}$/;
 
 const slackValidation = {
   destination: Joi.string()
     .required()
-    .custom((value, helpers) =>
-      validateSlackList(value, helpers, "destination"),
-    )
+    .custom((value, helpers) => {
+      // Split by comma
+      let channels = value.split(",");
+
+      // Trim & remove empty values
+      channels = channels.map((c) => c.trim()).filter((c) => c.length > 0);
+
+      // If after cleanup nothing remains
+      if (channels.length === 0) {
+        return helpers.message("At least one Slack channel ID is required");
+      }
+
+      // Slack Channel ID regex
+      // C = public channel, G = private channel, D = direct message
+
+      // Validate each channel ID
+      for (const channel of channels) {
+        if (!regex.test(channel)) {
+          return helpers.message(`Invalid Slack channel ID: ${channel}.`);
+        }
+      }
+
+      // Duplicate check
+      const uniqueChannels = new Set(channels);
+      if (uniqueChannels.size !== channels.length) {
+        return helpers.message("Duplicate Slack channel IDs are not allowed");
+      }
+
+      // Return cleaned value
+      return [...uniqueChannels].join(",");
+    })
     .messages({
-      "string.empty": "Destination Channel ID is required for Slack service.",
-      "any.required": "Destination Channel ID is required for Slack service.",
+      "string.base": "Destination must be a string",
+      "any.required": "Destination is required for Slack service",
     }),
 };
 
