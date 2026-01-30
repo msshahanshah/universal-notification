@@ -191,6 +191,7 @@ class ConnectionManager {
       const db = await require("../../models")(sequelize, clientId);
       this.modelCache.set(clientId, db);
     } catch (error) {
+      console.log(error)
       throw new ConnectionError(
         `Sequelize init failed for client ${clientId}`,
         { error: error.message }

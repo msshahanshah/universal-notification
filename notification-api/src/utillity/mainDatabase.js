@@ -3,9 +3,15 @@
 const { Sequelize } = require("sequelize");
 
 class GlobalDatabaseManager {
-  constructor() {}
+  constructor() {
+    this.sequelize = null;
+    this.User = null;
+  }
 
   async initializeSequelize() {
+    if (this.User) {
+      return { User: this.User };
+    }
     const sequelize = new Sequelize({
       dialect: "postgres",
       host: process.env.POSTGRES_HOST,
@@ -22,13 +28,12 @@ class GlobalDatabaseManager {
     await sequelize.authenticate();
     console.log(`Database global connection successful.`);
 
-    const User = await require("../../models/user")(sequelize, Sequelize);
-    return { User };
+    this.User = await require("../../models/user")(sequelize, Sequelize);
+    return { User: this.User };
   }
 
-  async getModels() {
-    const db = await this.initializeSequelize();
-    return db;
+  getModels() {
+    return this.initializeSequelize();
   }
 }
 module.exports = new GlobalDatabaseManager();

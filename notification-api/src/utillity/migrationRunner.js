@@ -49,6 +49,7 @@ async function migrateAllDatabases() {
     // Load and migrate client databases
     const clients = await loadClientConfigs();
     for (const client of clients) {
+      console.log(client)
       const clientConfig = {
         dialect: "postgres",
         host: client?.DBCONFIG?.HOST,

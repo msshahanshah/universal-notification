@@ -1,4 +1,4 @@
-const { serializeLogs } = require("./serialization");
+const { serializeLogs } = require('./serialization');
 
 const viewDeliveryStatus = async (messageId, clientId) => {
   let dbConnect = await global.connectionManager.getModels(clientId);
@@ -7,7 +7,7 @@ const viewDeliveryStatus = async (messageId, clientId) => {
   });
 
   if (!data) {
-    throw new Error("Message not found");
+    throw new Error('Message not found');
   }
 
   return {
@@ -17,29 +17,36 @@ const viewDeliveryStatus = async (messageId, clientId) => {
 };
 
 const viewMessageLogs = async (idClient, service, status, page, limit) => {
-  const offset = (page - 1) * limit;
-  const where = {};
-  if (service) {
-    where.service = service;
-  }
-  if (status) {
-    where.status = status;
-  }
+  try {
+    const offset = (page - 1) * limit;
+    const where = {};
+    if (service) {
+      where.service = service;
+    }
+    if (status) {
+      where.status = status;
+    }
 
-  if (!idClient) {
-    throw new Error("Not authorized");
+    if (!idClient) {
+      throw new Error('Not authorized');
+    }
+
+    let dbConnect = await global.connectionManager.getModels(idClient);
+
+    const { count, rows } = await dbConnect.Notification.findAndCountAll({
+      where,
+      order: [['createdAt', 'DESC']],
+      offset,
+      limit,
+    });
+
+    const totalPages = Math.ceil(count / limit);
+
+    const data = serializeLogs(rows);
+    return { data, totalPages };
+  } catch (error) {
+    console.log(error);
   }
-
-  let dbConnect = await global.connectionManager.getModels(idClient);
-  const { count, rows } = await dbConnect.Notification.findAndCountAll({
-    where,
-    offset,
-    limit,
-  });
-  const totalPages = Math.ceil(count / limit);
-
-  const data = serializeLogs(rows);
-  return { data, totalPages };
 };
 
 module.exports = { viewDeliveryStatus, viewMessageLogs };

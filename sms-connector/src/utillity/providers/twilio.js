@@ -13,6 +13,23 @@ class TwilioProvider {
       to,
     });
   }
+
+  async dummySend({ to, message }) {
+    return {
+      message: "This is a dummy message"
+    }
+  }
+
+  async getBalance() {
+    try {
+      const balance = await this.client.api.v2010
+        .accounts(this.accountSID)
+        .balance.fetch();
+      return balance;
+    } catch (error) {
+      console.error("Error fetching balance:", error.message);
+    }
+  }
 }
 
 module.exports = TwilioProvider;

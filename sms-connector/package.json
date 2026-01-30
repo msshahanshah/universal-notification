@@ -8,7 +8,9 @@
     "test": "node __tests__/index.test.js"
   },
   "dependencies": {
+    "@universal-notifier/secret-manager": "github:gkmit-dikshant/aws-secret-manager-package",
     "amqplib": "^0.10.8",
+    "axios": "^1.13.2",
     "dotenv": "^16.4.1",
     "handlebars": "^4.7.7",
     "lru-cache": "^11.1.0",

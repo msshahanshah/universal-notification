@@ -1,5 +1,6 @@
 const Joi = require("joi");
-const emailRegex = /^(?=.{6,254}$)[a-z0-9._%+-]+@[a-z0-9-]+\.[a-z]{2,}$/i;
+const emailRegex =
+  /^(?=.{6,254}$)[a-z0-9._%+-]+@[a-z0-9-]+\.[a-z]{2,}$/i;
 const ALLOWED_MIMETYPES = [
   "application/pdf",
   "image/x-png",
@@ -11,8 +12,8 @@ const validateEmailList = (value, helpers, fieldName) => {
   const mandatoryFields = ["fromEmail", "destination"];
 
   if (isValueEmpty) {
-    return mandatoryFields.includes(fieldName)
-      ? helpers.message(`${fieldName} is required and cannot be empty.`)
+    return mandatoryFields.includes(fieldName) 
+      ? helpers.message(`${fieldName} is required and cannot be empty.`) 
       : value;
   }
 
@@ -23,16 +24,12 @@ const validateEmailList = (value, helpers, fieldName) => {
 
   if (emails.length === 0) {
     return mandatoryFields.includes(fieldName)
-      ? helpers.message(
-          `At least one valid email is required for ${fieldName}.`,
-        )
+      ? helpers.message(`At least one valid email is required for ${fieldName}.`)
       : "";
   }
 
   if (fieldName === "fromEmail" && emails.length > 1) {
-    return helpers.message(
-      `The fromEmail field can only contain a single email.`,
-    );
+    return helpers.message(`The fromEmail field can only contain a single email.`);
   }
 
   const uniqueEmails = [...new Set(emails)];
@@ -45,6 +42,7 @@ const validateEmailList = (value, helpers, fieldName) => {
 
   return uniqueEmails.join(", ");
 };
+
 
 const emailValidation = {
   destination: Joi.when("service", {
@@ -62,10 +60,15 @@ const emailValidation = {
   }),
   subject: Joi.when("service", {
     is: "email",
-    then: Joi.string().trim().min(1).max(255).required().messages({
-      "string.empty": "Subject is required for email service.",
-      "string.max": "Subject must not exceed 255 characters.",
-    }),
+    then: Joi.string()
+      .trim()
+      .min(1)
+      .max(255)
+      .required()
+      .messages({
+        "string.empty": "Subject is required for email service.",
+        "string.max": "Subject must not exceed 255 characters.",
+      }),
     otherwise: Joi.forbidden(),
   }),
   body: Joi.when("service", {
@@ -106,10 +109,12 @@ const emailValidation = {
   }),
   attachments: Joi.when("service", {
     is: "email",
-    then: Joi.boolean().required().messages({
-      "any.required": "Attachments flag is required for Email service.",
-      "boolean.base": "Attachments must be either true or false.",
-    }),
+    then: Joi.boolean()
+      .required()
+      .messages({
+        "any.required": "Attachments flag is required for Email service.",
+        "boolean.base": "Attachments must be either true or false.",
+      }),
     otherwise: Joi.forbidden().messages({
       "any.unknown": "Attachments is only allowed for Email service.",
     }),

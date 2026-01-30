@@ -1,7 +1,7 @@
 "use strict";
-const fs = require("fs").promises;
-const path = require("path");
 const defaultPassword = require("../helpers/defaultPassword.helper");
+// const { loadClientSecret } = require("../src/utillity/awsSecretManager");
+const { SecretManager } = require("@universal-notifier/secret-manager");
 
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
@@ -12,15 +12,7 @@ module.exports = {
       schema: targetSchema,
     };
     try {
-      const clientDetailFilePath = path.join(
-        process.cwd(),
-        "..",
-        "clientList.json"
-      );
-
-      const clients = JSON.parse(
-        await fs.readFile(clientDetailFilePath, "utf-8")
-      );
+      const clients = await SecretManager.getSecrets();
 
       if (!Array.isArray(clients) || clients.length === 0) {
         throw new Error("No client found!");
@@ -38,7 +30,7 @@ module.exports = {
             username: `admin@${user}`,
             password: await defaultPassword(`admin@${user}`),
           };
-        })
+        }),
       );
 
       await queryInterface.bulkInsert(tableName, defaultUsers);

@@ -15,8 +15,9 @@ class SMSManager {
         });
     }
 
-    async initializeSMSSender(smsConfig, clientId) {
-        if (this.smsCache.get(clientId)) return;
+    async initializeSMSSender(smsConfig, clientId, provider) {
+        const key = `${clientId}:${provider}`;
+        if (this.smsCache.get(key)) return;
 
         if (!smsConfig) {
             const clientList = await loadClientConfigs();
@@ -26,19 +27,20 @@ class SMSManager {
                 return;
             }
         }
-
         logger.info(`[${clientId}] Testing SMS service connection...`);
-        const smsSender = new SmsSender(smsConfig);
+        const smsSender = new SmsSender(smsConfig, provider);
         await smsSender.initialize();
         logger.info(`[${clientId}] SMS service connection successful.`);
-        this.smsCache.set(clientId, smsSender);
+        this.smsCache.set(key, smsSender);
+        // set the key as clientId and provider 
     }
 
-    async getSMSSender(clientId) {
-        let smsSender = this.smsCache.get(clientId);
+    async getSMSSender(clientId, provider) {
+        const key = `${clientId}:${provider}`;
+        let smsSender = this.smsCache.get(key);
         if (!smsSender) {
-            await this.initializeSMSSender(undefined, clientId);
-            smsSender = this.smsCache.get(clientId);
+            await this.initializeSMSSender(undefined, clientId, provider);
+            smsSender = this.smsCache.get(key);
         }
         return smsSender;
     }
@@ -59,4 +61,4 @@ class SMSManager {
         else this.smsCache.clear();
     }
 }
-module.exports=new SMSManager();
+module.exports = new SMSManager();
