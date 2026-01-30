@@ -15,8 +15,8 @@
   "license": "ISC",
   "dependencies": {
     "@aws-sdk/client-s3": "^3.972.0",
-    "@aws-sdk/s3-presigned-post": "^3.974.0",
     "@aws-sdk/client-secrets-manager": "^3.971.0",
+    "@aws-sdk/s3-presigned-post": "^3.974.0",
     "@universal-notifier/secret-manager": "github:gkmit-dikshant/aws-secret-manager-package",
     "@grpc/grpc-js": "^1.14.3",
     "@grpc/proto-loader": "^0.8.0",

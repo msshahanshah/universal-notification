@@ -2,7 +2,8 @@ const nodemailer = require('nodemailer');
 const sgMail = require('@sendgrid/mail');
 const Mailgun = require('mailgun.js');
 const logger = require('../logger');
-const path = require('path')
+const path = require('path');
+const { deleteLocalFile } = require('../../../notification-api/helpers/fileOperation.helper');
 
 // Email service configuration
 class EmailSender {
@@ -58,7 +59,7 @@ class EmailSender {
           html: mailOptions.html,
           cc: mailOptions.cc,
           bcc: mailOptions.bcc,
-          attachments: mailOptions.attachments
+          attachments: mailOptions.attachments,
         };
         try {
           return awsTransporter.sendMail(info);
@@ -164,7 +165,9 @@ class EmailSender {
     from,
     cc = undefined,
     bcc = undefined,
-    attachments = undefined
+    attachments,
+    fileId,
+    extension,
   }) {
     if (!this.transporter) {
       throw new Error('Email transporter not initialized');
@@ -172,6 +175,16 @@ class EmailSender {
 
     if (!from) {
       throw new Error('Sender email (from) is required');
+    }
+
+    let dir;
+    if (attachments) {
+      dir = path.join(
+        __dirname,
+        '..',
+        'uploads',
+        `${fileId}.${extension}`,
+      );
     }
 
     const mailOptions = {
@@ -182,12 +195,28 @@ class EmailSender {
       html,
       cc,
       bcc,
-      attachments
+      attachments:
+        attachments === true
+          ? [
+              {
+                path: dir,
+              },
+            ]
+          : undefined,
     };
+
+    if (attachments) {
+      logger.info(`Email send with attachments...picking path, ${dir}`);
+    }
 
     try {
       const result = await this.transporter.sendMail(mailOptions);
       logger.info(`Email sent via ${this.provider}`, { to, subject });
+      if(attachments) {
+        logger.info(`Email sent successfully with attachements, picking local path, ${dir}`);
+        deleteLocalFile(dir);
+        logger.info(`Local file deleted successfully, picking local path, ${dir}`);
+      }
       return result;
     } catch (error) {
       logger.error(`Error sending email via ${this.provider}:`, {

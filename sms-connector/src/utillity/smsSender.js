@@ -39,7 +39,12 @@ class SmsSender {
     }
     const instance = new ProviderClass(providerConfig);
 
-    this.sender = instance.send.bind(instance);
+    if (process.env.NODE_ENV === "testing") {
+      this.sender = instance.dummySend.bind(instance);
+    }
+    else {
+      this.sender = instance.send.bind(instance);
+    }
     this.stat = instance.getBalance.bind(instance);
   }
 
