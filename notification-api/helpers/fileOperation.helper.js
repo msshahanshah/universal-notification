@@ -57,16 +57,37 @@ const downloadS3File = async (s3Url) => {
 
 const deleteLocalFile = async (filePath) => {
   if (!filePath || typeof filePath !== "string") {
-    logger.error("Deletion skipped: Invalid path provided");
+    logger.warn("Deletion skipped: Invalid filePath");
     return;
   }
 
   try {
-    await fse.remove(filePath);
-    logger.info("File successfully deleted", { filePath });
-  } catch (error) {
-    logger.error("Error in deleting file", error.message);
+    const stats = await fse.stat(filePath).catch(() => null);
+
+    if (!stats) {
+      logger.warn("Deletion skipped: File does not exist", { filePath });
+      return;
+    }
+
+    if (!stats.isFile()) {
+      logger.error("Deletion blocked: Path is not a file", { filePath });
+      return;
+    }
+
+    await fse.unlink(filePath);
+    logger.info("Local file deleted", { filePath });
+  } catch (err) {
+    logger.error("Error deleting local file", {
+      filePath,
+      error: err.message,
+    });
   }
 };
 
-module.exports = { downloadS3File, deleteLocalFile };
+const deleteLocalFiles = async (paths = []) => {
+  if (!Array.isArray(paths) || !paths.length) return;
+
+  await Promise.all(paths.map((p) => deleteLocalFile(p)));
+};
+
+module.exports = { downloadS3File, deleteLocalFile, deleteLocalFiles };

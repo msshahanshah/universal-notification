@@ -118,11 +118,10 @@ const notifyWithEmailAttachment = async (req, res) => {
 
     await Promise.all(
       attachments?.map((file) => {
-        // <s3_prefix>/uploads/<CLIENT_ID>/<MESSAGE_ID>/<file_name>
+        // <s3_prefix>/uploads/<CLIENT_ID>/<MESSAGE_ID>?<size>/<file_name>
         const s3Url = file;
         const parts = file.split("/");
         const filename = file.split("/uploads/")[1];
-        console.log("messageId >>>", messageId);
         return downloadS3File(s3Url, filename, messageId);
       }),
     );
@@ -174,72 +173,3 @@ const notifyWithEmailAttachment = async (req, res) => {
 };
 
 module.exports = { notify, notifyWithEmailAttachment };
-
-// app.post('/notify', async (req, res) => {
-
-//     // Validation
-//     if (!service || !targetChannel || !message) {
-//         logger.warn('Validation failed: Missing fields', { body: req.body, messageId });
-//         return res.status(400).json({
-//             error: 'Missing required fields: service, channel, message',
-//         });
-//     }
-//     const allowedServices = ['slack', 'email', 'telegram'];
-//     const lowerCaseService = service.toLowerCase();
-
-//     // Validate email specific fields
-//     if (lowerCaseService === 'email') {
-//         if (!req.body.templateId) {
-//             logger.warn('Validation failed: Missing templateId for email', { body: req.body, messageId });
-//             return res.status(400).json({ error: 'Missing templateId for email service' });
-//         }
-//         if (!message) {
-//             logger.warn('Validation failed: Missing message for email service', { body: req.body, messageId });
-//             return res.status(400).json({ error: 'Missing message for email service' });
-//         }
-
-//         if (typeof message !== 'object' || message === null) {
-//             logger.warn('Validation failed: message is not an object for email service', { body: req.body, messageId });
-//             return res.status(400).json({ error: 'Invalid message format: must be an object for email service' });
-//         }
-//     }
-//     if (!allowedServices.includes(lowerCaseService)) {
-//         logger.warn('Validation failed: Invalid service', { service, messageId });
-//         return res.status(400).json({
-//             error: `Invalid service specified. Allowed services are: ${allowedServices.join(', ')}`,
-//         });
-//     }
-
-//     try {
-
-//         res.status(202).json({
-//             status: 'accepted',
-//             message: 'Notification request accepted and queued.',
-//             messageId: messageId, // Return the ID to the client
-//         });
-
-//     } catch (publishError) {
-//         logger.error('RabbitMQ error: Failed to publish notification request', {
-//             messageId,
-//             dbId: notificationRecord.id,
-//             error: publishError.message,
-//             stack: publishError.stack
-//         });
-//         try {
-//             await notificationRecord.update({
-//                 status: 'failed',
-//                 connectorResponse: `Failed to publish to RabbitMQ: ${publishError.message}`
-//             });
-//             logger.warn(`Updated notification status to 'failed' due to publish error`, { messageId, dbId: notificationRecord.id });
-//         } catch (updateError) {
-//             logger.error('DB error: Failed to update notification status to "failed" after publish error', {
-//                 messageId,
-//                 dbId: notificationRecord.id,
-//                 updateError: updateError.message,
-//                 stack: updateError.stack
-//             });
-//         }
-
-//         res.status(500).json({ error: 'Failed to queue notification request after saving.' });
-//     }
-// });

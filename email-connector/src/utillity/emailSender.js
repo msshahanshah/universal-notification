@@ -4,7 +4,7 @@ const Mailgun = require("mailgun.js");
 const logger = require("../logger");
 const path = require("path");
 const {
-  deleteLocalFile,
+  deleteLocalFiles,
 } = require("../../../notification-api/helpers/fileOperation.helper");
 
 // Email service configuration
@@ -220,7 +220,6 @@ class EmailSender {
         logger.info(
           `Email sent successfully with attachements, picking local path,`,
         );
-        // deleteLocalFile(dir);
         logger.info(`Local file deleted successfully, picking local path`);
       }
       return result;
@@ -231,6 +230,8 @@ class EmailSender {
         subject,
       });
       throw error;
+    } finally {
+      deleteLocalFiles(attachments);
     }
   }
 }
