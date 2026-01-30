@@ -42,7 +42,6 @@ const validateSchema = Joi.object({
   cc: emailValidation.cc,
   bcc: emailValidation.bcc,
   attachments: emailValidation.attachments,
-  mimetype: emailValidation.mimetype,
 }).unknown(false); // Middleware to validate the request
 
 const validateRequest = (req, res, next) => {

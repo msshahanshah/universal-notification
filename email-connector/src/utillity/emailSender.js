@@ -1,9 +1,11 @@
-const nodemailer = require('nodemailer');
-const sgMail = require('@sendgrid/mail');
-const Mailgun = require('mailgun.js');
-const logger = require('../logger');
-const path = require('path');
-const { deleteLocalFile } = require('../../../notification-api/helpers/fileOperation.helper');
+const nodemailer = require("nodemailer");
+const sgMail = require("@sendgrid/mail");
+const Mailgun = require("mailgun.js");
+const logger = require("../logger");
+const path = require("path");
+const {
+  deleteLocalFile,
+} = require("../../../notification-api/helpers/fileOperation.helper");
 
 // Email service configuration
 class EmailSender {
@@ -27,16 +29,16 @@ class EmailSender {
       await this.setupSMTP();
     } else {
       console.error(
-        'Invalid email configuration:',
+        "Invalid email configuration:",
         JSON.stringify(this.clientConfig, null, 2),
       );
-      throw new Error('No valid email service configuration found');
+      throw new Error("No valid email service configuration found");
     }
   }
 
   async setupAmazonSES() {
     const { USER_NAME, PASSWORD, REGION } = this.clientConfig.AWS;
-    const sesHost = `email-smtp.${REGION || 'ap-south-1'}.amazonaws.com`;
+    const sesHost = `email-smtp.${REGION || "ap-south-1"}.amazonaws.com`;
 
     const awsTransporter = nodemailer.createTransport({
       host: sesHost,
@@ -64,13 +66,13 @@ class EmailSender {
         try {
           return awsTransporter.sendMail(info);
         } catch (err) {
-          console.error('AWS ses mail send failed:');
+          console.error("AWS ses mail send failed:");
           throw err;
         }
       },
     };
 
-    this.provider = 'AmazonSES';
+    this.provider = "AmazonSES";
   }
 
   async setupSendGrid() {
@@ -88,22 +90,22 @@ class EmailSender {
         return await sgMail.send(msg);
       },
     };
-    this.provider = 'SendGrid';
+    this.provider = "SendGrid";
   }
 
   async setupMailgun() {
     const { MAILGUN: mgConfig } = this.clientConfig;
 
     if (!mgConfig?.API_KEY || !mgConfig?.DOMAIN) {
-      throw new Error('Mailgun API_KEY or DOMAIN missing');
+      throw new Error("Mailgun API_KEY or DOMAIN missing");
     }
 
     const mailgun = new Mailgun(FormData);
 
     const mg = mailgun.client({
-      username: 'api', // always "api" for Mailgun
+      username: "api", // always "api" for Mailgun
       key: mgConfig.API_KEY, // api key from client json
-      url: 'https://api.mailgun.net', // this is url for US region
+      url: "https://api.mailgun.net", // this is url for US region
     });
 
     this.transporter = {
@@ -112,35 +114,35 @@ class EmailSender {
           from: mailOptions.from ?? `Vidit <noreply@${mgConfig.DOMAIN}>`,
           to: mailOptions.to,
           subject: mailOptions.subject,
-          text: mailOptions.text ?? 'Hello Universal Notification',
-          html: mailOptions.html ?? '<h1>Hello Universal Notification</h1>',
+          text: mailOptions.text ?? "Hello Universal Notification",
+          html: mailOptions.html ?? "<h1>Hello Universal Notification</h1>",
         };
 
         try {
           return await mg.messages.create(mgConfig.DOMAIN, msg);
         } catch (err) {
-          console.error('Mailgun send failed:', err?.message, err?.details);
+          console.error("Mailgun send failed:", err?.message, err?.details);
           throw err;
         }
       },
     };
 
-    this.provider = 'Mailgun';
+    this.provider = "Mailgun";
   }
 
   async setupGmail() {
     const { GMAIL: gmailConfig } = this.clientConfig;
     this.transporter = nodemailer.createTransport({
-      service: 'gmail',
+      service: "gmail",
       auth: {
-        type: 'OAuth2',
+        type: "OAuth2",
         user: gmailConfig.EMAIL,
         clientId: gmailConfig.CLIENT_ID,
         clientSecret: gmailConfig.CLIENT_SECRET,
         refreshToken: gmailConfig.REFRESH_TOKEN,
       },
     });
-    this.provider = 'Gmail';
+    this.provider = "Gmail";
   }
 
   async setupSMTP() {
@@ -154,7 +156,7 @@ class EmailSender {
         pass: PASSWORD,
       },
     });
-    this.provider = 'SMTP';
+    this.provider = "SMTP";
   }
 
   async sendEmail({
@@ -166,25 +168,34 @@ class EmailSender {
     cc = undefined,
     bcc = undefined,
     attachments,
-    fileId,
-    extension,
   }) {
     if (!this.transporter) {
-      throw new Error('Email transporter not initialized');
+      throw new Error("Email transporter not initialized");
     }
 
     if (!from) {
-      throw new Error('Sender email (from) is required');
+      throw new Error("Sender email (from) is required");
     }
 
     let dir;
-    if (attachments) {
-      dir = path.join(
-        __dirname,
-        '..',
-        'uploads',
-        `${fileId}.${extension}`,
-      );
+    if (attachments?.length) {
+      dir = attachments.map((s3Url) => {
+        // 1. Remove ?1/ safely
+        const cleanUrl = s3Url.replace(/\?.*?\//, "/");
+
+        // 2. Extract relative path after /uploads/
+        const relativePath = cleanUrl.split("/uploads/")[1];
+
+        // 3. Build local file path
+        const localPath = path.resolve(
+          __dirname,
+          "..",
+          "uploads",
+          relativePath,
+        );
+
+        return { path: localPath };
+      });
     }
 
     const mailOptions = {
@@ -195,27 +206,22 @@ class EmailSender {
       html,
       cc,
       bcc,
-      attachments:
-        attachments === true
-          ? [
-              {
-                path: dir,
-              },
-            ]
-          : undefined,
+      attachments: attachments?.length ? dir : undefined,
     };
 
     if (attachments) {
-      logger.info(`Email send with attachments...picking path, ${dir}`);
+      logger.info(`Email send with attachments...picking path`);
     }
 
     try {
       const result = await this.transporter.sendMail(mailOptions);
       logger.info(`Email sent via ${this.provider}`, { to, subject });
-      if(attachments) {
-        logger.info(`Email sent successfully with attachements, picking local path, ${dir}`);
-        deleteLocalFile(dir);
-        logger.info(`Local file deleted successfully, picking local path, ${dir}`);
+      if (attachments) {
+        logger.info(
+          `Email sent successfully with attachements, picking local path,`,
+        );
+        // deleteLocalFile(dir);
+        logger.info(`Local file deleted successfully, picking local path`);
       }
       return result;
     } catch (error) {

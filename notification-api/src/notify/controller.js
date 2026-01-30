@@ -26,7 +26,6 @@ const notify = async (req, res) => {
     cc,
     bcc,
     attachments,
-    extension,
   } = req.body;
   let content = {};
   if (message) {
@@ -37,11 +36,7 @@ const notify = async (req, res) => {
     content.fromEmail = fromEmail;
     content.cc = cc;
     content.bcc = bcc;
-  }
-
-  if ("attachments" in req.body) {
     content.attachments = attachments;
-    content.extension = extension;
   }
 
   const clientID = req.headers["x-client-id"];
@@ -59,49 +54,46 @@ const notify = async (req, res) => {
     });
   }
 
-  const { url, fields } = await generatePreSignedUrl(
+  const urls = await generatePreSignedUrl(
     clientID,
     notificationRecord.messageId,
+    attachments,
   );
 
   let result;
 
-  if (!attachments) {
+  if (attachments.length === 0) {
     notificationRecord.clientId = clientID;
     result = await publishingNotificationRequest(notificationRecord);
   }
 
-  const response = attachments
-    ? {
-        success: true,
-        message: `Waiting for file upload on URL (expiry 5 mins). Message Id: ${notificationRecord.messageId}`,
-        url: url,
-        fields: fields,
-      }
-    : {
-        success: true,
-        message: `Notification request accepted ${result ? "and queued." : ""}`,
-        messageId: notificationRecord.messageId, // Return the ID to the client
-      };
+  const response =
+    attachments.length > 0
+      ? {
+          success: true,
+          message: `Waiting for file upload on URL (expiry 5 mins). Message Id: ${notificationRecord.messageId}`,
+          urls,
+        }
+      : {
+          success: true,
+          message: `Notification request accepted ${result ? "and queued." : ""}`,
+          messageId: notificationRecord.messageId, // Return the ID to the client
+        };
 
   return res.status(202).json(response);
 };
 
 const notifyWithEmailAttachment = async (req, res) => {
   try {
-    const { media } = req.body;
-    if (!media) {
-      throw new Error("Please send media (S3 URL)");
+    const { attachments, messageId } = req.body;
+    if (
+      !attachments ||
+      (!Array.isArray(attachments) && attachments.length === 0)
+    ) {
+      throw new Error("Please send media (S3 URL's)");
     }
 
     const headers = req.headers;
-
-    const parts = media.split("/");
-    const fileName = parts.slice(-2).join("/");
-    let messageId = parts.pop();
-    messageId = messageId.split('.')[0];
-
-    console.log(messageId);
 
     const clientID = req.headers["x-client-id"];
 
@@ -110,10 +102,7 @@ const notifyWithEmailAttachment = async (req, res) => {
       subject: notificationData.subject,
       body: notificationData.body,
       fromEmail: notificationData.fromEmail,
-      media: media,
-      extension: notificationData.extension,
-      attachments: notificationData.attachments,
-      fileId: messageId
+      attachments,
     };
 
     if (notificationData.cc) {
@@ -127,10 +116,15 @@ const notifyWithEmailAttachment = async (req, res) => {
     const service = notificationData.service;
     const destination = notificationData.destination;
 
-    const path = await downloadS3File(
-      media,
-      fileName,
-      notificationData.extension,
+    await Promise.all(
+      attachments?.map((file) => {
+        // <s3_prefix>/uploads/<CLIENT_ID>/<MESSAGE_ID>/<file_name>
+        const s3Url = file;
+        const parts = file.split("/");
+        const filename = file.split("/uploads/")[1];
+        console.log("messageId >>>", messageId);
+        return downloadS3File(s3Url, filename, messageId);
+      }),
     );
 
     const notificationRecord = await creatingNotificationRecord(
@@ -139,6 +133,7 @@ const notifyWithEmailAttachment = async (req, res) => {
       destination,
       content,
     );
+
     if (notificationRecord.statusCode) {
       return res.status(notificationRecord.statusCode).json({
         error: notificationRecord.message,

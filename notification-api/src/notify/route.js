@@ -11,6 +11,6 @@ const notificationRouter = express.Router();
 
 notificationRouter.post("/notify", auth, validateRequest, notify);
 
-notificationRouter.post("/notify-with-attachment", auth, notifyWithEmailAttachment);
+notificationRouter.post("/notify-with-attachment", notifyWithEmailAttachment);
 
-module.exports = notificationRouter;  
+module.exports = notificationRouter;

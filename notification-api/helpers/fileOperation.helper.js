@@ -1,71 +1,71 @@
-const fse = require('fs-extra');
-const axios = require('axios');
-const path = require('path');
-const logger = require('../src/logger');
+const fse = require("fs-extra");
+const axios = require("axios");
+const path = require("path");
+const logger = require("../src/logger");
 
-const downloadS3File = async (s3Url, fileName, extension) => {
+const downloadS3File = async (s3Url) => {
+  // 1. Remove "?1/" safely
+  const cleanUrl = s3Url.replace(/\?.*?\//, "/");
+
+  // 2. Extract path after /uploads/
+  const relativePath = cleanUrl.split("/uploads/")[1];
+
+  // 3. Split into parts
+  const [client, messageId, fileName] = relativePath.split("/");
+
+  // 4. Build directory path (NO filename here)
   const downloadDir = path.resolve(
     __dirname,
-    '..',
-    '..',
-    'email-connector',
-    'src',
-    'uploads',
+    "..",
+    "..",
+    "email-connector",
+    "src",
+    "uploads",
+    client,
+    messageId,
   );
-  const msgId = fileName.split('/')[1];
-  const localFilePath = path.join(downloadDir, `${msgId}.${extension}`);
+
+  // 5. Final file path
+  const localFilePath = path.join(downloadDir, fileName);
 
   try {
-    // 1. Ensure the folder exists
-    await fse.ensureDir(downloadDir);
+    console.log("downloadDir >>>", downloadDir);
+    console.log("localFilePath >>>", localFilePath);
 
+    // 6. Ensure directory exists
+    await fse.ensureDir(downloadDir);
+    let newS3Url = s3Url.replace("?", "%3F"); // % -> %3F
+    // 7. Download
     const response = await axios({
-      url: s3Url,
-      method: 'GET',
-      responseType: 'stream',
+      url: newS3Url,
+      method: "GET",
+      responseType: "stream",
     });
 
-    // 3. Create a write stream using fse
     const writer = fse.createWriteStream(localFilePath);
-
-    // 4. Pipe the data from axios to the file
     response.data.pipe(writer);
 
-    // 5. Manually wrap in a Promise to wait for completion
     return new Promise((resolve, reject) => {
-      writer.on('finish', () => {
-        logger.info(`Download complete: ${localFilePath}`);
-        resolve(localFilePath);
-      });
-
-      writer.on('error', (err) => {
-        logger.error('File Stream error:', {
-          errorMessage: err.message,
-          stack: err.stack,
-        });
-        reject(err);
-      });
+      writer.on("finish", () => resolve(localFilePath));
+      writer.on("error", reject);
     });
   } catch (err) {
-    logger.error('Axios request failed:', {
-      errorMessage: err.message,
-      stack: err.stack,
-    });
+    logger.error("Download failed:", err);
     throw err;
   }
 };
 
 const deleteLocalFile = async (filePath) => {
-  if (!filePath || typeof filePath !== 'string') {
-    logger.error('Deletion skipped: Invalid path provided');
+  if (!filePath || typeof filePath !== "string") {
+    logger.error("Deletion skipped: Invalid path provided");
     return;
   }
 
   try {
     await fse.remove(filePath);
-    logger.info('File successfully deleted', { filePath });
+    logger.info("File successfully deleted", { filePath });
   } catch (error) {
-    logger.error('Error in deleting file', error.message);
+    logger.error("Error in deleting file", error.message);
   }
 };
 
