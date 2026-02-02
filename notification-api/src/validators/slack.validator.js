@@ -22,7 +22,6 @@ const slackValidation = {
       for (let i = 0; i < channels.length; i++) {
         channels[i] = channels[i].toUpperCase();
       }
-      
       // Slack Channel ID regex
       // C = public channel, G = private channel, D = direct message
 
@@ -41,7 +40,7 @@ const slackValidation = {
 
       // Return cleaned value
       return [...uniqueChannels].join(",");
-    };)
+    })
     .messages({
       "string.base": "Destination must be a string",
       "any.required": "Destination is required for Slack service",
