@@ -20,6 +20,12 @@ const slackValidation = {
       // Slack Channel ID regex
       // C = public channel, G = private channel, D = direct message
 
+      // converting into uppercase
+
+      for (let i = 0; i < channels.length; i++) {
+        channels[i] = channels[i].toUpperCase();
+      }
+
       // Validate each channel ID
       for (const channel of channels) {
         if (!regex.test(channel)) {
