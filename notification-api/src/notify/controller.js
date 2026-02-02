@@ -121,23 +121,6 @@ const notifyWithEmailAttachment = async (req, res) => {
     const service = notificationData.service;
     const destination = notificationData.destination;
 
-    /**
-     * Add a check if attachments contain presigned url for direct downloadingr
-     */
-
-    if (attachments?.length && typeof attachments[0] === "string") {
-      await Promise.all(
-        attachments.map((file) => {
-          // <s3_prefix>/uploads/<CLIENT_ID>/<MESSAGE_ID>?<size>/<file_name>
-          const s3Url = file;
-          const cleanUrl = s3Url.replace(/\?.*?\//, "/");
-          const relativePath = cleanUrl.split("/uploads/")[1];
-          const [client, _messageId, fileName] = relativePath.split("/");
-          return downloadS3File(s3Url, fileName, messageId);
-        }),
-      );
-    }
-
     const notificationRecord = {
       service,
       destination,

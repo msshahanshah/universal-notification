@@ -208,6 +208,17 @@ class EmailSender {
           return { path: localPath };
         });
       } else {
+        // download files
+        await Promise.all(
+          attachments.map((file) => {
+            // <s3_prefix>/uploads/<CLIENT_ID>/<MESSAGE_ID>?<size>/<file_name>
+            const s3Url = file;
+            const cleanUrl = s3Url.replace(/\?.*?\//, "/");
+            const relativePath = cleanUrl.split("/uploads/")[1];
+            const [client, _messageId, fileName] = relativePath.split("/");
+            return downloadS3File(s3Url, fileName, messageId);
+          }),
+        );
         dir = attachments.map((s3Url) => {
           // 1. Remove ?1/ safely
           const cleanUrl = s3Url.replace(/\?.*?\//, "/");
