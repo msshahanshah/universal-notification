@@ -24,25 +24,41 @@ const notify = async (req, res) => {
 
   const clientID = req.headers["x-client-id"];
 
-  const notificationRecord = await creatingNotificationRecord(
+  const notificationRecords = await creatingNotificationRecord(
     clientID,
     service,
     destination,
     content
   );
-  if (notificationRecord.statusCode) {
-    return res.status(notificationRecord.statusCode).json({
-      error: notificationRecord.message,
-      messageId: notificationRecord.messageId,
-    });
-  }
-  notificationRecord.clientId = clientID;
-  let result = await publishingNotificationRequest(notificationRecord);
+  // console.log(notificationRecords);
+  notificationRecords.forEach(notificationRecord => {
+    if (notificationRecord.statusCode) {
+      return res.status(notificationRecord.statusCode).json({
+        error: notificationRecord.message,
+        messageId: notificationRecord.messageId,
+      });
+    }
+    else {
+      notificationRecord.clientId = clientID;
+    }
+  })
+
+  console.log(notificationRecords);
+
+  const publishResults = await Promise.all(
+    notificationRecords.map(async (record) => {
+      try {
+        return await publishingNotificationRequest(record);
+      } catch (err) {
+        return { success: false, record, error: err.message };
+      }
+    })
+  );
 
   return res.status(202).json({
     success: true,
     status: "accepted",
-    message: `Notification request accepted ${result ? "and queued." : ""}`,
+    message: `Notification request accepted ${publishResults ? "and queued." : ""}`,
     messageId: notificationRecord.messageId, // Return the ID to the client
   });
 };

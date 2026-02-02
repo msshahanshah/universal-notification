@@ -19,42 +19,61 @@ const creatingNotificationRecord = async (
   });
   let dbConnect = await global.connectionManager.getModels(clientId);
   //saving the records in db
-  return await dbConnect.Notification.create({
-    messageId: uuidv4(),
-    service: service,
-    destination: destination,
-    content: content,
-    status: "pending", // Initial status
-    attempts: 0,
-    templateId: templateId,
-  })
-    .then((record) => {
-      logger.info(
-        `Notification record created successfully`,
-        record.dataValues,
-      );
-      return record.dataValues;
-    })
-    .catch((dbError) => {
-      logger.error("Database error: Failed to create notification record", {
-        error: dbError.message,
-        stack: dbError.stack,
-      });
+  const destinations = destination.split(',');
 
-      if (dbError.name === "SequelizeUniqueConstraintError") {
+  const results = await Promise.all(
+    destinations.map(async (number) => {
+      try {
+        const record = await dbConnect.Notification.create({
+          messageId: uuidv4(),
+          service,
+          destination: number,
+          content,
+          status: "pending",
+          attempts: 0,
+          templateId,
+        });
+
+        logger.info("Notification record created successfully", {
+          number,
+          ...record.dataValues,
+        });
+
         return {
-          statusCode: 409,
-          message:
-            "Conflict: A notification with this identifier potentially exists.",
+          success: true,
+          number,
+          ...record.dataValues,
+        };
+      } catch (dbError) {
+        logger.error("Database error: Failed to create notification record", {
+          number,
+          error: dbError.message,
+        });
+
+        if (dbError.name === "SequelizeUniqueConstraintError") {
+          return {
+            success: false,
+            number,
+            statusCode: 409,
+            message:
+              "Conflict: A notification with this identifier potentially exists.",
+          };
+        }
+
+        return {
+          success: false,
+          number,
+          statusCode: 500,
+          message: "Failed to create notification",
+          error: dbError.message,
         };
       }
-      return {
-        statusCode: 500,
-        message: "Failed to create notification record in database.",
-        error: dbError.message,
-      };
-    });
-};
+    })
+  );
+
+  return results; 
+}
+
 const publishingNotificationRequest = async (notificationRecord) => {
   let { service, destination, content, messageId, clientId } =
     notificationRecord;
