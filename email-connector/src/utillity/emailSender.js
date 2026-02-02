@@ -5,6 +5,7 @@ const logger = require("../logger");
 const path = require("path");
 const {
   deleteLocalFiles,
+  downloadS3File,
 } = require("../../../notification-api/helpers/fileOperation.helper");
 
 // Email service configuration
@@ -159,16 +160,19 @@ class EmailSender {
     this.provider = "SMTP";
   }
 
-  async sendEmail({
-    to,
-    subject,
-    text,
-    html,
-    from,
-    cc = undefined,
-    bcc = undefined,
-    attachments,
-  }) {
+  async sendEmail(
+    messageId,
+    {
+      to,
+      subject,
+      text,
+      html,
+      from,
+      cc = undefined,
+      bcc = undefined,
+      attachments,
+    },
+  ) {
     if (!this.transporter) {
       throw new Error("Email transporter not initialized");
     }
@@ -179,23 +183,50 @@ class EmailSender {
 
     let dir;
     if (attachments?.length) {
-      dir = attachments.map((s3Url) => {
-        // 1. Remove ?1/ safely
-        const cleanUrl = s3Url.replace(/\?.*?\//, "/");
-
-        // 2. Extract relative path after /uploads/
-        const relativePath = cleanUrl.split("/uploads/")[1];
-
-        // 3. Build local file path
-        const localPath = path.resolve(
-          __dirname,
-          "..",
-          "uploads",
-          relativePath,
+      if (typeof attachments[0] === "object") {
+        // receiving presigned urls
+        // download files
+        await Promise.all(
+          attachments.map((attachmentObj) => {
+            return downloadS3File(
+              attachmentObj.url,
+              attachmentObj.fileName,
+              messageId,
+              true,
+            );
+          }),
         );
 
-        return { path: localPath };
-      });
+        dir = attachments.map((attachment) => {
+          const localPath = path.resolve(
+            __dirname,
+            "..",
+            "uploads",
+            messageId,
+            attachment.fileName,
+          );
+          return { path: localPath };
+        });
+      } else {
+        dir = attachments.map((s3Url) => {
+          // 1. Remove ?1/ safely
+          const cleanUrl = s3Url.replace(/\?.*?\//, "/");
+
+          // 2. Extract relative path after /uploads/
+          const relativePath = cleanUrl.split("/uploads/")[1];
+          const [client, _messageId, fileName] = relativePath.split("/");
+          // 3. Build local file path
+          const localPath = path.resolve(
+            __dirname,
+            "..",
+            "uploads",
+            messageId,
+            fileName,
+          );
+
+          return { path: localPath };
+        });
+      }
     }
 
     const mailOptions = {
@@ -224,6 +255,7 @@ class EmailSender {
       }
       return result;
     } catch (error) {
+      console.log(error);
       logger.error(`Error sending email via ${this.provider}:`, {
         error: error.message,
         to,

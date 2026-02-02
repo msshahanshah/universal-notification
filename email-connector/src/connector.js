@@ -1,5 +1,5 @@
-const logger = require('./logger');
-const connectionManager = require('./utillity/connectionManager');
+const logger = require("./logger");
+const connectionManager = require("./utillity/connectionManager");
 
 async function connectAndConsume(clientConfigList) {
   try {
@@ -26,9 +26,9 @@ async function connectAndConsume(clientConfigList) {
 
         // Start consuming with package consumer
         await rabbitClient.consume({
-          service: 'email',
+          service: "email",
           sender: async (payload, messageId) => {
-            if (process.env.NODE_ENV === 'testing') {
+            if (process.env.NODE_ENV === "testing") {
               const msg = await db.Notification.findOne({
                 where: { messageId },
               });
@@ -37,11 +37,13 @@ async function connectAndConsume(clientConfigList) {
                 return;
               }
               await db.Notification.update(
-                { status: 'sent' },
+                { status: "sent" },
                 { where: { messageId } },
               );
             }
-            return emailSender.sendEmail(payload);
+            console.log("payload, messageID >>", payload, messageId);
+
+            return emailSender.sendEmail(messageId, payload);
           },
           db,
           maxProcessAttemptCount: 3,
@@ -52,10 +54,10 @@ async function connectAndConsume(clientConfigList) {
     // Make connectionManager available globally for rabbitMQClient
     global.connectionManager = connectionManager;
 
-    logger.info('All connections initialized successfully.');
+    logger.info("All connections initialized successfully.");
   } catch (error) {
     logger.error(
-      'Failed to connect or consume from RabbitMQ / DB check failed:',
+      "Failed to connect or consume from RabbitMQ / DB check failed:",
       { error: error.message, stack: error.stack },
     );
     throw error; // Re-throw to let caller handle retry logic
@@ -69,10 +71,10 @@ async function closeConnections(clientId) {
       logger.info(`Closed all connections for client ${clientId}`);
     } else {
       await connectionManager.close();
-      logger.info('Closed all connections');
+      logger.info("Closed all connections");
     }
   } catch (error) {
-    logger.error('Failed to close connections:', { error: error.message });
+    logger.error("Failed to close connections:", { error: error.message });
   }
 }
 module.exports = {

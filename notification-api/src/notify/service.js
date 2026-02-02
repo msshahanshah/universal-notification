@@ -89,8 +89,9 @@ const publishingNotificationRequest = async (notificationRecord) => {
     messageId,
     clientId,
     fileId = undefined,
-    attachments
+    attachments,
   } = notificationRecord;
+  console.log(clientId);
   const provider = await selectProvider(service, destination, clientId);
 
   const rabbitConnect = await rabbitManager.getClient(clientId);
@@ -108,7 +109,7 @@ const publishingNotificationRequest = async (notificationRecord) => {
       timestamp: new Date().toISOString(),
       provider,
       fileId,
-      attachments
+      attachments,
     });
 
     return result;

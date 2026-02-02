@@ -40,7 +40,6 @@ const notify = async (req, res) => {
   }
 
   const clientID = req.headers["x-client-id"];
-
   const notificationRecord = await creatingNotificationRecord(
     clientID,
     service,
@@ -54,25 +53,31 @@ const notify = async (req, res) => {
     });
   }
 
-  const urls = await generatePreSignedUrl(
-    clientID,
-    notificationRecord.messageId,
-    attachments,
-  );
+  let preSignedUrls;
+  if (attachments?.length && typeof attachments[0] === "string") {
+    preSignedUrls = await generatePreSignedUrl(
+      clientID,
+      notificationRecord.messageId,
+      attachments,
+    );
+  }
 
   let result;
 
-  if (attachments.length === 0) {
+  if (
+    attachments.length === 0 ||
+    (attachments?.length && typeof attachments[0] === "object")
+  ) {
     notificationRecord.clientId = clientID;
     result = await publishingNotificationRequest(notificationRecord);
   }
 
   const response =
-    attachments.length > 0
+    attachments.length > 0 && typeof attachments[0] === "string"
       ? {
           success: true,
           message: `Waiting for file upload on URL (expiry 5 mins). Message Id: ${notificationRecord.messageId}`,
-          urls,
+          preSignedUrls,
         }
       : {
           success: true,
@@ -95,9 +100,9 @@ const notifyWithEmailAttachment = async (req, res) => {
 
     const headers = req.headers;
 
-    const clientID = req.headers["x-client-id"];
+    const clientId = req.headers["x-client-id"];
 
-    const notificationData = await getNotificationData(messageId, clientID);
+    const notificationData = await getNotificationData(messageId, clientId);
     let content = {
       subject: notificationData.subject,
       body: notificationData.body,
@@ -116,38 +121,39 @@ const notifyWithEmailAttachment = async (req, res) => {
     const service = notificationData.service;
     const destination = notificationData.destination;
 
-    await Promise.all(
-      attachments?.map((file) => {
-        // <s3_prefix>/uploads/<CLIENT_ID>/<MESSAGE_ID>?<size>/<file_name>
-        const s3Url = file;
-        const parts = file.split("/");
-        const filename = file.split("/uploads/")[1];
-        return downloadS3File(s3Url, filename, messageId);
-      }),
-    );
+    /**
+     * Add a check if attachments contain presigned url for direct downloadingr
+     */
 
-    const notificationRecord = await creatingNotificationRecord(
-      clientID,
+    if (attachments?.length && typeof attachments[0] === "string") {
+      await Promise.all(
+        attachments.map((file) => {
+          // <s3_prefix>/uploads/<CLIENT_ID>/<MESSAGE_ID>?<size>/<file_name>
+          const s3Url = file;
+          const cleanUrl = s3Url.replace(/\?.*?\//, "/");
+          const relativePath = cleanUrl.split("/uploads/")[1];
+          const [client, _messageId, fileName] = relativePath.split("/");
+          return downloadS3File(s3Url, fileName, messageId);
+        }),
+      );
+    }
+
+    const notificationRecord = {
       service,
       destination,
       content,
-    );
+      clientId,
+      messageId,
+      attachments,
+    };
 
-    if (notificationRecord.statusCode) {
-      return res.status(notificationRecord.statusCode).json({
-        error: notificationRecord.message,
-        messageId: notificationRecord.messageId,
-      });
-    }
-
-    notificationRecord.clientId = clientID;
-    notificationRecord.fileId = messageId;
     result = await publishingNotificationRequest(notificationRecord);
 
     return res.status(202).json({
+      success: true,
       status: "accepted",
       message: `Notification request accepted ${result ? "and queued." : ""}`,
-      messageId: notificationRecord.messageId, // Return the ID to the client
+      messageId, // Return the ID to the client
     });
   } catch (err) {
     console.log("Error in notifying with email attachement", err.message);

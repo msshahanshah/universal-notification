@@ -3,17 +3,13 @@ const axios = require("axios");
 const path = require("path");
 const logger = require("../src/logger");
 
-const downloadS3File = async (s3Url) => {
-  // 1. Remove "?1/" safely
-  const cleanUrl = s3Url.replace(/\?.*?\//, "/");
-
-  // 2. Extract path after /uploads/
-  const relativePath = cleanUrl.split("/uploads/")[1];
-
-  // 3. Split into parts
-  const [client, messageId, fileName] = relativePath.split("/");
-
-  // 4. Build directory path (NO filename here)
+const downloadS3File = async (
+  s3Url,
+  filename,
+  messageId,
+  isPresigned = false,
+) => {
+  // create download
   const downloadDir = path.resolve(
     __dirname,
     "..",
@@ -21,20 +17,17 @@ const downloadS3File = async (s3Url) => {
     "email-connector",
     "src",
     "uploads",
-    client,
     messageId,
   );
-
-  // 5. Final file path
-  const localFilePath = path.join(downloadDir, fileName);
+  await fse.ensureDir(downloadDir);
+  const localFilePath = path.join(downloadDir, filename);
 
   try {
     console.log("downloadDir >>>", downloadDir);
     console.log("localFilePath >>>", localFilePath);
 
-    // 6. Ensure directory exists
-    await fse.ensureDir(downloadDir);
-    let newS3Url = s3Url.replace("?", "%3F"); // % -> %3F
+    let newS3Url = s3Url;
+    if (!isPresigned) newS3Url = s3Url.replace("?", "%3F"); // % -> %3F
     // 7. Download
     const response = await axios({
       url: newS3Url,

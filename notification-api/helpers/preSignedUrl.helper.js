@@ -23,7 +23,10 @@ const generatePreSignedUrl = async (clientId, messageId, attachements) => {
           //   "Content-Type": ""
           // }
         };
-        return { [file]: await createPresignedPost(s3Client, params) };
+        return {
+          fileName: file,
+          s3: await createPresignedPost(s3Client, params),
+        };
       }),
     );
 
