@@ -2,6 +2,7 @@ const fse = require("fs-extra");
 const axios = require("axios");
 const path = require("path");
 const logger = require("../src/logger");
+const { promises } = require("dns");
 
 const downloadS3File = async (
   s3Url,
@@ -77,10 +78,54 @@ const deleteLocalFile = async (filePath) => {
   }
 };
 
-const deleteLocalFiles = async (paths = []) => {
-  if (!Array.isArray(paths) || !paths.length) return;
+const deleteLocalFiles = async (messageId, attachements = []) => {
+  if (!Array.isArray(attachements) || !attachements.length) return;
 
-  await Promise.all(paths.map((p) => deleteLocalFile(p)));
+  let deletePromises = [];
+
+  if (attachments?.length) {
+    if (typeof attachments[0] === "object") {
+      deletePromises = attachments.map((attachment) => {
+        const localPath = path.resolve(
+          __dirname,
+          "..",
+          "uploads",
+          messageId,
+          attachment.fileName,
+        );
+        return deleteLocalFile(localPath);
+      });
+    } else {
+      deletePromises = attachments.map((s3Url) => {
+        // 1. Remove ?1/ safely
+        const cleanUrl = s3Url.replace(/\?.*?\//, "/");
+        // 2. Extract relative path after /uploads/
+        const relativePath = cleanUrl.split("/uploads/")[1];
+        const [client, _messageId, fileName] = relativePath.split("/");
+        // 3. Build local file path
+        const localPath = path.resolve(
+          __dirname,
+          "..",
+          "uploads",
+          messageId,
+          fileName,
+        );
+
+        return deleteLocalFile(localPath);
+      });
+    }
+  }
+
+  await Promise.all(deletePromises);
 };
 
-module.exports = { downloadS3File, deleteLocalFile, deleteLocalFiles };
+const deleteMessageAttachments = async (folderPath) => {
+  await fse.remove(folderPath);
+};
+
+module.exports = {
+  downloadS3File,
+  deleteLocalFile,
+  deleteLocalFiles,
+  deleteMessageAttachments,
+};
