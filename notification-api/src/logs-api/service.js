@@ -35,6 +35,7 @@ const viewMessageLogs = async (idClient, service, status, page, limit) => {
     where,
     offset,
     limit,
+    order: [["createdAt", "DESC"]]
   });
   const totalPages = Math.ceil(count / limit);
 

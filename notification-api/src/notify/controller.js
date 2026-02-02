@@ -40,6 +40,7 @@ const notify = async (req, res) => {
   let result = await publishingNotificationRequest(notificationRecord);
 
   return res.status(202).json({
+    success: true,
     status: "accepted",
     message: `Notification request accepted ${result ? "and queued." : ""}`,
     messageId: notificationRecord.messageId, // Return the ID to the client
