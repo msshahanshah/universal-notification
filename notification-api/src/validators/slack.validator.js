@@ -17,6 +17,11 @@ const slackValidation = {
         return helpers.message("At least one Slack channel ID is required");
       }
 
+      // converting into uppercase
+
+      for (let i = 0; i < channels.length; i++) {
+        channels[i] = channels[i].toUpperCase();
+      }
       // Slack Channel ID regex
       // C = public channel, G = private channel, D = direct message
 
