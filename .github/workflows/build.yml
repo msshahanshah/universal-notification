@@ -28,6 +28,7 @@ jobs:
         id: filter
         uses: dorny/paths-filter@v3
         with:
+          base: development
           filters: |
             email-connector: 'email-connector/**'
             notification-api: 'notification-api/**'
