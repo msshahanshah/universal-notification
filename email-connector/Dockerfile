@@ -10,7 +10,7 @@ RUN npm install
 COPY . .
 
 # Entrypoint
-RUN chmod +x /usr/src/app/entrypoint.sh
+RUN chmod +x /usr/src/app/entrypoint.sh 
 
 ENTRYPOINT ["/usr/src/app/entrypoint.sh"]
 
