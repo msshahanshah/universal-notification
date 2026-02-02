@@ -1,52 +1,57 @@
 name: Build & Push Docker Images
 
 on:
-  workflow_dispatch:
-    inputs:
-      service:
-        description: "Service to build (email-connector, notification-api, slack-connector, sms-connector or all)"
-        required: true
-        default: "all"
-  
   push:
     branches:
-      # - development
-      - feature/workflow
+      - development
     paths:
-      - "**/Dockerfile"
+      - "email-connector/**"
+      - "notification-api/**"
+      - "slack-connector/**"
+      - "sms-connector/**"
+  workflow_dispatch:
 
 env:
   REGISTRY: docker.io
   IMAGE_NAMESPACE: msshahanshah
 
 jobs:
-  build-and-push:
+  filter:
     runs-on: ubuntu-latest
+    outputs:
+      services: ${{ steps.filter.outputs.changes }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
 
+      - name: Detect changes
+        id: filter
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            email-connector: 'email-connector/**'
+            notification-api: 'notification-api/**'
+            slack-connector: 'slack-connector/**'
+            sms-connector: 'sms-connector/**'
+
+  build-and-push:
+    needs: filter
+    if: ${{ needs.filter.outputs.services != '[]' && needs.filter.outputs.services != '' }}
+    runs-on: ubuntu-latest
     strategy:
       matrix:
-        service:
-          - email-connector
-          - notification-api
-          - slack-connector
-          - sms-connector
+        service: ${{ fromJSON(needs.filter.outputs.services) }}
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Login to Docker Hub
-        uses: docker/login-action@v3
+      - name: Build and Push Service
+        uses: ./.github/actions/build-push
         with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-
-      - name: Build and Push Image
-        uses: docker/build-push-action@v5
-        with:
-          context: ./${{ matrix.service }}
-          file: ./${{ matrix.service }}/Dockerfile
-          push: true
-          tags: |
-            ${{ env.IMAGE_NAMESPACE }}/universal-${{ matrix.service }}:latest
-            ${{ env.IMAGE_NAMESPACE }}/universal-${{ matrix.service }}:${{ github.sha }}
+          service: ${{ matrix.service }}
+          image_namespace: ${{ env.IMAGE_NAMESPACE }}
+          dockerhub_username: ${{ secrets.DOCKERHUB_USERNAME }}
+          dockerhub_token: ${{ secrets.DOCKERHUB_TOKEN }}
+          image_name: ${{ matrix.service == 'notification-api' && 'un-api' || format('un-{0}', matrix.service) }}
+          tag: ${{ github.run_number }}
