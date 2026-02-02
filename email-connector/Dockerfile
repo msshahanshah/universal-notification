@@ -3,7 +3,7 @@ FROM node:18-alpine
 WORKDIR /usr/src/app
 
 # Install dependencies first (better caching)
-COPY package*.json ./
+COPY package*.json ./ 
 RUN npm install
 
 # Copy app source
