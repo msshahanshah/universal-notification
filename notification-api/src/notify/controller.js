@@ -30,27 +30,37 @@ const notify = async (req, res) => {
     destination,
     content
   );
-  // console.log(notificationRecords);
-  notificationRecords.forEach(notificationRecord => {
-    if (notificationRecord.statusCode) {
-      return res.status(notificationRecord.statusCode).json({
-        error: notificationRecord.message,
-        messageId: notificationRecord.messageId,
-      });
-    }
-    else {
-      notificationRecord.clientId = clientID;
-    }
-  })
 
-  console.log(notificationRecords);
+  const successes = notificationRecords.filter(r => r.success);
+  const failures = notificationRecords.filter(r => !r.success);
+
+  if (successes.length === 0) {
+    const error = failures[0]; 
+    return res.status(error.statusCode || 500).json({
+      success: false,
+      message: "All notification insertions failed",
+      errors: failures
+    });
+  }
+  successes.forEach(r => r.clientId = clientID);
+
+  if (failures.length > 0) {
+    return res.status(207).json({
+      success: false,
+      status: "partial_success",
+      inserted: successes.length,
+      failed: failures.length,
+      failures,
+      success: publishResults
+    });
+  }
 
   const publishResults = await Promise.all(
     notificationRecords.map(async (record) => {
       try {
         return await publishingNotificationRequest(record);
       } catch (err) {
-        return { success: false, record, error: err.message };
+        return { success: false, record, message: err.message };
       }
     })
   );
@@ -58,8 +68,9 @@ const notify = async (req, res) => {
   return res.status(202).json({
     success: true,
     status: "accepted",
-    message: `Notification request accepted ${publishResults ? "and queued." : ""}`,
-    messageId: notificationRecord.messageId, // Return the ID to the client
+    inserted: successes.length,
+    published: publishResults.length,
+    messageIds: successes.map(r => r.messageId)
   });
 };
 module.exports = notify;
