@@ -3,8 +3,7 @@ name: Build & Push Docker Images
 on:
   push:
     branches:
-      - main
-      - feature/workflow
+      - development
     paths:
       - "email-connector/**"
       - "notification-api/**"
