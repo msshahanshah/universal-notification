@@ -40,16 +40,17 @@ const notify = async (req, res) => {
   }
 
   const clientID = req.headers["x-client-id"];
-  const notificationRecord = await creatingNotificationRecord(
+
+  const notificationRecords = await creatingNotificationRecord(
     clientID,
     service,
     destination,
     content,
   );
-  if (notificationRecord.statusCode) {
-    return res.status(notificationRecord.statusCode).json({
-      error: notificationRecord.message,
-      messageId: notificationRecord.messageId,
+  if (notificationRecords.statusCode) {
+    return res.status(notificationRecords.statusCode).json({
+      error: notificationRecords.message,
+      messageId: notificationRecords.messageId,
     });
   }
 
@@ -57,34 +58,63 @@ const notify = async (req, res) => {
   if (attachments?.length && typeof attachments[0] === "string") {
     preSignedUrls = await generatePreSignedUrl(
       clientID,
-      notificationRecord.messageId,
+      notificationRecords.messageId,
       attachments,
     );
   }
 
   let result;
   if (
-    !attachments || 
-    (attachments?.length && typeof attachments[0] === "object") || attachments?.length === 0
+    !attachments ||
+    (attachments?.length && typeof attachments[0] === "object") ||
+    attachments?.length === 0
   ) {
-    notificationRecord.clientId = clientID;
-    result = await publishingNotificationRequest(notificationRecord);
+    notificationRecords.clientId = clientID;
+    result = await publishingNotificationRequest(notificationRecords);
   }
 
   const response =
     attachments?.length > 0 && typeof attachments[0] === "string"
       ? {
           success: true,
-          message: `Waiting for file upload on URL (expiry 5 mins). Message Id: ${notificationRecord.messageId}`,
+          message: `Waiting for file upload on URL (expiry 5 mins). Message Id: ${notificationRecords.messageId}`,
           preSignedUrls,
         }
       : {
           success: true,
           message: `Notification request accepted ${result ? "and queued." : ""}`,
-          messageId: notificationRecord.messageId, // Return the ID to the client
+          messageId: notificationRecords.messageId, // Return the ID to the client
         };
 
-  return res.status(202).json(response);
+  // return res.status(202).json(response);
+  // console.log(notificationRecordss);
+  notificationRecords.forEach((notificationRecord) => {
+    if (notificationRecord.statusCode) {
+      return res.status(notificationRecord.statusCode).json({
+        error: notificationRecord.message,
+        messageId: notificationRecord.messageId,
+      });
+    } else {
+      notificationRecord.clientId = clientID;
+    }
+  });
+
+  const publishResults = await Promise.all(
+    notificationRecords.map(async (record) => {
+      try {
+        return await publishingNotificationRequest(record);
+      } catch (err) {
+        return { success: false, record, error: err.message };
+      }
+    }),
+  );
+
+  return res.status(202).json({
+    success: true,
+    status: "accepted",
+    message: `Notification request accepted ${publishResults ? "and queued." : ""}`,
+    messageId: notificationRecords.messageId, // Return the ID to the client
+  });
 };
 
 const notifyWithEmailAttachment = async (req, res) => {
