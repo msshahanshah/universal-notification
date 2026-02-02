@@ -41,8 +41,6 @@ async function connectAndConsume(clientConfigList) {
                 { where: { messageId } },
               );
             }
-            console.log("payload, messageID >>", payload, messageId);
-
             return emailSender.sendEmail(messageId, payload);
           },
           db,
