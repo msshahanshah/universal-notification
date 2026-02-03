@@ -24,8 +24,6 @@ const downloadS3File = async (
   const localFilePath = path.join(downloadDir, filename);
 
   try {
-    console.log("downloadDir >>>", downloadDir);
-    console.log("localFilePath >>>", localFilePath);
 
     let newS3Url = s3Url;
     if (!isPresigned) newS3Url = s3Url.replace("?", "%3F"); // % -> %3F
