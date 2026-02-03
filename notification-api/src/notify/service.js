@@ -19,8 +19,7 @@ const creatingNotificationRecord = async (
   });
   let dbConnect = await global.connectionManager.getModels(clientId);
   //saving the records in db
-  const destinations = destination.split(',');
-
+  const destinations = destination;
   const results = await Promise.all(
     destinations.map(async (number) => {
       try {

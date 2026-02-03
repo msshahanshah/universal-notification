@@ -35,7 +35,7 @@ const notify = async (req, res) => {
   const failures = notificationRecords.filter(r => !r.success);
 
   if (successes.length === 0) {
-    const error = failures[0]; 
+    const error = failures[0];
     return res.status(error.statusCode || 500).json({
       success: false,
       message: "All notification insertions failed",
@@ -64,6 +64,23 @@ const notify = async (req, res) => {
       }
     })
   );
+
+  if (notificationRecords.length === 1) {
+    if (notificationRecords[0].statusCode) {
+      return res.status(notificationRecords[0].statusCode).json({
+        error: notificationRecords[0].message,
+        messageId: notificationRecords[0].messageId,
+      });
+    }
+    else {
+      return res.status(202).json({
+        success: true,
+        status: "accepted",
+        message: `Notification request accepted ${publishResults ? "and queued." : ""}`,
+        messageId: notificationRecords[0].messageId
+      });
+    }
+  }
 
   return res.status(202).json({
     success: true,
