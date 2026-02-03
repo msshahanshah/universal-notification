@@ -22,8 +22,8 @@ const commonValidation = {
       "number.max": "Limit cannot exceed 100",
     }),
   service: Joi.string()
+    .required()
     .valid("email", "slack", "sms")
-    .optional()
     .messages({
       "string.base": "Service must be a string",
       "any.only": "Service must be one of: email, slack, sms",
