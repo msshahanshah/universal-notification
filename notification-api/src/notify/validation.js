@@ -52,9 +52,6 @@ const validateRequest = (req, res, next) => {
       .json({ success: false, message: error.details[0].message });
   }
   req.body = value;
-  if (req.body.service == 'email' && req.body.attachments === true) {
-    req.body.extension = extension_mimetype_map[value.mimetype];
-  }
   next();
 };
 module.exports = validateRequest;

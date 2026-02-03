@@ -1,4 +1,5 @@
 const Joi = require("joi");
+const { validateAttachments } = require("./common.validator");
 const emailRegex = /^(?=.{6,254}$)[a-z0-9._%+-]+@[a-z0-9-]+\.[a-z]{2,}$/i;
 const ALLOWED_MIMETYPES = [
   "application/pdf",
@@ -106,13 +107,8 @@ const emailValidation = {
   }),
   attachments: Joi.when("service", {
     is: "email",
-    then: Joi.array().messages({
-      "any.required": "Attachments flag is required for Email service.",
-      "boolean.base": "Attachments must be either true or false.",
-    }),
-    otherwise: Joi.forbidden().messages({
-      "any.unknown": "Attachments is only allowed for Email service.",
-    }),
+    then: Joi.array().custom((value, helpers) => validateAttachments(value, helpers)).optional(),
+    otherwise: Joi.forbidden(),
   }),
 };
 module.exports = emailValidation;

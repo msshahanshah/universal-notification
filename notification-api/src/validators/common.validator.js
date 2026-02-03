@@ -43,4 +43,52 @@ const commonValidation = {
       }),
     }),
 };
-module.exports = { commonValidation, baseOptions };
+
+
+const validateAttachments = (value, helpers) => {
+
+  if (value.length) {
+    const fileNameRegex = new RegExp(/^(?![ .])(?!.*[ .]$)[A-Za-z0-9._ -]+$/);
+    const urlRegex = new RegExp(
+      '^https?:\\/\\/(?:[a-z0-9.-]+\\.)?s3(?:[.-][a-z0-9-]+)?\\.amazonaws\\.com(?:\\/[\\S]*?)?\\?.*(?:X-Amz-Signature=|X-Amz-Credential=|AWSAccessKeyId=)',
+      'i'
+    );
+    // array of filename
+    if (typeof value[0] === 'string') {
+      for (const filename of value) {
+      if (typeof filename !== 'string' || !fileNameRegex.test(filename)) {
+        return helpers.message(`invalid filename ${filename}`);
+      }
+    }
+    } else if (typeof value[0] === 'object') {
+      for (const file of value) {
+      if (typeof file !== 'object' || file === null) {
+        return helpers.message(`invalid email attachments format`);
+      }
+
+      if (!file.fileName || !file.url) {
+        return helpers.message(
+          `missing fields. please provide fileName and url`
+        );
+      }
+
+      if (
+        typeof file.fileName !== 'string' ||
+        !fileNameRegex.test(file.fileName)
+      ) {
+        return helpers.message(`invalid fileName ${file.fileName}`);
+      }
+
+      if (typeof file.url !== 'string' || !urlRegex.test(file.url)) {
+        return helpers.message(
+          `invalid s3 presigned url for file ${file.fileName}`
+        );
+      }
+    }
+  }
+
+    return value;
+  }
+}
+
+module.exports = { commonValidation, baseOptions, validateAttachments };
