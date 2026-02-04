@@ -9,6 +9,8 @@
   },
   "dependencies": {
     "@universal-notifier/secret-manager": "github:gkmit-dikshant/aws-secret-manager-package",
+    "@grpc/grpc-js": "^1.14.3",
+    "@grpc/proto-loader": "^0.8.0",
     "amqplib": "^0.10.8",
     "axios": "^1.13.2",
     "dotenv": "^16.4.1",

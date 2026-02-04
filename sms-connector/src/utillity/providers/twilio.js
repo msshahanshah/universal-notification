@@ -1,10 +1,11 @@
 const twilio = require("twilio");
 
 class TwilioProvider {
-  constructor(config) {
-    this.from = config.FROM_NUMBER;
-    this.client = twilio(config.ACCOUNT_SID, config.AUTH_TOKEN);
-  }
+    constructor(config) {
+        this.from = config.FROM_NUMBER;
+        this.client = twilio(config.ACCOUNT_SID, config.AUTH_TOKEN);
+        this.accountSID = config.ACCOUNT_SID
+    }
 
   async send({ to, message }) {
     return this.client.messages.create({
