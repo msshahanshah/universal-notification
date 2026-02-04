@@ -43,7 +43,7 @@ const validateEmailList = (value, helpers, fieldName) => {
     }
   }
 
-  return uniqueEmails.join(", ");
+  return uniqueEmails;
 };
 
 const emailValidation = {
