@@ -1,8 +1,12 @@
 'use strict';
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
-  async up(queryInterface, Sequelize) {
-    await queryInterface.createTable('wallets', {
+  async up(queryInterface, Sequelize, schemaName) {
+    const tableName = {
+      tableName: "routing_rules",
+      schema: schemaName,
+    };
+    await queryInterface.createTable(tableName, {
       id: {
         allowNull: false,
         autoIncrement: true,

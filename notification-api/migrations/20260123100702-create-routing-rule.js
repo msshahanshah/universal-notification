@@ -6,7 +6,7 @@ module.exports = {
       tableName: "routing_rules",
       schema: schemaName,
     };
-    await queryInterface.createTable('routing_rules', {
+    await queryInterface.createTable(tableName, {
       id: {
         allowNull: false,
         autoIncrement: true,

@@ -1,7 +1,7 @@
 const fetchBalance = async (clientId, service, provider) => {
 
     if (!clientId || !service || !provider) {
-        throw new Error("clientId, service and provider are required");
+        throw { message: "service and provider are missing", statusCode: 400 };
     }
 
     const dbConnect = await global.connectionManager.getModels(clientId);
@@ -22,9 +22,7 @@ const fetchBalance = async (clientId, service, provider) => {
 const updateBalance = async (clientId, response, label, service) => {
 
     if (!clientId || !response?.provider || !service) {
-        const err = new Error("clientId, service, provider are required");
-        err.status = 400;
-        throw err;
+        throw { message: "service and provider are missing", statusCode: 400 };
     }
     const dbConnect = await global.connectionManager.getModels(clientId);
 
@@ -34,7 +32,7 @@ const updateBalance = async (clientId, response, label, service) => {
         provider: response.provider,
         balance: response.balance,
         balance_type: label,
-        currency: response?.currency 
+        currency: response?.currency
     });
 }
 module.exports = { fetchBalance, updateBalance }

@@ -15,9 +15,7 @@ const getBalance = async (req, res) => {
         const { service, provider } = req.query;
 
         if (!service || !provider) {
-            const err = new Error("Service and provider are missing");
-            err.statusCode = 400;
-            throw err;
+            throw { message: "service and provider are missing", statusCode: 400 };
         }
 
         const metadata = new grpc.Metadata();
@@ -60,19 +58,17 @@ const viewBalance = async (req, res) => {
         const { service, provider } = req.query;
 
         if (!service || !provider) {
-            const err = new Error("service and provider are required");
-            err.statusCode = 400;
-            throw err;
+            throw { message: "service and provider are missing", statusCode: 400 };
         }
 
         const response = await fetchBalance(clientId, service.toUpperCase(), provider.toUpperCase());
-        
+
         return res.json({
             success: true,
             message: "Balance fetched successfully",
             data: {
                 provider: response.provider,
-                label : response.balance_type,
+                label: response.balance_type,
                 balance: response.balance,
                 currency: response.currency
             }
