@@ -1,10 +1,5 @@
 const Joi = require("joi");
 const emailRegex = /^(?=.{6,254}$)[a-z0-9._%+-]+@[a-z0-9-]+\.[a-z]{2,}$/i;
-const ALLOWED_MIMETYPES = [
-  "application/pdf",
-  "image/x-png",
-  "image/x-citrix-jpeg",
-];
 
 const validateEmailList = (value, helpers, fieldName) => {
   const isValueEmpty = !value || value.trim().length === 0;
@@ -103,37 +98,6 @@ const emailValidation = {
       .custom((value, helpers) => validateEmailList(value, helpers, "bcc"))
       .optional(),
     otherwise: Joi.forbidden(),
-  }),
-  attachments: Joi.when("service", {
-    is: "email",
-    then: Joi.boolean().required().messages({
-      "any.required": "Attachments flag is required for Email service.",
-      "boolean.base": "Attachments must be either true or false.",
-    }),
-    otherwise: Joi.forbidden().messages({
-      "any.unknown": "Attachments is only allowed for Email service.",
-    }),
-  }),
-  mimetype: Joi.when("service", {
-    is: "email",
-    then: Joi.when("attachments", {
-      is: true,
-      then: Joi.string()
-        .valid(...ALLOWED_MIMETYPES)
-        .required()
-        .messages({
-          "any.required": "Mimetype is required when attachments is true.",
-          "any.only":
-            "Mimetype must be one of: application/pdf, image/x-png, image/x-citrix-jpeg.",
-          "string.base": "Mimetype must be a valid string.",
-        }),
-      otherwise: Joi.forbidden().messages({
-        "any.unknown": "Mimetype is not allowed when attachments is false.",
-      }),
-    }),
-    otherwise: Joi.forbidden().messages({
-      "any.unknown": "Mimetype is only allowed for Email service.",
-    }),
   }),
 };
 module.exports = emailValidation;

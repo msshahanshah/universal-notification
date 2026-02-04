@@ -27,11 +27,7 @@ const destination = Joi.alternatives()
   })
   .required()
   .messages({ "string.empty": "Destination is required" });
-const extension_mimetype_map = {
-  "application/pdf": "pdf",
-  "image/x-png": "png",
-  "image/x-citrix-jpeg": "jpeg",
-};
+
 const validateSchema = Joi.object({
   service: commonValidation.service,
   destination,
@@ -41,8 +37,6 @@ const validateSchema = Joi.object({
   fromEmail: emailValidation.fromEmail,
   cc: emailValidation.cc,
   bcc: emailValidation.bcc,
-  attachments: emailValidation.attachments,
-  mimetype: emailValidation.mimetype,
 }).unknown(false); // Middleware to validate the request
 
 const validateRequest = (req, res, next) => {
@@ -51,9 +45,6 @@ const validateRequest = (req, res, next) => {
     return res
       .status(400)
       .json({ success: false, message: error.details[0].message });
-  }
-  if (req.body.service == "email" && req.body.attachments === true) {
-    req.body.extension = extension_mimetype_map[value.mimetype];
   }
   req.body = value;
 
