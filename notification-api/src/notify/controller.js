@@ -44,6 +44,16 @@ const notify = async (req, res) => {
   }
   successes.forEach(r => r.clientId = clientID);
 
+  const publishResults = await Promise.all(
+    successes.map(async (record) => {
+      try {
+        return await publishingNotificationRequest(record);
+      } catch (err) {
+        return { success: false, record, message: err.message };
+      }
+    })
+  );
+
   if (failures.length > 0) {
     return res.status(207).json({
       success: false,
@@ -54,16 +64,6 @@ const notify = async (req, res) => {
       success: publishResults
     });
   }
-
-  const publishResults = await Promise.all(
-    notificationRecords.map(async (record) => {
-      try {
-        return await publishingNotificationRequest(record);
-      } catch (err) {
-        return { success: false, record, message: err.message };
-      }
-    })
-  );
 
   if (notificationRecords.length === 1) {
     if (notificationRecords[0].statusCode) {
