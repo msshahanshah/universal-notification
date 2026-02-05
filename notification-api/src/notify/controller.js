@@ -38,7 +38,8 @@ const notify = async (req, res) => {
     const error = failures[0];
     return res.status(error.statusCode || 500).json({
       success: false,
-      message: "All notification insertions failed",
+      status: "rejected",
+      message: "All notifications failed",
       errors: failures
     });
   }
@@ -58,8 +59,7 @@ const notify = async (req, res) => {
     return res.status(207).json({
       success: false,
       status: "partial_success",
-      inserted: successes.length,
-      failed: failures.length,
+      message: `Notification request accepted ${publishResults ? "and queued." : ""}`,
       failures,
       success: publishResults
     });
@@ -68,7 +68,8 @@ const notify = async (req, res) => {
   if (notificationRecords.length === 1) {
     if (notificationRecords[0].statusCode) {
       return res.status(notificationRecords[0].statusCode).json({
-        error: notificationRecords[0].message,
+        success: false,
+        message: notificationRecords[0].message,
         messageId: notificationRecords[0].messageId,
       });
     }
@@ -85,8 +86,7 @@ const notify = async (req, res) => {
   return res.status(202).json({
     success: true,
     status: "accepted",
-    inserted: successes.length,
-    published: publishResults.length,
+    message: `Notification request accepted ${publishResults ? "and queued." : ""}`,
     messageIds: successes.map(r => r.messageId)
   });
 };
