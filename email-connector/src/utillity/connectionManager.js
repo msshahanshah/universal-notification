@@ -51,7 +51,7 @@ class ConnectionManager {
           : "Other",
     });
     logger.info(`[${clientId}] Testing email service connection...`);
-    let emailSender = new EmailSender(emailConfig);
+    let emailSender = new EmailSender(clientId, emailConfig);
     await emailSender.initialize();
     logger.info(`[${clientId}] Email service connection successful.`);
     this.emailCache.set(clientId, emailSender);

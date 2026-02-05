@@ -56,16 +56,22 @@ const creatingNotificationRecord = async (
 
 const selectProvider = async (service, destination, clientId) => {
   try {
-    const countryCode =
-      parsePhoneNumberFromString(destination).countryCallingCode;
-    let dbConnect = await global.connectionManager.getModels(clientId);
-    const provider = await dbConnect.RoutingRule.findOne({
-      where: {
-        service: service.toUpperCase(),
-        match_value: countryCode,
-      },
-    });
-    return provider?.provider;
+    if (service === "sms") {
+      const countryCode =
+        parsePhoneNumberFromString(destination).countryCallingCode;
+      let dbConnect = await global.connectionManager.getModels(clientId);
+      const routingRole = await dbConnect.RoutingRule.findOne({
+        where: {
+          service: service.toUpperCase(),
+          match_value: countryCode,
+        },
+      });
+
+      return routingRole?.provider;
+    } else if (service === "email") {
+      // TODO check for email routing
+      return "AWS";
+    }
   } catch (error) {
     return {
       statusCode: 400,

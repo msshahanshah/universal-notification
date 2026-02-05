@@ -2,39 +2,59 @@ const nodemailer = require("nodemailer");
 const sgMail = require("@sendgrid/mail");
 const Mailgun = require("mailgun.js");
 const logger = require("../logger");
-const path = require("path");
-const {
-  downloadS3File,
-  deleteMessageAttachments,
-} = require("../../../notification-api/helpers/fileOperation.helper");
+const { downloadS3File } = require("../helpers/fileOperation.helper");
+const { Readable } = require("stream");
 
 // Email service configuration
 class EmailSender {
-  constructor(clientConfig) {
+  constructor(clientId, clientConfig) {
+    this.client;
     this.clientConfig = clientConfig;
     this.transporter = null;
     this.provider = null;
+    this.providerInitializer = {
+      AWS: this.setupAmazonSES,
+      SENDGRID: this.setupSendGrid,
+      MAILGUN: this.setupMailgun,
+      GMAIL: this.setupGmail,
+      SMTP: this.setupSMTP,
+    };
+    this.defaultProvider = Object.entries(this.clientConfig).find(
+      ([service, config]) => {
+        return config?.default === true;
+      },
+    )?.[0];
+
+    if (!this.defaultProvider) {
+      throw new Error(`no default config for email for client ${clientId}`);
+    }
   }
 
-  async initialize() {
-    // Determine which email service to use (default to AWS SES if configured)
-    if (this.clientConfig?.AWS?.USER_NAME) {
-      await this.setupAmazonSES();
-    } else if (this.clientConfig?.SENDGRID?.API_KEY) {
-      await this.setupSendGrid();
-    } else if (this.clientConfig?.MAILGUN?.API_KEY) {
-      await this.setupMailgun();
-    } else if (this.clientConfig?.GMAIL?.CLIENT_ID) {
-      await this.setupGmail();
-    } else if (this.clientConfig?.HOST && this.clientConfig?.PORT) {
-      await this.setupSMTP();
-    } else {
-      console.error(
-        "Invalid email configuration:",
-        JSON.stringify(this.clientConfig, null, 2),
-      );
-      throw new Error("No valid email service configuration found");
+  async initialize(provider = "default") {
+    let providerKey = provider;
+
+    if (provider === "default") {
+      providerKey = this.defaultProvider;
     }
+
+    const initializer = this.providerInitializer[providerKey];
+
+    if (typeof initializer === "function") {
+      await initializer.call(this);
+      return;
+    }
+
+    // fallback to SMTP if explicitly configured
+    if (this.clientConfig?.HOST && this.clientConfig?.PORT) {
+      await this.setupSMTP();
+      return;
+    }
+
+    console.error(
+      "Invalid email configuration:",
+      JSON.stringify(this.clientConfig, null, 2),
+    );
+    throw new Error(`Unsupported email provider: ${provider}`);
   }
 
   async setupAmazonSES() {
@@ -117,8 +137,14 @@ class EmailSender {
           subject: mailOptions.subject,
           text: mailOptions.text ?? "Hello Universal Notification",
           html: mailOptions.html ?? "<h1>Hello Universal Notification</h1>",
+          attachment: mailOptions.attachments.map((att) => {
+            // att.content.filename = att.filename;
+            return {
+              data: att.content,
+              filename: att.filename,
+            };
+          }),
         };
-
         try {
           return await mg.messages.create(mgConfig.DOMAIN, msg);
         } catch (err) {
@@ -171,8 +197,10 @@ class EmailSender {
       cc = undefined,
       bcc = undefined,
       attachments,
+      provider,
     },
   ) {
+    await this.initialize(provider);
     if (!this.transporter) {
       throw new Error("Email transporter not initialized");
     }
@@ -180,13 +208,13 @@ class EmailSender {
     if (!from) {
       throw new Error("Sender email (from) is required");
     }
-
     let dir;
+    let inMemoryAttachments;
     if (attachments?.length) {
       if (typeof attachments[0] === "object") {
         // receiving presigned urls
         // download files
-        await Promise.all(
+        inMemoryAttachments = await Promise.all(
           attachments.map((attachmentObj) => {
             return downloadS3File(
               attachmentObj.url,
@@ -196,20 +224,9 @@ class EmailSender {
             );
           }),
         );
-
-        dir = attachments.map((attachment) => {
-          const localPath = path.resolve(
-            __dirname,
-            "..",
-            "uploads",
-            messageId,
-            attachment.fileName,
-          );
-          return { path: localPath };
-        });
       } else {
         // download files
-        await Promise.all(
+        inMemoryAttachments = await Promise.all(
           attachments.map((file) => {
             // <s3_prefix>/uploads/<CLIENT_ID>/<MESSAGE_ID>?<size>/<file_name>
             const s3Url = file;
@@ -219,24 +236,6 @@ class EmailSender {
             return downloadS3File(s3Url, fileName, messageId);
           }),
         );
-        dir = attachments.map((s3Url) => {
-          // 1. Remove ?1/ safely
-          const cleanUrl = s3Url.replace(/\?.*?\//, "/");
-
-          // 2. Extract relative path after /uploads/
-          const relativePath = cleanUrl.split("/uploads/")[1];
-          const [client, _messageId, fileName] = relativePath.split("/");
-          // 3. Build local file path
-          const localPath = path.resolve(
-            __dirname,
-            "..",
-            "uploads",
-            messageId,
-            fileName,
-          );
-
-          return { path: localPath };
-        });
       }
     }
 
@@ -248,7 +247,7 @@ class EmailSender {
       html,
       cc,
       bcc,
-      attachments: attachments?.length ? dir : undefined,
+      attachments: inMemoryAttachments,
     };
 
     if (attachments) {
@@ -256,37 +255,28 @@ class EmailSender {
     }
 
     try {
-      if (process.env.NODE_ENV === 'testing') {
+      if (process.env.NODE_ENV === "testing") {
         const result = {
-          accepted: ['test@gmail.com'],
+          accepted: ["test@gmail.com"],
           rejected: [],
-          ehlo: ['8BITMIME', 'AUTH PLAIN LOGIN', 'Ok'],
+          ehlo: ["8BITMIME", "AUTH PLAIN LOGIN", "Ok"],
           envelopeTime: 95,
           messageTime: 197,
           messageSize: 365,
           response:
-            '250 Ok 0109019c03052734-b7820738-bb36-420f-88ee-f3ca02161911-000000',
+            "250 Ok 0109019c03052734-b7820738-bb36-420f-88ee-f3ca02161911-000000",
           envelope: {
-            from: 'noreply@gmail.com',
-            to: ['test@gmail.com'],
+            from: "noreply@gmail.com",
+            to: ["test@gmail.com"],
           },
-          messageId: '<45a87056-a3cc-2120-e7f7-fed8a783d5c5@gmail.com>',
+          messageId: "<45a87056-a3cc-2120-e7f7-fed8a783d5c5@gmail.com>",
         };
         logger.info(`Email.... sent via ${this.provider}`, { to, subject });
         return result;
       } else {
         const result = await this.transporter.sendMail(mailOptions);
         logger.info(`Email sent via ${this.provider}`, { to, subject });
-        if (attachments) {
-          logger.info(
-            `Email sent successfully with attachements, picking local path, ${dir}`,
-          );
-          deleteLocalFile(dir);
-          logger.info(
-            `Local file deleted successfully, picking local path, ${dir}`,
-          );
-          return result;
-        }
+        return result;
       }
     } catch (error) {
       console.log(error);
@@ -296,11 +286,6 @@ class EmailSender {
         subject,
       });
       throw error;
-    } finally {
-      await deleteMessageAttachments(
-        path.resolve(__dirname, "..", "uploads", messageId),
-      );
-      logger.info(`Local file deleted successfully, picking local path`);
     }
   }
 }

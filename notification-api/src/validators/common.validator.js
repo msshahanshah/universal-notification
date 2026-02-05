@@ -1,34 +1,22 @@
 const Joi = require("joi");
 const baseOptions = { abortEarly: false, stripUnknown: false };
 const commonValidation = {
-  page: Joi.number()
-    .integer()
-    .min(1)
-    .optional()
-    .messages({
-      "number.base": "Page must be a number",
-      "number.integer": "Page must be an integer",
-      "number.min": "Page must be at least 1",
-    }),
-  limit: Joi.number()
-    .integer()
-    .min(1)
-    .max(100)
-    .optional()
-    .messages({
-      "number.base": "Limit must be a number",
-      "number.integer": "Limit must be an integer",
-      "number.min": "Limit must be at least 1",
-      "number.max": "Limit cannot exceed 100",
-    }),
-  service: Joi.string()
-    .required()
-    .valid("email", "slack", "sms")
-    .messages({
-      "string.base": "Service must be a string",
-      "any.only": "Service must be one of: email, slack, sms",
-      "string.empty": "Service cannot be empty",
-    }),
+  page: Joi.number().integer().min(1).optional().messages({
+    "number.base": "Page must be a number",
+    "number.integer": "Page must be an integer",
+    "number.min": "Page must be at least 1",
+  }),
+  limit: Joi.number().integer().min(1).max(100).optional().messages({
+    "number.base": "Limit must be a number",
+    "number.integer": "Limit must be an integer",
+    "number.min": "Limit must be at least 1",
+    "number.max": "Limit cannot exceed 100",
+  }),
+  service: Joi.string().required().valid("email", "slack", "sms").messages({
+    "string.base": "Service must be a string",
+    "any.only": "Service must be one of: email, slack, sms",
+    "string.empty": "Service cannot be empty",
+  }),
   message: Joi.string()
     .trim()
     .when("service", {
@@ -44,51 +32,48 @@ const commonValidation = {
     }),
 };
 
-
 const validateAttachments = (value, helpers) => {
-
   if (value.length) {
     const fileNameRegex = new RegExp(/^(?![ .])(?!.*[ .]$)[A-Za-z0-9._ -]+$/);
     const urlRegex = new RegExp(
-      '^https?:\\/\\/(?:[a-z0-9.-]+\\.)?s3(?:[.-][a-z0-9-]+)?\\.amazonaws\\.com(?:\\/[\\S]*?)?\\?.*(?:X-Amz-Signature=|X-Amz-Credential=|AWSAccessKeyId=)',
-      'i'
+      "^https?:\\/\\/(?:[a-z0-9.-]+\\.)?s3(?:[.-][a-z0-9-]+)?\\.amazonaws\\.com(?:\\/[\\S]*?)?\\?.*(?:X-Amz-Signature=|X-Amz-Credential=|AWSAccessKeyId=)",
+      "i",
     );
     // array of filename
-    if (typeof value[0] === 'string') {
+    if (typeof value[0] === "string") {
       for (const filename of value) {
-      if (typeof filename !== 'string' || !fileNameRegex.test(filename)) {
-        return helpers.message(`invalid filename ${filename}`);
+        if (typeof filename !== "string" || !fileNameRegex.test(filename)) {
+          return helpers.message(`invalid filename ${filename}`);
+        }
       }
-    }
-    } else if (typeof value[0] === 'object') {
+    } else if (typeof value[0] === "object") {
       for (const file of value) {
-      if (typeof file !== 'object' || file === null) {
-        return helpers.message(`invalid email attachments format`);
-      }
+        if (typeof file !== "object" || file === null) {
+          return helpers.message(`invalid email attachments format`);
+        }
 
-      if (!file.fileName || !file.url) {
-        return helpers.message(
-          `missing fields. please provide fileName and url`
-        );
-      }
+        if (!file.fileName || !file.url) {
+          return helpers.message(
+            `missing fields. please provide fileName and url`,
+          );
+        }
 
-      if (
-        typeof file.fileName !== 'string' ||
-        !fileNameRegex.test(file.fileName)
-      ) {
-        return helpers.message(`invalid fileName ${file.fileName}`);
-      }
+        if (
+          typeof file.fileName !== "string" ||
+          !fileNameRegex.test(file.fileName)
+        ) {
+          return helpers.message(`invalid fileName ${file.fileName}`);
+        }
 
-      if (typeof file.url !== 'string' || !urlRegex.test(file.url)) {
-        return helpers.message(
-          `invalid s3 presigned url for file ${file.fileName}`
-        );
+        if (typeof file.url !== "string" || !urlRegex.test(file.url)) {
+          return helpers.message(
+            `invalid s3 presigned url for file ${file.fileName}`,
+          );
+        }
       }
     }
   }
-
-    return value;
-  }
-}
+  return value;
+};
 
 module.exports = { commonValidation, baseOptions, validateAttachments };

@@ -63,9 +63,8 @@ const notify = async (req, res) => {
   }
 
   let result;
-
   if (
-    attachments.length === 0 ||
+    !attachments ||
     (attachments?.length && typeof attachments[0] === "object")
   ) {
     notificationRecord.clientId = clientID;
@@ -73,7 +72,7 @@ const notify = async (req, res) => {
   }
 
   const response =
-    attachments.length > 0 && typeof attachments[0] === "string"
+    attachments?.length > 0 && typeof attachments[0] === "string"
       ? {
           success: true,
           message: `Waiting for file upload on URL (expiry 5 mins). Message Id: ${notificationRecord.messageId}`,

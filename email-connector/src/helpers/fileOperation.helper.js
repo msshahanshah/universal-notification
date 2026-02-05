@@ -1,51 +1,53 @@
 const fse = require("fs-extra");
 const axios = require("axios");
 const path = require("path");
-const logger = require("../src/logger");
-const { promises } = require("dns");
+const logger = require("../logger");
 
 const downloadS3File = async (
   s3Url,
   filename,
   messageId,
   isPresigned = false,
+  isStream = false,
 ) => {
-  // create download
-  const downloadDir = path.resolve(
-    __dirname,
-    "..",
-    "..",
-    "email-connector",
-    "src",
-    "uploads",
-    messageId,
-  );
-  await fse.ensureDir(downloadDir);
-  const localFilePath = path.join(downloadDir, filename);
-
   try {
-
     let newS3Url = s3Url;
     if (!isPresigned) newS3Url = s3Url.replace("?", "%3F"); // % -> %3F
-    // 7. Download
+    // creating file stream
     const response = await axios({
       url: newS3Url,
       method: "GET",
-      responseType: "stream",
+      responseType: isStream ? "stream" : "arraybuffer",
     });
 
-    const writer = fse.createWriteStream(localFilePath);
-    response.data.pipe(writer);
-
-    return new Promise((resolve, reject) => {
-      writer.on("finish", () => resolve(localFilePath));
-      writer.on("error", reject);
-    });
+    return {
+      filename,
+      content: isStream ? response.data : Buffer.from(response.data),
+    };
   } catch (err) {
     logger.error("Download failed:", err);
     throw err;
   }
 };
+
+async function downloadFromS3AsStream({ bucket, key, filename }) {
+  const command = new GetObjectCommand({
+    Bucket: bucket,
+    Key: key,
+  });
+
+  const response = await s3.send(command);
+
+  if (!response.Body) {
+    throw new Error("Empty S3 response body");
+  }
+
+  // response.Body is a Node.js Readable stream
+  return {
+    filename,
+    content: response.Body,
+  };
+}
 
 const deleteLocalFile = async (filePath) => {
   if (!filePath || typeof filePath !== "string") {
