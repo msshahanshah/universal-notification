@@ -4,8 +4,10 @@ const deliveryStatus = async (req, res, next) => {
   try {
     const messageId = req.params.id;
     const clientId = req.header("X-Client-Id");
-
+    // console.log("globall io>>>>",global.io);
     const result = await viewDeliveryStatus(messageId, clientId);
+    const io = req.app.get("io");
+    io.emit("updated-status", { status: result.status });
 
     res.status(200).json({
       success: true,

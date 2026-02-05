@@ -1,6 +1,7 @@
 const logger = require("./logger");
 const amqp = require('amqplib');
 require('dotenv').config();
+const axios = require("axios")
 
 const MAX_PROCESSING_ATTEMPTS = parseInt(process.env.MAX_PROCESSING_ATTEMPTS || '3', 10);
 
@@ -170,6 +171,14 @@ module.exports = (RABBITMQ_URL, rabbitConfig) => {
                     { status: "sent" },
                     { where: { id: notificationRecord.id } }
                 );
+                const response = await axios.get(`http://localhost:3000/delivery-status/${notificationData.messageId}`,
+                    {
+                        headers: {
+                            "x-client-id": clientId   // or "GKMIT"
+                        }
+                    }
+                );
+                console.log(response);
                 logger.info(`Notification status updated to 'sent'`, { messageId, dbId: notificationRecord.id });
                 channel.ack(msg);
             } catch (processingError) {
@@ -180,6 +189,15 @@ module.exports = (RABBITMQ_URL, rabbitConfig) => {
                     { where: { id: notificationRecord.id } }
                 );
 
+                const response = await axios.get(`http://localhost:3000/delivery-status/${notificationData.messageId}`,
+                    {
+                        headers: {
+                            "x-client-id": clientId   // or "GKMIT"
+                        }
+                    }
+                );
+                console.log(response);
+                
                 logger.warn(`Notification status updated to 'failed'`, { messageId, dbId: notificationRecord.id });
                 channel.ack(msg);
             }

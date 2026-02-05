@@ -7,7 +7,7 @@ const logger = require("./logger");
 const { Sequelize } = require("sequelize");
 const connectionManager = require("./utillity/connectionManager");
 const { loadClientConfigs } = require("./utillity/loadClientConfigs");
-
+const { Server } = require("socket.io")
 /**
  * @type {import('http').Server|null}
  */
@@ -40,6 +40,16 @@ async function startServer(clientConfigList) {
       logger.info(
         `[${process.env.clientList}] Notification API listening on port ${process.env.SERVER_PORT} in ${config.env} mode`
       );
+    });
+    const io = new Server(server, {
+      cors: {
+        origin: "*",
+      },
+    });
+    app.set("io", io);
+
+    io.on("connection", (socket) => {
+      logger.info(`Socket connected: ${socket.id}`);
     });
     return server;
   } catch (error) {
@@ -108,6 +118,25 @@ if (cluster.isMaster) {
       // Start master router
       try {
         const proxy = httpProxy.createProxyServer({});
+
+        // proxy.on("upgrade", (req, socket, head) => {
+        //   const clientId = req.headers["x-client-id"];
+        //   const client = clients.find(c => c.ID === clientId);
+
+        //   if (!client) {
+        //     logger.warn("WS: Missing X-Client-Id", { clientId });
+        //     socket.destroy();
+        //     return;
+        //   }
+
+        //   logger.info(`WS Upgrade: Client ${clientId} → port ${client.SERVER_PORT}`);
+
+        //   proxy.ws(req, socket, head, {
+        //     target: `http://localhost:${client.SERVER_PORT}`,
+        //     ws: true,
+        //   });
+        // });
+
         const YAML = require("yamljs");
         const swaggerUi = require("swagger-ui-express");
         const swaggerDoc = YAML.load(path.join(__dirname, "swagger.yaml"));
@@ -144,6 +173,23 @@ if (cluster.isMaster) {
 
         masterServer = masterApp.listen(3000, () => {
           logger.info("Master router listening on port 3000");
+        });
+
+        masterServer.on("upgrade", (req, socket, head) => {
+          const clientId = req.headers["x-client-id"];
+          const client = clients.find(c => c.ID === clientId);
+
+          if (!client) {
+            logger.warn("WS: Missing X-Client-Id", { clientId });
+            socket.destroy();
+            return;
+          }
+
+          logger.info(`WS Upgrade: Client ${clientId} → port ${client.SERVER_PORT}`);
+
+          proxy.ws(req, socket, head, {
+            target: `http://localhost:${client.SERVER_PORT}`,
+          });
         });
       } catch (error) {
         logger.error("Master router error:", {
