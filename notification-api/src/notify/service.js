@@ -16,13 +16,6 @@ const creatingNotificationRecord = async (
   content,
   templateId = null,
 ) => {
-  // logger.info(`Creating notification record in DB`, {
-  //   clientId,
-  //   service,
-  //   destination,
-  //   content,
-  //   templateId,
-  // });
   let dbConnect = await global.connectionManager.getModels(clientId);
   return await dbConnect.Notification.create({
     messageId: uuidv4(),
@@ -63,16 +56,22 @@ const creatingNotificationRecord = async (
 
 const selectProvider = async (service, destination, clientId) => {
   try {
-    const countryCode =
-      parsePhoneNumberFromString(destination).countryCallingCode;
-    let dbConnect = await global.connectionManager.getModels(clientId);
-    const provider = await dbConnect.RoutingRule.findOne({
-      where: {
-        service: service.toUpperCase(),
-        match_value: countryCode,
-      },
-    });
-    return provider?.provider;
+    if (service === "sms") {
+      const countryCode =
+        parsePhoneNumberFromString(destination).countryCallingCode;
+      let dbConnect = await global.connectionManager.getModels(clientId);
+      const routingRole = await dbConnect.RoutingRule.findOne({
+        where: {
+          service: service.toUpperCase(),
+          match_value: countryCode,
+        },
+      });
+
+      return routingRole?.provider;
+    } else if (service === "email") {
+      // TODO check for email routing
+      return;
+    }
   } catch (error) {
     return {
       statusCode: 400,
@@ -89,8 +88,9 @@ const publishingNotificationRequest = async (notificationRecord) => {
     messageId,
     clientId,
     fileId = undefined,
-    attachments
+    attachments,
   } = notificationRecord;
+  console.log(clientId);
   const provider = await selectProvider(service, destination, clientId);
 
   const rabbitConnect = await rabbitManager.getClient(clientId);
@@ -108,7 +108,7 @@ const publishingNotificationRequest = async (notificationRecord) => {
       timestamp: new Date().toISOString(),
       provider,
       fileId,
-      attachments
+      attachments,
     });
 
     return result;

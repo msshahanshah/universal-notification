@@ -26,7 +26,6 @@ const notify = async (req, res) => {
     cc,
     bcc,
     attachments,
-    extension,
   } = req.body;
   let content = {};
   if (message) {
@@ -37,15 +36,10 @@ const notify = async (req, res) => {
     content.fromEmail = fromEmail;
     content.cc = cc;
     content.bcc = bcc;
-  }
-
-  if ("attachments" in req.body) {
     content.attachments = attachments;
-    content.extension = extension;
   }
 
   const clientID = req.headers["x-client-id"];
-
   const notificationRecord = await creatingNotificationRecord(
     clientID,
     service,
@@ -59,61 +53,60 @@ const notify = async (req, res) => {
     });
   }
 
-  const { url, fields } = await generatePreSignedUrl(
-    clientID,
-    notificationRecord.messageId,
-  );
+  let preSignedUrls;
+  if (attachments?.length && typeof attachments[0] === "string") {
+    preSignedUrls = await generatePreSignedUrl(
+      clientID,
+      notificationRecord.messageId,
+      attachments,
+    );
+  }
 
   let result;
-
-  if (!attachments) {
+  if (
+    !attachments ||
+    (attachments?.length && typeof attachments[0] === "object")
+  ) {
     notificationRecord.clientId = clientID;
     result = await publishingNotificationRequest(notificationRecord);
   }
 
-  const response = attachments
-    ? {
-        success: true,
-        message: `Waiting for file upload on URL (expiry 5 mins). Message Id: ${notificationRecord.messageId}`,
-        url: url,
-        fields: fields,
-      }
-    : {
-        success: true,
-        message: `Notification request accepted ${result ? "and queued." : ""}`,
-        messageId: notificationRecord.messageId, // Return the ID to the client
-      };
+  const response =
+    attachments?.length > 0 && typeof attachments[0] === "string"
+      ? {
+          success: true,
+          message: `Waiting for file upload on URL (expiry 5 mins). Message Id: ${notificationRecord.messageId}`,
+          preSignedUrls,
+        }
+      : {
+          success: true,
+          message: `Notification request accepted ${result ? "and queued." : ""}`,
+          messageId: notificationRecord.messageId, // Return the ID to the client
+        };
 
   return res.status(202).json(response);
 };
 
 const notifyWithEmailAttachment = async (req, res) => {
   try {
-    const { media } = req.body;
-    if (!media) {
-      throw new Error("Please send media (S3 URL)");
+    const { attachments, messageId } = req.body;
+    if (
+      !attachments ||
+      (!Array.isArray(attachments) && attachments.length === 0)
+    ) {
+      throw new Error("Please send media (S3 URL's)");
     }
 
     const headers = req.headers;
 
-    const parts = media.split("/");
-    const fileName = parts.slice(-2).join("/");
-    let messageId = parts.pop();
-    messageId = messageId.split('.')[0];
+    const clientId = req.headers["x-client-id"];
 
-    console.log(messageId);
-
-    const clientID = req.headers["x-client-id"];
-
-    const notificationData = await getNotificationData(messageId, clientID);
+    const notificationData = await getNotificationData(messageId, clientId);
     let content = {
       subject: notificationData.subject,
       body: notificationData.body,
       fromEmail: notificationData.fromEmail,
-      media: media,
-      extension: notificationData.extension,
-      attachments: notificationData.attachments,
-      fileId: messageId
+      attachments,
     };
 
     if (notificationData.cc) {
@@ -127,33 +120,22 @@ const notifyWithEmailAttachment = async (req, res) => {
     const service = notificationData.service;
     const destination = notificationData.destination;
 
-    const path = await downloadS3File(
-      media,
-      fileName,
-      notificationData.extension,
-    );
-
-    const notificationRecord = await creatingNotificationRecord(
-      clientID,
+    const notificationRecord = {
       service,
       destination,
       content,
-    );
-    if (notificationRecord.statusCode) {
-      return res.status(notificationRecord.statusCode).json({
-        error: notificationRecord.message,
-        messageId: notificationRecord.messageId,
-      });
-    }
+      clientId,
+      messageId,
+      attachments,
+    };
 
-    notificationRecord.clientId = clientID;
-    notificationRecord.fileId = messageId;
     result = await publishingNotificationRequest(notificationRecord);
 
     return res.status(202).json({
+      success: true,
       status: "accepted",
       message: `Notification request accepted ${result ? "and queued." : ""}`,
-      messageId: notificationRecord.messageId, // Return the ID to the client
+      messageId, // Return the ID to the client
     });
   } catch (err) {
     console.log("Error in notifying with email attachement", err.message);
@@ -179,72 +161,3 @@ const notifyWithEmailAttachment = async (req, res) => {
 };
 
 module.exports = { notify, notifyWithEmailAttachment };
-
-// app.post('/notify', async (req, res) => {
-
-//     // Validation
-//     if (!service || !targetChannel || !message) {
-//         logger.warn('Validation failed: Missing fields', { body: req.body, messageId });
-//         return res.status(400).json({
-//             error: 'Missing required fields: service, channel, message',
-//         });
-//     }
-//     const allowedServices = ['slack', 'email', 'telegram'];
-//     const lowerCaseService = service.toLowerCase();
-
-//     // Validate email specific fields
-//     if (lowerCaseService === 'email') {
-//         if (!req.body.templateId) {
-//             logger.warn('Validation failed: Missing templateId for email', { body: req.body, messageId });
-//             return res.status(400).json({ error: 'Missing templateId for email service' });
-//         }
-//         if (!message) {
-//             logger.warn('Validation failed: Missing message for email service', { body: req.body, messageId });
-//             return res.status(400).json({ error: 'Missing message for email service' });
-//         }
-
-//         if (typeof message !== 'object' || message === null) {
-//             logger.warn('Validation failed: message is not an object for email service', { body: req.body, messageId });
-//             return res.status(400).json({ error: 'Invalid message format: must be an object for email service' });
-//         }
-//     }
-//     if (!allowedServices.includes(lowerCaseService)) {
-//         logger.warn('Validation failed: Invalid service', { service, messageId });
-//         return res.status(400).json({
-//             error: `Invalid service specified. Allowed services are: ${allowedServices.join(', ')}`,
-//         });
-//     }
-
-//     try {
-
-//         res.status(202).json({
-//             status: 'accepted',
-//             message: 'Notification request accepted and queued.',
-//             messageId: messageId, // Return the ID to the client
-//         });
-
-//     } catch (publishError) {
-//         logger.error('RabbitMQ error: Failed to publish notification request', {
-//             messageId,
-//             dbId: notificationRecord.id,
-//             error: publishError.message,
-//             stack: publishError.stack
-//         });
-//         try {
-//             await notificationRecord.update({
-//                 status: 'failed',
-//                 connectorResponse: `Failed to publish to RabbitMQ: ${publishError.message}`
-//             });
-//             logger.warn(`Updated notification status to 'failed' due to publish error`, { messageId, dbId: notificationRecord.id });
-//         } catch (updateError) {
-//             logger.error('DB error: Failed to update notification status to "failed" after publish error', {
-//                 messageId,
-//                 dbId: notificationRecord.id,
-//                 updateError: updateError.message,
-//                 stack: updateError.stack
-//             });
-//         }
-
-//         res.status(500).json({ error: 'Failed to queue notification request after saving.' });
-//     }
-// });
