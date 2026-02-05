@@ -70,7 +70,7 @@ const selectProvider = async (service, destination, clientId) => {
       return routingRole?.provider;
     } else if (service === "email") {
       // TODO check for email routing
-      return "AWS";
+      return;
     }
   } catch (error) {
     return {
