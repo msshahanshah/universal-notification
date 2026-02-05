@@ -26,13 +26,17 @@ module.exports = {
         allowNull: false,
         type: Sequelize.STRING
       },
-      match_key: {
+      balance: {
+        type: Sequelize.STRING,
         allowNull: false,
-        type: Sequelize.STRING
       },
-      match_value: {
+      balance_type: {
+        type: Sequelize.STRING,
         allowNull: false,
-        type: Sequelize.STRING
+      },
+      currency: {
+        type: Sequelize.STRING,
+        allowNull: true,
       },
       created_at: {
         allowNull: false,
@@ -52,6 +56,6 @@ module.exports = {
     });
   },
   async down(queryInterface, Sequelize) {
-    await queryInterface.dropTable('routing_rules');
+    await queryInterface.dropTable('wallets');
   }
 };

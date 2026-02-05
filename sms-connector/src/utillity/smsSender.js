@@ -66,5 +66,4 @@ class SmsSender {
     }
   }
 }
-
 module.exports = SmsSender;

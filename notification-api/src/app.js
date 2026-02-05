@@ -10,6 +10,7 @@ const notificationRouter = require("./notify/route");
 const logRouter = require("./logs-api/route");
 
 const authRouter = require("./auth/route");
+const statRouter = require("./stats/route");
 
 const app = express();
 
@@ -32,6 +33,7 @@ app.get("/health", (req, res) => {
 app.use(notificationRouter);
 app.use(logRouter);
 app.use(authRouter);
+app.use(statRouter);
 
 /**
  * Route for creating and publishing a notification request.`
