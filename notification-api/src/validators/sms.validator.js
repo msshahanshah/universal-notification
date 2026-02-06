@@ -1,5 +1,6 @@
 const Joi = require("joi");
-const { parsePhoneNumberFromString } = require("libphonenumber-js");
+const { PhoneNumberUtil } = require("google-libphonenumber");
+const phoneUtil = PhoneNumberUtil.getInstance();
 
 const smsValidation = {
   destination: Joi.string()
@@ -21,9 +22,20 @@ const smsValidation = {
 
       // Validate each number
       for (const number of numbers) {
-        const phone = parsePhoneNumberFromString(number);
-        if (!phoneRegex.test(number) || !phone || !phone.isValid()) {
-          return helpers.message(`Invalid phone number`);
+        if (!phoneRegex.test(number)) {
+          return helpers.message("Invalid phone number ");
+        }
+
+        try {
+          // Parse number
+          const parsedNumber = phoneUtil.parse(number);
+
+          // Check validity
+          if (!phoneUtil.isValidNumber(parsedNumber)) {
+            return helpers.message("Invalid phone number ");
+          }
+        } catch (err) {
+          return helpers.message("Invalid phone number ");
         }
       }
 
