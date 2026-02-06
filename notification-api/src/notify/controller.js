@@ -64,8 +64,8 @@ const notify = async (req, res) => {
 
   let result;
   if (
-    !attachments ||
-    (attachments?.length && typeof attachments[0] === "object")
+    !attachments || 
+    (attachments?.length && typeof attachments[0] === "object") || attachments?.length === 0
   ) {
     notificationRecord.clientId = clientID;
     result = await publishingNotificationRequest(notificationRecord);
