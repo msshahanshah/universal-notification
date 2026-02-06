@@ -129,7 +129,7 @@ components:
         destination:
           type: string
           pattern: '/^(?=.{6,254}$)[a-z0-9._%+-]+@[a-z0-9-]+\.[a-z]{2,}$/i'
-          example: khandelwal7vidit@gmail.com
+          example: test@gmail.com
           description: >
             Comma-separated list of destination email addresses.
             At least one valid email is required.
@@ -138,7 +138,7 @@ components:
         fromEmail:
           type: string
           pattern: '/^(?=.{6,254}$)[a-z0-9._%+-]+@[a-z0-9-]+\.[a-z]{2,}$/i'
-          example: imvidit7@gmail.com
+          example: test@gmail.com
         
         subject:
           type: string
@@ -153,7 +153,7 @@ components:
         cc:
           type: string
           pattern: '/^(?=.{6,254}$)[a-z0-9._%+-]+@[a-z0-9-]+\.[a-z]{2,}$/i'
-          example: "imvidit7@gmail.com, imvidit8@gmail.com"
+          example: "test@gmail.com, test@gmail.com"
           description: >
             Optional comma-separated CC email addresses.
             Duplicate emails are not allowed.
@@ -161,7 +161,7 @@ components:
         bcc:
           type: string
           pattern: '/^(?=.{6,254}$)[a-z0-9._%+-]+@[a-z0-9-]+\.[a-z]{2,}$/i'
-          example: "imvidit2@gmail.com, imvidit3@gmail.com"
+          example: "test@gmail.com, test@gmail.com"
           description: >
             Optional comma-separated BCC email addresses.
             Duplicate emails are not allowed.
@@ -180,7 +180,7 @@ components:
         destination:
           type: string
           pattern: '/^(?=.{6,254}$)[a-z0-9._%+-]+@[a-z0-9-]+\.[a-z]{2,}$/i'
-          example: khandelwal7vidit@gmail.com
+          example: test@gmail.com
           description: >
             Comma-separated list of destination email addresses.
             At least one valid email is required.
@@ -189,7 +189,7 @@ components:
         fromEmail:
           type: string
           pattern: '/^(?=.{6,254}$)[a-z0-9._%+-]+@[a-z0-9-]+\.[a-z]{2,}$/i'
-          example: imvidit7@gmail.com
+          example: test@gmail.com
         
         subject:
           type: string
@@ -204,13 +204,13 @@ components:
         cc:
           type: string
           pattern: '/^(?=.{6,254}$)[a-z0-9._%+-]+@[a-z0-9-]+\.[a-z]{2,}$/i'
-          example: "imvidit7@gmail.com, imvidit8@gmail.com"
+          example: "test@gmail.com, test@gmail.com"
           description: >
             Optional comma-separated CC email addresses.
             Duplicate emails are not allowed.
         bcc:
           type: string
-          example: "imvidit2@gmail.com , imvidit3@gmail.com"
+          example: "test@gmail.com ,test@gmail.com"
           description: >
             Optional comma-separated BCC email addresses.
             Duplicate emails are not allowed.
@@ -233,7 +233,7 @@ components:
         destination:
           type: string
           pattern: '/^(?=.{6,254}$)[a-z0-9._%+-]+@[a-z0-9-]+\.[a-z]{2,}$/i'
-          example: khandelwal7vidit@gmail.com
+          example: test@gmail.com
           description: >
             Comma-separated list of destination email addresses.
             At least one valid email is required.
@@ -242,7 +242,7 @@ components:
         fromEmail:
           type: string
           pattern: '/^(?=.{6,254}$)[a-z0-9._%+-]+@[a-z0-9-]+\.[a-z]{2,}$/i'
-          example: imvidit7@gmail.com
+          example: test@gmail.com
         
         subject:
           type: string
@@ -257,7 +257,7 @@ components:
         cc:
           type: string
           pattern: '/^(?=.{6,254}$)[a-z0-9._%+-]+@[a-z0-9-]+\.[a-z]{2,}$/i'
-          example: "imvidit7@gmail.com, imvidit8@gmail.com"
+          example: "test@gmail.com, test@gmail.com"
           description: >
             Optional comma-separated CC email addresses.
             Duplicate emails are not allowed.
@@ -518,8 +518,8 @@ paths:
                   subject: "Recent Mail"
                   body: "Email body content"
                   fromEmail: "sender@example.com"
-                  cc: "imvidit7@gmail.com , imvidit8@gmail.com"
-                  bcc: "imvidit2@gmail.com , imvidit3@gmail.com"
+                  cc: "itest@gmail.com , itest@gmail.com"
+                  bcc: "itest@gmail.com , itest@gmail.com"
       responses:
         "200":
           description: Accepted
