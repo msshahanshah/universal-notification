@@ -1,4 +1,5 @@
 const Joi = require("joi");
+const { parsePhoneNumberFromString } = require("libphonenumber-js");
 
 const smsValidation = {
   destination: Joi.string()
@@ -16,13 +17,13 @@ const smsValidation = {
       }
 
       // Single phone number regex
-      const phoneRegex = /^\+(?:[1-9]|[1-9][0-9])[1-9][0-9]{9}$/;
+      const phoneRegex = /^\+[0-9]+$/;
+
       // Validate each number
       for (const number of numbers) {
-        if (!phoneRegex.test(number)) {
-          return helpers.message(
-            `Invalid phone number format: ${number}. Use +<countryCode><10-digit-number>`,
-          );
+        const phone = parsePhoneNumberFromString(number);
+        if (!phoneRegex.test(number) || !phone || !phone.isValid()) {
+          return helpers.message(`Invalid phone number`);
         }
       }
 
