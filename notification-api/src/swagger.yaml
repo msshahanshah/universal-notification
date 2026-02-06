@@ -77,7 +77,7 @@ components:
           example: "+919109024482,+918861635898"
           description: >
             Comma-separated list of phone numbers.
-            Each number must be in format +<countryCode><phoneNumber>.
+            Each number must be in format .
             Duplicate numbers are not allowed.
 
     NotifySlack:
