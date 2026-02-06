@@ -73,11 +73,11 @@ components:
         
         destination:
           type: string
-          pattern: '/^\+(?:[1-9]|[1-9][0-9])[1-9][0-9]{9}$/'
-          example: "+919929797900,+14155552671"
+          pattern: '/^\+[0-9]+$/'
+          example: "+919109024482,+918861635898"
           description: >
             Comma-separated list of phone numbers.
-            Each number must be in format +<countryCode><10-digit-number>.
+            Each number must be in format +<countryCode><phoneNumber>.
             Duplicate numbers are not allowed.
 
     NotifySlack:
