@@ -21,77 +21,151 @@ components:
   schemas:
     LoginRequest:
       type: object
-      required: [username, password]
+      required:
+        - username
+        - password
       properties:
         username:
           type: string
+          minLength: 3
+          maxLength: 30
+          pattern: '^[A-Za-z]{3,10}@[A-Za-z]{3,5}$'
+          example: abcdef@xyz
+          description: Username must be letters(3–10)@letters(3–5)
         password:
           type: string
+          minLength: 8
+          maxLength: 12
+          pattern: '^[A-Za-z0-9]{8,12}$'
+          example: Pass1234
+          description: Password must be 8–12 characters and alphanumeric
+
 
     RefreshRequest:
       type: object
-      required: [refreshToken]
+      required:
+        - refreshToken
       properties:
         refreshToken:
           type: string
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+          description: Refresh token must be a non-empty string
+
 
     NotifySms:
       type: object
-      required: [service, message, destination]
+      required:
+        - service
+        - message
+        - destination
       properties:
         service:
           type: string
           enum: [sms]
           example: sms
+          description: Notification service type (must be sms)
+
         message:
           type: string
+          minLength: 1
           example: Hello Vidit, how are you
+          
+        
         destination:
           type: string
-          example: "+919929797900"
+          pattern: '/^\+(?:[1-9]|[1-9][0-9])[1-9][0-9]{9}$/'
+          example: "+919929797900,+14155552671"
+          description: >
+            Comma-separated list of phone numbers.
+            Each number must be in format +<countryCode><10-digit-number>.
+            Duplicate numbers are not allowed.
 
     NotifySlack:
       type: object
-      required: [service, message, destination]
+      required:
+        - service
+        - message
+        - destination
       properties:
         service:
           type: string
           enum: [slack]
           example: slack
+          description: Notification service type (must be slack)
+
         message:
           type: string
+          minLength: 1
           example: Good Morning, Guys
+          
+
         destination:
           type: string
-          example: C08Q1E38E10R
+          pattern: '/^[CGD][A-Z0-9]{8,10}$/'
+          example: C08Q1E38E10R,G09A1B2C3D
+          description: >
+            Comma-separated list of Slack channel IDs.
+            Each ID must start with C (public), G (private), or D (DM),
+            followed by 8–10 uppercase alphanumeric characters.
+            Duplicate channel IDs are not allowed.
+            characters length must be between 9 to 11
 
     NotifyEmail:
       type: object
-      required: [service, destination, subject, body, fromEmail]
+      required:
+        - service
+        - destination
+        - subject
+        - body
+        - fromEmail
       additionalProperties: false
       properties:
         service:
           type: string
           enum: [email]
           example: email
+          description: Notification service type (must be email)
+
         destination:
           type: string
+          pattern: '/^(?=.{6,254}$)[a-z0-9._%+-]+@[a-z0-9-]+\.[a-z]{2,}$/i'
           example: khandelwal7vidit@gmail.com
-        subject:
-          type: string
-          example: Hi This is recent mail from vidit khandelwal.
-        body:
-          type: string
-          example: Good Morning Dikshant, Please look into this email.
+          description: >
+            Comma-separated list of destination email addresses.
+            At least one valid email is required.
+            Duplicate emails are not allowed.
+
         fromEmail:
           type: string
+          pattern: '/^(?=.{6,254}$)[a-z0-9._%+-]+@[a-z0-9-]+\.[a-z]{2,}$/i'
           example: imvidit7@gmail.com
+        
+        subject:
+          type: string
+          minLength: 1
+          maxLength: 255
+        
+        body:
+          type: string
+          minLength: 1
+          example: Good Morning Dikshant, Please look into this email.
+        
         cc:
           type: string
-          example: "imvidit7@gmail.com , imvidit8@gmail.com"
+          pattern: '/^(?=.{6,254}$)[a-z0-9._%+-]+@[a-z0-9-]+\.[a-z]{2,}$/i'
+          example: "imvidit7@gmail.com, imvidit8@gmail.com"
+          description: >
+            Optional comma-separated CC email addresses.
+            Duplicate emails are not allowed.
+
         bcc:
           type: string
-          example: "imvidit2@gmail.com , imvidit3@gmail.com"
+          pattern: '/^(?=.{6,254}$)[a-z0-9._%+-]+@[a-z0-9-]+\.[a-z]{2,}$/i'
+          example: "imvidit2@gmail.com, imvidit3@gmail.com"
+          description: >
+            Optional comma-separated BCC email addresses.
+            Duplicate emails are not allowed.
+
     NotifyEmailWithFileAttachment:
       type: object
       required: [service, destination, subject, body, fromEmail]
@@ -101,27 +175,50 @@ components:
           type: string
           enum: [email]
           example: email
+          description: Notification service type (must be email)
+
         destination:
           type: string
+          pattern: '/^(?=.{6,254}$)[a-z0-9._%+-]+@[a-z0-9-]+\.[a-z]{2,}$/i'
           example: khandelwal7vidit@gmail.com
-        subject:
-          type: string
-          example: Hi This is recent mail from vidit khandelwal.
-        body:
-          type: string
-          example: Good Morning Dikshant, Please look into this email.
+          description: >
+            Comma-separated list of destination email addresses.
+            At least one valid email is required.
+            Duplicate emails are not allowed.
+
         fromEmail:
           type: string
+          pattern: '/^(?=.{6,254}$)[a-z0-9._%+-]+@[a-z0-9-]+\.[a-z]{2,}$/i'
           example: imvidit7@gmail.com
+        
+        subject:
+          type: string
+          minLength: 1
+          maxLength: 255
+        
+        body:
+          type: string
+          minLength: 1
+          example: Good Morning Dikshant, Please look into this email.
+        
         cc:
           type: string
-          example: "imvidit7@gmail.com , imvidit8@gmail.com"
+          pattern: '/^(?=.{6,254}$)[a-z0-9._%+-]+@[a-z0-9-]+\.[a-z]{2,}$/i'
+          example: "imvidit7@gmail.com, imvidit8@gmail.com"
+          description: >
+            Optional comma-separated CC email addresses.
+            Duplicate emails are not allowed.
         bcc:
           type: string
           example: "imvidit2@gmail.com , imvidit3@gmail.com"
+          description: >
+            Optional comma-separated BCC email addresses.
+            Duplicate emails are not allowed.
+
         attachments:
           type: array
           example: ["file1.png", "file2.pdf"]
+          
     NotifyEmailWithS3FileAttachment:
       type: object
       required: [service, destination, subject, body, fromEmail]
@@ -131,24 +228,46 @@ components:
           type: string
           enum: [email]
           example: email
+          description: Notification service type (must be email)
+
         destination:
           type: string
+          pattern: '/^(?=.{6,254}$)[a-z0-9._%+-]+@[a-z0-9-]+\.[a-z]{2,}$/i'
           example: khandelwal7vidit@gmail.com
-        subject:
-          type: string
-          example: Hi This is recent mail from vidit khandelwal.
-        body:
-          type: string
-          example: Good Morning Dikshant, Please look into this email.
+          description: >
+            Comma-separated list of destination email addresses.
+            At least one valid email is required.
+            Duplicate emails are not allowed.
+
         fromEmail:
           type: string
+          pattern: '/^(?=.{6,254}$)[a-z0-9._%+-]+@[a-z0-9-]+\.[a-z]{2,}$/i'
           example: imvidit7@gmail.com
+        
+        subject:
+          type: string
+          minLength: 1
+          maxLength: 255
+        
+        body:
+          type: string
+          minLength: 1
+          example: Good Morning Dikshant, Please look into this email.
+        
         cc:
           type: string
-          example: "imvidit7@gmail.com , imvidit8@gmail.com"
+          pattern: '/^(?=.{6,254}$)[a-z0-9._%+-]+@[a-z0-9-]+\.[a-z]{2,}$/i'
+          example: "imvidit7@gmail.com, imvidit8@gmail.com"
+          description: >
+            Optional comma-separated CC email addresses.
+            Duplicate emails are not allowed.
+
         bcc:
           type: string
           example: "imvidit2@gmail.com , imvidit3@gmail.com"
+          description: >
+            Optional comma-separated BCC email addresses.
+            Duplicate emails are not allowed.
         attachments:
           type: array
           example:
