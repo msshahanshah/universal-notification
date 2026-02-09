@@ -38,8 +38,10 @@ const validateEmailList = (value, helpers, fieldName) => {
 
   const uniqueEmails = [...new Set(emails)];
 
-  for (const email of uniqueEmails) {
-    if (email.length > 254 || !emailRegex.test(email)) {
+  const emailSchema = Joi.string().email({ tlds: { allow: false } });
+  for (const email of emails) {
+    const { error } = emailSchema.validate(email);
+    if (error) {
       return helpers.message(`Email "${email}" in ${fieldName} is invalid.`);
     }
   }

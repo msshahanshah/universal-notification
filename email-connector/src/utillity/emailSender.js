@@ -137,8 +137,7 @@ class EmailSender {
           subject: mailOptions.subject,
           text: mailOptions.text ?? "Hello Universal Notification",
           html: mailOptions.html ?? "<h1>Hello Universal Notification</h1>",
-          attachment: mailOptions.attachments.map((att) => {
-            // att.content.filename = att.filename;
+          attachment: mailOptions.attachments?.map((att) => {
             return {
               data: att.content,
               filename: att.filename,
