@@ -110,7 +110,8 @@ const notifyWithEmailAttachment = async (req, res) => {
     const { attachments, messageId } = req.body;
     if (
       !attachments ||
-      (!Array.isArray(attachments) && attachments.length === 0)
+      !Array.isArray(attachments) ||
+      attachments.length === 0
     ) {
       throw new Error("Please send media (S3 URL's)");
     }
