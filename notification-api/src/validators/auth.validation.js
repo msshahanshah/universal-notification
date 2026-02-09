@@ -11,7 +11,7 @@ const authValidation = {
       "string.base": "Username must be a string",
       "string.empty": "Username cannot be empty",
       "string.min": "Username must be at least 3 characters long",
-      "string.max": "Username must not exceed 30 characters",
+      "string.max": "Username must not exceed 16 characters",
       "string.pattern.base":
         "Username must be in format: letters(3-10)@letters(3-5)",
       "any.required": "Username is required",

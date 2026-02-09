@@ -1,4 +1,6 @@
 const Joi = require("joi");
+const { PhoneNumberUtil } = require("google-libphonenumber");
+const phoneUtil = PhoneNumberUtil.getInstance();
 
 const smsValidation = {
   destination: Joi.string()
@@ -16,13 +18,24 @@ const smsValidation = {
       }
 
       // Single phone number regex
-      const phoneRegex = /^\+(?:[1-9]|[1-9][0-9])[1-9][0-9]{9}$/;
+      const phoneRegex = /^\+[0-9]+$/;
+
       // Validate each number
       for (const number of numbers) {
         if (!phoneRegex.test(number)) {
-          return helpers.message(
-            `Invalid phone number format: ${number}. Use +<countryCode><10-digit-number>`,
-          );
+          return helpers.message("Invalid phone number ");
+        }
+
+        try {
+          // Parse number
+          const parsedNumber = phoneUtil.parse(number);
+
+          // Check validity
+          if (!phoneUtil.isValidNumber(parsedNumber)) {
+            return helpers.message("Invalid phone number ");
+          }
+        } catch (err) {
+          return helpers.message("Invalid phone number ");
         }
       }
 

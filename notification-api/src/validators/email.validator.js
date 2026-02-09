@@ -38,11 +38,11 @@ const validateEmailList = (value, helpers, fieldName) => {
 
   const uniqueEmails = [...new Set(emails)];
 
-  // for (const email of uniqueEmails) {
-  //   if (email.length > 254 || !emailRegex.test(email)) {
-  //     return helpers.message(`Email "${email}" in ${fieldName} is invalid.`);
-  //   }
-  // }
+  for (const email of uniqueEmails) {
+    if (email.length > 254 || !emailRegex.test(email)) {
+      return helpers.message(`Email "${email}" in ${fieldName} is invalid.`);
+    }
+  }
 
   return uniqueEmails.join(", ");
 };
