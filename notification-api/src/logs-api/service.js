@@ -10,10 +10,7 @@ const viewDeliveryStatus = async (messageId, clientId) => {
     throw new Error("Message not found");
   }
 
-  return {
-    messageId: data.messageId,
-    status: data.status,
-  };
+  return serializeLogs([data]);
 };
 
 const viewMessageLogs = async (idClient, service, status, page, limit) => {

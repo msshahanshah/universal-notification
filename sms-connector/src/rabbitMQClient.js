@@ -171,14 +171,20 @@ module.exports = (RABBITMQ_URL, rabbitConfig) => {
                     { status: "sent" },
                     { where: { id: notificationRecord.id } }
                 );
-                const response = await axios.get(`http://localhost:3000/delivery-status/${notificationData.messageId}`,
-                    {
-                        headers: {
-                            "x-client-id": clientId   // or "GKMIT"
+                try {
+                    await axios.get(`http://localhost:3000/delivery-status/${notificationData.messageId}`,
+                        {
+                            headers: {
+                                "x-client-id": clientId,
+                                "x-internal-key": "divyabagora"
+                            }
                         }
-                    }
-                );
-                console.log(response);
+                    );
+                } catch (error) {
+                    logger.error("delivery-status API failed (ignored)", {
+                        error: error.message
+                    });
+                }
                 logger.info(`Notification status updated to 'sent'`, { messageId, dbId: notificationRecord.id });
                 channel.ack(msg);
             } catch (processingError) {
@@ -189,15 +195,20 @@ module.exports = (RABBITMQ_URL, rabbitConfig) => {
                     { where: { id: notificationRecord.id } }
                 );
 
-                const response = await axios.get(`http://localhost:3000/delivery-status/${notificationData.messageId}`,
-                    {
-                        headers: {
-                            "x-client-id": clientId   // or "GKMIT"
+                try {
+                    await axios.get(`http://localhost:3000/delivery-status/${notificationData.messageId}`,
+                        {
+                            headers: {
+                                "x-client-id": clientId,
+                                "x-internal-key": "divyabagora"
+                            }
                         }
-                    }
-                );
-                console.log(response);
-                
+                    );
+                } catch (error) {
+                    logger.error("delivery-status API failed (ignored)", {
+                        error: error.message
+                    });
+                }
                 logger.warn(`Notification status updated to 'failed'`, { messageId, dbId: notificationRecord.id });
                 channel.ack(msg);
             }

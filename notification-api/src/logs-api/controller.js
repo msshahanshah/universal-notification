@@ -3,17 +3,30 @@ const { viewDeliveryStatus, viewMessageLogs } = require("./service");
 const deliveryStatus = async (req, res, next) => {
   try {
     const messageId = req.params.id;
-    const clientId = req.header("X-Client-Id");
-    // console.log("globall io>>>>",global.io);
+    const clientId = req.header("x-client-id");
     const result = await viewDeliveryStatus(messageId, clientId);
-    const io = req.app.get("io");
-    io.emit("updated-status", { status: result.status });
+    const wss = req.app.get("ws");
+    const client = [...wss.clients][0]; 
+
+    if (client && client.readyState === 1) {
+      client.send(
+        JSON.stringify({
+          type: "stream",
+          messageId: result[0].messageId,
+          status: result[0].status,
+          attempts: result[0].attempts,
+          id: result[0].id,
+          service: result[0].service,
+          messageDate: result[0].messageDate
+        })
+      );
+    }
 
     res.status(200).json({
       success: true,
       data: {
-        messageId: result.messageId,
-        deliveryStatus: result.status,
+        messageId: result[0].messageId,
+        deliveryStatus: result[0].status,
       },
     });
   } catch (error) {

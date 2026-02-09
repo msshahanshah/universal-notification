@@ -2,6 +2,10 @@ const accessControl = (req, res, next) => {
     const X_Client_ID = req.headers["x-client-id"];
 
     const user = req.user.username;
+
+    if (req.user.service === 'internal'){
+        return next();
+    }
     if (
         typeof X_Client_ID === 'string' &&
         typeof user === 'string' &&
@@ -14,4 +18,4 @@ const accessControl = (req, res, next) => {
     }
 }
 
-module.exports = accessControl;
+module.exports = accessControl; 

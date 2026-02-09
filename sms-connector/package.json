@@ -9,7 +9,7 @@
   },
   "dependencies": {
     "amqplib": "^0.10.8",
-    "axios": "^1.13.4",
+    "axios": "^1.13.5",
     "dotenv": "^16.4.1",
     "handlebars": "^4.7.7",
     "lru-cache": "^11.1.0",

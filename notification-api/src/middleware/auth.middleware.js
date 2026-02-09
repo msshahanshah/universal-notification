@@ -4,6 +4,12 @@ const globalDatabaseManager = require("../utillity/mainDatabase");
 
 const auth = async (req, res, next) => {
     try {
+
+        const internalKey = req.header("x-internal-key");
+        if (internalKey === process.env.INTERNAL_SERVICE_TOKEN) {
+            req.user = { service: "internal" };
+            return next();
+        }
         let token = "";
 
         if (req.headers && req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {

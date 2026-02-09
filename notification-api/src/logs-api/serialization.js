@@ -7,7 +7,7 @@ const serializeLogs = (rows) => {
       destination: log.destination,
       status: log.status,
       attempts: log.attempts,
-      messageDate: log.createdAt,
+      messageDate: log.updatedAt,
     };
   });
 };

@@ -1,4 +1,5 @@
 const cluster = require("cluster");
+require("dotenv").config();   
 const path = require("path");
 const express = require("express");
 const httpProxy = require("http-proxy");
@@ -7,246 +8,229 @@ const logger = require("./logger");
 const { Sequelize } = require("sequelize");
 const connectionManager = require("./utillity/connectionManager");
 const { loadClientConfigs } = require("./utillity/loadClientConfigs");
-const { Server } = require("socket.io")
-/**
- * @type {import('http').Server|null}
- */
+// const { Server } = require("socket.io");   // <-- KEEPING YOUR COMMENT
+const WebSocket = require("ws");
+const jwt = require("jsonwebtoken")
+
 let server = null;
 let masterServer = null;
 
 /**
- * Starts the server for a specific client.
- * @param {Object} client - Client configuration.
- * @returns {Promise<void>}
+ * Starts the server for each client (worker process)
  */
 async function startServer(clientConfigList) {
   logger.info(`[${process.env.clientList}] Starting server...`);
+
   try {
-    // Initialize client-specific Sequelize
+    // Initialize DB + RabbitMQ for each client
     for (const clientItem of clientConfigList) {
-      await connectionManager.initializeSequelize(
-        clientItem.DBCONFIG,
-        clientItem.ID
-      );
-      await connectionManager.initializeRabbitMQ(
-        clientItem.RABBITMQ,
-        clientItem.ID
-      );
+      await connectionManager.initializeSequelize(clientItem.DBCONFIG, clientItem.ID);
+      await connectionManager.initializeRabbitMQ(clientItem.RABBITMQ, clientItem.ID);
     }
+
     global.connectionManager = connectionManager;
+
     const app = require("./app");
-    // Start HTTP Server
+
+    // Start worker HTTP server
     server = app.listen(process.env.SERVER_PORT, () => {
       logger.info(
-        `[${process.env.clientList}] Notification API listening on port ${process.env.SERVER_PORT} in ${config.env} mode`
+        `[${process.env.clientList}] Notification API listening on port ${process.env.SERVER_PORT}`
       );
     });
-    const io = new Server(server, {
-      cors: {
-        origin: "*",
-      },
-    });
-    app.set("io", io);
+    console.log(process.env.REQ_URL);
+    const wss = new WebSocket.Server({ server });
+    wss.on("connection", (ws, req) => {
+      const url = new URL(req.url, process.env.REQ_URL);
+      const clientId = url.searchParams.get("clientId");
+      const token = url.searchParams.get("token");
+      console.log(token)
 
-    io.on("connection", (socket) => {
-      logger.info(`Socket connected: ${socket.id}`);
+      if (!token) {
+        logger.warn("WS Missing token for", clientId);
+        ws.close(4001, "Authorization denied");
+        return;
+      }
+
+      try {
+        const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
+        ws.user = decoded;
+        logger.info(`WS Auth Success: clientId=${clientId}`, decoded);
+      } catch (err) {
+        logger.warn(`WS Invalid token for clientId=${clientId} → ${err.message}`);
+        ws.close(4002, "Token is not valid or has expired");
+        return;
+      }
+
+      logger.info(`WS Connected: clientId=${clientId}`);
+
+      ws.on("message", (msg) => {
+        logger.info(`WS Message from ${msg}`);
+      });
+
+      ws.send(JSON.stringify({ type: "connected", clientId }));
     });
+
+    app.set("ws", wss);
+
     return server;
   } catch (error) {
     logger.error(`[${process.env.clientList}] Failed to start server:`, {
       error: error.message,
       stack: error.stack,
     });
+
     await shutdown(1, process.env.clientList);
   }
 }
 
 /**
- * Shuts down the server for a specific client.
- * @param {number} [exitCode=0] - Exit code.
- * @param {string} [clientId='unknown'] - Client identifier.
- * @returns {Promise<void>}
+ * Shutdown helper
  */
 async function shutdown(exitCode = 0, clientId = "unknown", server) {
   logger.info(`[${clientId}] Shutting down server...`);
 
-  // Close HTTP server
   if (server) {
     await new Promise((resolve, reject) => {
-      if (server) {
-        server.close((err) => {
-          if (err) {
-            logger.error(`[${clientId}] Error closing HTTP server:`, err);
-            return reject(err);
-          }
-          logger.info(`[${clientId}] HTTP server closed.`);
-          resolve();
-        });
-        setTimeout(
-          () => reject(new Error("HTTP server close timeout")),
-          10000
-        ).unref();
-      } else {
-        logger.info(`[${clientId}] HTTP server already closed.`);
+      server.close((err) => {
+        if (err) return reject(err);
         resolve();
-      }
+      });
+
+      setTimeout(() => reject(new Error("Server close timeout")), 10000);
     }).catch((err) => logger.error(`[${clientId}] ${err.message}`));
+
     server = null;
   }
 
-  // Close Database connection
   if (global.connectionManager) {
     await global.connectionManager.closeAllTypeConnection(clientId);
   }
 
-  logger.info(
-    `[${clientId}] Shutdown complete. Exiting with code ${exitCode}.`
-  );
+  logger.info(`[${clientId}] Shutdown complete.`);
   process.exit(exitCode);
 }
 
-// Global clients array for port calculation
 let clients = [];
 
-// Master process: Fork workers for each client
+/**
+ * MASTER PROCESS
+ */
 if (cluster.isMaster) {
   (async () => {
     try {
       clients = await loadClientConfigs();
       logger.info(`Master: Loaded ${clients.length} clients.`);
 
-      // Start master router
-      try {
-        const proxy = httpProxy.createProxyServer({});
+      const proxy = httpProxy.createProxyServer({});
 
-        // proxy.on("upgrade", (req, socket, head) => {
-        //   const clientId = req.headers["x-client-id"];
-        //   const client = clients.find(c => c.ID === clientId);
+      /**
+       * MASTER Router (HTTP + WebSocket)
+       */
+      const masterApp = express();
+      masterApp.use(require("cors")());
 
-        //   if (!client) {
-        //     logger.warn("WS: Missing X-Client-Id", { clientId });
-        //     socket.destroy();
-        //     return;
-        //   }
+      // HTTP Routing (headers)
+      masterApp.use((req, res) => {
+        const clientId = req.headers["x-client-id"];
+        const client = clients.find((c) => c.ID === clientId);
 
-        //   logger.info(`WS Upgrade: Client ${clientId} → port ${client.SERVER_PORT}`);
+        if (!client) {
+          logger.warn("Invalid or missing X-Client-Id", { clientId });
+          return res
+            .status(400)
+            .json({ error: "Invalid or missing X-Client-Id header" });
+        }
 
-        //   proxy.ws(req, socket, head, {
-        //     target: `http://localhost:${client.SERVER_PORT}`,
-        //     ws: true,
-        //   });
-        // });
-
-        const YAML = require("yamljs");
-        const swaggerUi = require("swagger-ui-express");
-        const swaggerDoc = YAML.load(path.join(__dirname, "swagger.yaml"));
-        const masterApp = express();
-        masterApp.use(require("cors")());
-        masterApp.use(
-          "/api-docs",
-          swaggerUi.serve,
-          swaggerUi.setup(swaggerDoc)
-        );
-        masterApp.use((req, res, next) => {
-          const clientId = req.headers["x-client-id"];
-          const client = clients.find((c) => c.ID === clientId);
-          if (!client) {
-            logger.warn("Invalid or missing X-Client-Id header", { clientId });
-            return res
-              .status(400)
-              .json({ error: "Invalid or missing X-Client-Id header" });
-          }
-
-          logger.info(
-            `Routing request for client ${clientId} to port ${client.SERVER_PORT}`
-          );
-          proxy.web(
-            req,
-            res,
-            { target: `http://localhost:${client.SERVER_PORT}` },
-            (err) => {
-              logger.error("Proxy error", { error: err.message });
-              res.status(500).json({ error: "Failed to route request" });
-            }
-          );
+        proxy.web(req, res, {
+          target: `http://localhost:${client.SERVER_PORT}`,
         });
+      });
 
-        masterServer = masterApp.listen(3000, () => {
-          logger.info("Master router listening on port 3000");
-        });
+      // Master HTTP Server
+      masterServer = masterApp.listen(3000, () => {
+        logger.info("Master router listening on port 3000");
+      });
 
-        masterServer.on("upgrade", (req, socket, head) => {
-          const clientId = req.headers["x-client-id"];
-          const client = clients.find(c => c.ID === clientId);
+      masterServer.on("upgrade", (req, socket, head) => {
+        const url = new URL(req.url, process.env.REQ_URL);
+        const clientId = url.searchParams.get("clientId");
 
-          if (!client) {
-            logger.warn("WS: Missing X-Client-Id", { clientId });
+        if (!clientId) {
+          logger.warn("WS: Missing clientId in query");
+          socket.destroy();
+          return;
+        }
+
+        const client = clients.find((c) => c.ID === clientId);
+        if (!client) {
+          logger.warn("WS: Invalid clientId", { clientId });
+          socket.destroy();
+          return;
+        }
+
+        logger.info(`WS Upgrade: clientId=${clientId} → port ${client.SERVER_PORT}`);
+
+        proxy.ws(
+          req,
+          socket,
+          head,
+          { target: `http://localhost:${client.SERVER_PORT}` },
+          (err) => {
+            // Prevent crash
+            logger.error("WS Proxy Error:", err?.message);
             socket.destroy();
-            return;
           }
+        );
+      });
 
-          logger.info(`WS Upgrade: Client ${clientId} → port ${client.SERVER_PORT}`);
+      /**
+       * Start workers
+       */
+      const uniquePorts = new Set(clients.map((c) => c.SERVER_PORT));
 
-          proxy.ws(req, socket, head, {
-            target: `http://localhost:${client.SERVER_PORT}`,
-          });
-        });
-      } catch (error) {
-        logger.error("Master router error:", {
-          error: error.message,
-          stack: error.stack,
-        });
-      }
-      //Find Unique ports for server
-      const uniquePorts = new Set(clients.map((client) => client.SERVER_PORT));
       uniquePorts.forEach((port) => {
         let clientList = clients
-          .filter((client) => client.SERVER_PORT === port)
-          .map((item) => item.ID)
+          .filter((c) => c.SERVER_PORT === port)
+          .map((c) => c.ID)
           .join(",");
+
         const worker = cluster.fork({ SERVER_PORT: port, clientList });
+
         logger.info(
-          `Master: Forked worker for client ${clientList} (PID: ${worker.process.pid})`
+          `Master: Forked worker for client(s) ${clientList} (PID: ${worker.process.pid})`
         );
       });
 
-      // Handle worker exit and restart
+      /**
+       * Restart worker on crash
+       */
       cluster.on("exit", (worker, code, signal) => {
         logger.warn(
-          `Master: Worker ${worker.process.pid} exited with code ${code} (signal: ${signal})`
+          `Worker ${worker.process.pid} exited with code ${code}, restarting...`
         );
-        // Get port and client list from the worker's env that we set during fork
-        // const workerEnv = worker.process.env;
-        const port = worker.SERVER_PORT;
-        const workerClientList = worker.clientList;
 
-        if (port && workerClientList) {
-          logger.info(
-            `Master: Restarting worker for port ${port} (clients: ${workerClientList})...`
-          );
-          cluster.fork({ SERVER_PORT: port, clientList: workerClientList });
-        } else {
-          logger.error(
-            "Master: Unable to restart worker - missing configuration",
-            {
-              port,
-              workerClientList,
-              pid: worker.process.pid,
-            }
-          );
-        }
+        // FIX: correct env lookup
+        const port = worker.process.env.SERVER_PORT;
+        const list = worker.process.env.clientList;
+
+        cluster.fork({ SERVER_PORT: port, clientList: list });
       });
+
     } catch (error) {
-      logger.error("Master: Failed to initialize:", { error: error.message });
+      logger.error("Master Init Error:", { error: error.message });
       process.exit(1);
     }
   })();
+
 } else {
-  // Worker process: Start server for assigned client
+  /**
+   * WORKER PROCESS
+   */
   (async () => {
     try {
       if (!process.env.clientList) {
-        logger.error(`Worker: No configuration found for client`);
+        logger.error("Worker: No clientList env found");
         process.exit(1);
       }
 
@@ -255,32 +239,25 @@ if (cluster.isMaster) {
         (c) => c.SERVER_PORT === +process.env.SERVER_PORT
       );
 
-      let server = await startServer(clientConfigList);
+      const server = await startServer(clientConfigList);
 
-      // Handle graceful shutdown
+      // Graceful shutdown
       process.on("SIGTERM", () => shutdown(0, process.env.clientList, server));
       process.on("SIGINT", () => shutdown(0, process.env.clientList, server));
 
-      // Handle unhandled promise rejections
+      // Error handlers
       process.on("unhandledRejection", (reason, promise) => {
-        logger.error(`[${process.env.clientList}] Unhandled Rejection at:`, {
-          promise,
-          reason: reason.message || reason,
-        });
-        //shutdown(1,process.env.clientList);
+        logger.error("Unhandled Rejection:", { reason });
       });
 
-      // Handle uncaught exceptions
       process.on("uncaughtException", (error) => {
-        logger.error(`[${process.env.clientList}] Uncaught Exception:`, {
-          error: error.message,
-          stack: error.stack,
-        });
+        logger.error("Uncaught Exception:", { error });
         shutdown(1, process.env.clientList);
       });
+
     } catch (error) {
       logger.error(
-        `Worker: Failed to start for client ${process.env.clientList}:`,
+        `Worker start failed (${process.env.clientList})`,
         { error: error.message }
       );
       process.exit(1);

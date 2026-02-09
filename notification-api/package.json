@@ -30,6 +30,7 @@
     "uuid": "^11.1.0",
     "websocket": "^1.0.35",
     "winston": "^3.17.0",
+    "ws": "^8.19.0",
     "yamljs": "^0.3.0"
   },
   "devDependencies": {
