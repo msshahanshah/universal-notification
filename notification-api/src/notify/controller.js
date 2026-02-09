@@ -13,108 +13,208 @@ const {
 } = require("./service");
 
 const { generatePreSignedUrl } = require("../../helpers/preSignedUrl.helper");
-const { downloadS3File } = require("../../helpers/fileOperation.helper");
+
+// const notify = async (req, res) => {
+//   const {
+//     service,
+//     destination,
+//     message,
+//     subject,
+//     body,
+//     fromEmail,
+//     cc,
+//     bcc,
+//     attachments,
+//   } = req.body;
+//   let content = {};
+//   if (message) {
+//     content.message = message;
+//   } else {
+//     content.subject = subject;
+//     content.body = body;
+//     content.fromEmail = fromEmail;
+//     content.cc = cc;
+//     content.bcc = bcc;
+//     content.attachments = attachments;
+//   }
+
+//   const clientID = req.headers["x-client-id"];
+
+//   const notificationRecords = await creatingNotificationRecord(
+//     clientID,
+//     service,
+//     destination,
+//     content,
+//   );
+//   // if (notificationRecords.statusCode) {
+//   //   return res.status(notificationRecords.statusCode).json({
+//   //     error: notificationRecords.message,
+//   //     messageId: notificationRecords.messageId,
+//   //   });
+//   // }
+
+//   notificationRecords.forEach((notificationRecord) => {
+//     if (notificationRecord.statusCode) {
+//       return res.status(notificationRecord.statusCode).json({
+//         error: notificationRecord.message,
+//         messageId: notificationRecord.messageId,
+//       });
+//     } else {
+//       notificationRecord.clientId = clientID;
+//     }
+//   });
+
+//   let preSignedUrls;
+//   if (attachments?.length && typeof attachments[0] === "string") {
+//     preSignedUrls = await generatePreSignedUrl(
+//       clientID,
+//       notificationRecords[0].messageId,
+//       attachments,
+//     );
+//   }
+
+//   let result;
+//   if (
+//     !attachments ||
+//     (attachments?.length && typeof attachments[0] === "object") ||
+//     attachments?.length === 0
+//   ) {
+//     // notificationRecords[0].clientId = clientID;
+//     // result = await publishingNotificationRequest(notificationRecords[0]);
+//     result = await Promise.all(
+//       notificationRecords.map(async (record) => {
+//         try {
+//           record.clientId = clientID;
+//           return await publishingNotificationRequest(record);
+//         } catch (err) {
+//           return { success: false, record, error: err.message };
+//         }
+//       }),
+//     );
+//   }
+
+//   const response =
+//     attachments?.length > 0 && typeof attachments[0] === "string"
+//       ? {
+//           success: true,
+//           message: `Waiting for file upload on URL (expiry 5 mins). Message Id: ${notificationRecords.messageId}`,
+//           preSignedUrls,
+//         }
+//       : {
+//           success: true,
+//           message: `Notification request accepted ${result ? "and queued." : ""}`,
+//           messageId: notificationRecords.messageId, // Return the ID to the client
+//         };
+
+//   // const publishResults = await Promise.all(
+//   //   notificationRecords.map(async (record) => {
+//   //     try {
+//   //       return await publishingNotificationRequest(record);
+//   //     } catch (err) {
+//   //       return { success: false, record, error: err.message };
+//   //     }
+//   //   }),
+//   // );
+
+//   return res.status(202).json({
+//     success: true,
+//     status: "accepted",
+//     message: `Notification request accepted ${publishResults ? "and queued." : ""}`,
+//     messageId: notificationRecords.messageId, // Return the ID to the client
+//   });
+//   // return res.status(202).json(response);
+//   // console.log(notificationRecordss);
+// };
 
 const notify = async (req, res) => {
-  const {
-    service,
-    destination,
-    message,
-    subject,
-    body,
-    fromEmail,
-    cc,
-    bcc,
-    attachments,
-  } = req.body;
-  let content = {};
-  if (message) {
-    content.message = message;
-  } else {
-    content.subject = subject;
-    content.body = body;
-    content.fromEmail = fromEmail;
-    content.cc = cc;
-    content.bcc = bcc;
-    content.attachments = attachments;
-  }
+  try {
+    const {
+      service,
+      destination,
+      message,
+      subject,
+      body,
+      fromEmail,
+      cc,
+      bcc,
+      attachments,
+    } = req.body;
 
-  const clientID = req.headers["x-client-id"];
+    const clientID = req.headers["x-client-id"];
 
-  const notificationRecords = await creatingNotificationRecord(
-    clientID,
-    service,
-    destination,
-    content,
-  );
-  if (notificationRecords.statusCode) {
-    return res.status(notificationRecords.statusCode).json({
-      error: notificationRecords.message,
-      messageId: notificationRecords.messageId,
+    // Build content
+    const content = message
+      ? { message }
+      : { subject, body, fromEmail, cc, bcc, attachments };
+
+    const notificationRecords = await creatingNotificationRecord(
+      clientID,
+      service,
+      destination,
+      content,
+    );
+
+    for (const record of notificationRecords) {
+      if (record.statusCode) {
+        return res.status(record.statusCode).json({
+          error: record.message,
+          messageId: record.messageId,
+        });
+      }
+      record.clientId = clientID;
+    }
+
+    let preSignedUrls;
+    if (attachments?.length && typeof attachments[0] === "string") {
+      preSignedUrls = await generatePreSignedUrl(
+        clientID,
+        notificationRecords[0].messageId,
+        attachments,
+      );
+    }
+
+    let publishResults;
+    if (
+      !attachments ||
+      attachments.length === 0 ||
+      typeof attachments[0] === "object"
+    ) {
+      publishResults = await Promise.all(
+        notificationRecords.map(async (record) => {
+          try {
+            return await publishingNotificationRequest(record);
+          } catch (err) {
+            return { success: false, record, error: err.message };
+          }
+        }),
+      );
+    }
+
+    const response = {
+      success: true,
+      status: "accepted",
+      message:
+        attachments?.length && typeof attachments[0] === "string"
+          ? "Waiting for file upload on URL (expiry 5 mins)."
+          : `Notification request accepted ${
+              publishResults ? "and queued." : ""
+            }`,
+      preSignedUrls,
+    };
+
+    if (notificationRecords?.length === 1) {
+      response.messageId = notificationRecords[0].messageId;
+    } else {
+      response.messageIds = notificationRecords.map((r) => r.messageId);
+    }
+    return res.status(202).json(response);
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+      error: error.message,
     });
   }
-
-  let preSignedUrls;
-  if (attachments?.length && typeof attachments[0] === "string") {
-    preSignedUrls = await generatePreSignedUrl(
-      clientID,
-      notificationRecords.messageId,
-      attachments,
-    );
-  }
-
-  let result;
-  if (
-    !attachments ||
-    (attachments?.length && typeof attachments[0] === "object") ||
-    attachments?.length === 0
-  ) {
-    notificationRecords.clientId = clientID;
-    result = await publishingNotificationRequest(notificationRecords);
-  }
-
-  const response =
-    attachments?.length > 0 && typeof attachments[0] === "string"
-      ? {
-          success: true,
-          message: `Waiting for file upload on URL (expiry 5 mins). Message Id: ${notificationRecords.messageId}`,
-          preSignedUrls,
-        }
-      : {
-          success: true,
-          message: `Notification request accepted ${result ? "and queued." : ""}`,
-          messageId: notificationRecords.messageId, // Return the ID to the client
-        };
-
-  // return res.status(202).json(response);
-  // console.log(notificationRecordss);
-  notificationRecords.forEach((notificationRecord) => {
-    if (notificationRecord.statusCode) {
-      return res.status(notificationRecord.statusCode).json({
-        error: notificationRecord.message,
-        messageId: notificationRecord.messageId,
-      });
-    } else {
-      notificationRecord.clientId = clientID;
-    }
-  });
-
-  const publishResults = await Promise.all(
-    notificationRecords.map(async (record) => {
-      try {
-        return await publishingNotificationRequest(record);
-      } catch (err) {
-        return { success: false, record, error: err.message };
-      }
-    }),
-  );
-
-  return res.status(202).json({
-    success: true,
-    status: "accepted",
-    message: `Notification request accepted ${publishResults ? "and queued." : ""}`,
-    messageId: notificationRecords.messageId, // Return the ID to the client
-  });
 };
 
 const notifyWithEmailAttachment = async (req, res) => {

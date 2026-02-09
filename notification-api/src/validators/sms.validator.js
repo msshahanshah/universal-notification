@@ -47,7 +47,7 @@ const smsValidation = {
 
       uniqueNumbers = [...new Set(numbers)];
 
-      return uniqueNumbers.join(",");
+      return uniqueNumbers;
     })
     .messages({
       "string.base": "Destination must be a string",
