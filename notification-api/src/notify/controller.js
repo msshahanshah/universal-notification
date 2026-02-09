@@ -64,7 +64,7 @@ const notify = async (req, res) => {
     let publishResults;
     if (
       !attachments ||
-      attachments.length === 0 ||
+      attachments?.length === 0 ||
       typeof attachments[0] === "object"
     ) {
       publishResults = await Promise.all(
