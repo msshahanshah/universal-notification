@@ -1,6 +1,6 @@
 # ./notification-api/Dockerfile
 
-FROM node:18
+FROM node:20
 
 # Set the working directory inside the container
 WORKDIR /usr/src/app

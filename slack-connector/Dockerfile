@@ -1,6 +1,6 @@
  # ./slack-connector/Dockerfile
 
-FROM node:18
+FROM node:20
 
 WORKDIR /usr/src/app
 
