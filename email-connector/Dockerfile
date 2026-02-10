@@ -1,4 +1,5 @@
-FROM node:18-alpine
+# Use an official Node.js runtime as the parent image
+FROM node:20
 
 WORKDIR /usr/src/app
 

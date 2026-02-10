@@ -12,6 +12,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "20": "^3.1.9",
     "@slack/web-api": "^7.9.1",
     "@universal-notifier/secret-manager": "github:gkmit-dikshant/aws-secret-manager-package",
     "amqplib": "^0.10.7",
