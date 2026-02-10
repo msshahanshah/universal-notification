@@ -1,17 +1,11 @@
 const Joi = require("joi");
 const { validateAttachments } = require("./common.validator");
-const emailRegex = /^(?=.{6,254}$)[a-z0-9._%+-]+@[a-z0-9-]+\.[a-z]{2,}$/i;
-const ALLOWED_MIMETYPES = [
-  "application/pdf",
-  "image/x-png",
-  "image/x-citrix-jpeg",
-];
 
 const validateEmailList = (value, helpers, fieldName) => {
   const isValueEmpty = !value || value.trim().length === 0;
   const mandatoryFields = ["fromEmail", "destination"];
 
-  if (isValueEmpty) {
+  if (isValueEmpty && fieldName !== "cc" && fieldName != "bcc") {
     return mandatoryFields.includes(fieldName)
       ? helpers.message(`${fieldName} is required and cannot be empty.`)
       : value;
@@ -96,6 +90,7 @@ const emailValidation = {
   cc: Joi.when("service", {
     is: "email",
     then: Joi.string()
+      .allow("")
       .custom((value, helpers) => validateEmailList(value, helpers, "cc"))
       .optional(),
     otherwise: Joi.forbidden(),
@@ -103,6 +98,7 @@ const emailValidation = {
   bcc: Joi.when("service", {
     is: "email",
     then: Joi.string()
+      .allow("")
       .custom((value, helpers) => validateEmailList(value, helpers, "bcc"))
       .optional(),
     otherwise: Joi.forbidden(),

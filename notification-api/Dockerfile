@@ -1,23 +1,21 @@
-# ./notification-api/Dockerfile
+FROM node:18-alpine
 
 FROM node:20
 
 # Set the working directory inside the container
 WORKDIR /usr/src/app
 
-# Copy package.json and package-lock.json (if exists)
+# Install dependencies first (better caching)
 COPY package*.json ./
-
-# Install dependencies
 RUN npm install
 
-# Copy all files to the working directory
+# Copy app source
 COPY . .
-# Copy clientList.json from parent directory
 
-# Expose the port the app runs in
+# Entrypoint
+RUN chmod +x /usr/src/app/entrypoint.sh
+
+ENTRYPOINT ["/usr/src/app/entrypoint.sh"]
+
+# Expose only if API uses it
 EXPOSE 3000
-
-# Run migrations and start the server
-
- CMD ["node src/server.js"]
