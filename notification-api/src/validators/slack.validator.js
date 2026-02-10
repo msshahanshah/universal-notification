@@ -39,7 +39,7 @@ const slackValidation = {
       }
 
       // Return cleaned value
-      return [...uniqueChannels].join(",");
+      return [...uniqueChannels];
     })
     .messages({
       "string.base": "Destination must be a string",

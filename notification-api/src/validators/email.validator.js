@@ -46,7 +46,7 @@ const validateEmailList = (value, helpers, fieldName) => {
     }
   }
 
-  return uniqueEmails.join(", ");
+  return [uniqueEmails.join(", ")];
 };
 
 const emailValidation = {
