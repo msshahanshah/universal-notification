@@ -7,7 +7,7 @@
     "start": "node src/server.js",
     "dev": "nodemon src/server.js",
     "migrate": "node src/utillity/migrate.js",
-    "seed": "touch ./helpers/default_credentials.txt & npx sequelize-cli db:seed:all",
+    "seed": "touch ./helpers/default_credentials.json & npx sequelize-cli db:seed:all",
     "test": "jest --detectOpenHandles"
   },
   "keywords": [],

@@ -15,11 +15,17 @@ const generatePassword = async (username) => {
   // Hash password
   const hashedPassword = await bcrypt.hash(password, 12);
 
-  const filePath = path.join(__dirname, "default_credentials.txt");
+  const filePath = path.join(__dirname, "default_credentials.json");
 
-  // Append credentials (username + plain password)
-  const fileLine = `${username} : ${password}\n`;
-  await fs.appendFile(filePath, fileLine, { encoding: "utf8" });
+  const oldCred = JSON.parse(await fs.readFile(filePath));
+  const newCreds = JSON.stringify(
+    Object.assign({}, { [username]: password }, oldCred),
+    null,
+    2,
+  );
+  await fs.writeFile(filePath, newCreds, {
+    encoding: "utf8",
+  });
 
   return hashedPassword;
 };
