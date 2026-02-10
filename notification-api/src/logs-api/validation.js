@@ -5,12 +5,16 @@ const {
 } = require("../validators/common.validator");
 
 const validateLogsSchema = Joi.object({
-  service: commonValidation.service,
+  service: Joi.string().optional().valid("email", "slack", "sms").messages({
+    "string.base": "Service must be a string",
+    "any.only": "Service must be one of: email, slack, sms",
+    "string.empty": "Service cannot be empty",
+  }),
   status: Joi.string()
     .valid("pending", "sent", "failed", "processing")
     .optional()
     .messages({
-      "any.only": "Status must be one of: pending, sent, failed.",
+      "any.only": "Status must be one of: pending, sent, failed , processing .",
       "string.base": "Status must be a string.",
     }),
   page: commonValidation.page,
