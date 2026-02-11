@@ -1,4 +1,4 @@
-const fs = require("fs").promises;
+const fs = require("fs-extra");
 const path = require("path");
 const bcrypt = require("bcrypt");
 
@@ -15,15 +15,19 @@ const generatePassword = async (username) => {
   // Hash password
   const hashedPassword = await bcrypt.hash(password, 12);
 
+  // create file
   const filePath = path.join(__dirname, "default_credentials.json");
+  fs.ensureFileSync(filePath);
 
-  const oldCred = JSON.parse(await fs.readFile(filePath));
+  const fileContent = fs.readFileSync(filePath, "utf-8") || `{}`;
+
+  const oldCred = JSON.parse(fileContent);
   const newCreds = JSON.stringify(
     Object.assign({}, { [username]: password }, oldCred),
     null,
     2,
   );
-  await fs.writeFile(filePath, newCreds, {
+  fs.writeFileSync(filePath, newCreds, {
     encoding: "utf8",
   });
 
