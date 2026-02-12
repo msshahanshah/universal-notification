@@ -41,12 +41,28 @@ const validateAttachments = (value, helpers) => {
     );
     // array of filename
     if (typeof value[0] === "string") {
+      // checking duplicate filename
+      const uniqueFilenames = [...new Set(value)];
+
+      if (value.length != uniqueFilenames.length) {
+        return helpers.message(
+          `In attachments array filename can not be duplicates`,
+        );
+      }
       for (const filename of value) {
         if (typeof filename !== "string" || !fileNameRegex.test(filename)) {
           return helpers.message(`invalid filename ${filename}`);
         }
       }
     } else if (typeof value[0] === "object") {
+      const filenamesArr = value.map((item, idx) => item.fileName);
+      // checking duplicate filename
+      const uniqueFilenames = [...new Set(filenamesArr)];
+      if (value.length != uniqueFilenames.length) {
+        return helpers.message(
+          `In attachments array filename can not be duplicates`,
+        );
+      }
       for (const file of value) {
         if (typeof file !== "object" || file === null) {
           return helpers.message(`invalid email attachments format`);
