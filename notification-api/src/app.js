@@ -15,7 +15,7 @@ const statRouter = require("./stats/route");
 const app = express();
 
 // Global Middlewares
-app.use(express.json({ strict: false }));
+app.use(express.json());
 
 /**
  * Health check route.
