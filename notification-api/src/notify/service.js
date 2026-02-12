@@ -90,6 +90,7 @@ const selectProvider = async (service, destination, clientId) => {
       return;
     }
   } catch (error) {
+    console.log(error);
     return {
       statusCode: 400,
       message: error.message,
@@ -107,7 +108,6 @@ const publishingNotificationRequest = async (notificationRecord) => {
     fileId = undefined,
     attachments,
   } = notificationRecord;
-  console.log(clientId);
   const provider = await selectProvider(service, destination, clientId);
 
   const rabbitConnect = await rabbitManager.getClient(clientId);

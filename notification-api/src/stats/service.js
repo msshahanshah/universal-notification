@@ -25,11 +25,11 @@ const updateBalance = async (clientId, response, label, service) => {
         throw { message: "service and provider are missing", statusCode: 400 };
     }
     const dbConnect = await global.connectionManager.getModels(clientId);
-
+    
     await dbConnect.Wallet.upsert({
         code: clientId,
         service,
-        provider: response.provider,
+        provider: response?.provider,
         balance: response.balance,
         balance_type: label,
         currency: response?.currency

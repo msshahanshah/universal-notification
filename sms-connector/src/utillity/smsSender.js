@@ -20,6 +20,8 @@ class SmsSender {
     };
 
     let selectedProvider = this.provider;
+    console.log(selectedProvider);
+    // console.log(this.clientConfig);
     if (selectedProvider === "DEFAULT") {
       const defaultProviderEntry = Object.entries(this.clientConfig).find(
         ([key, value]) => value?.default === true,
@@ -36,6 +38,7 @@ class SmsSender {
     }
 
     const providerConfig = this.clientConfig?.[selectedProvider];
+    console.log(providerConfig);
     if (!providerConfig) {
       throw new Error(`Configuration not found for provider ${this.provider}`);
     }
@@ -56,7 +59,7 @@ class SmsSender {
       const result = await this.sender({ to, message });
       console.log(
         `SMS sent via ${this.provider}:`,
-        result.data || result.sid || result,
+        result?.data || result?.sid || result,
       );
       return result;
     } catch (error) {

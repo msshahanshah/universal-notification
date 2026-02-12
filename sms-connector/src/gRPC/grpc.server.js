@@ -47,9 +47,9 @@ async function GetBalance(call, callback) {
         callback(null, {
             provider: smsSender.provider,
             balance: balance.balance,
-            currency: balance.currency
+            currency: balance?.currency
         });
-
+        
     } catch (error) {
         callback({
             code: grpc.status.INTERNAL,
