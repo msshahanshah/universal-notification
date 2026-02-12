@@ -1,6 +1,7 @@
 const TextlocalProvider = require("./providers/textlocal");
 const MSG91Provider = require("./providers/msg91");
 const TwilioProvider = require("./providers/twilio");
+const SmsStrikerProvider = require("./providers/smsStriker")
 
 class SmsSender {
   constructor(clientConfig, provider = "DEFAULT") {
@@ -15,6 +16,7 @@ class SmsSender {
       TEXTLOCAL: TextlocalProvider,
       MSG91: MSG91Provider,
       TWILIO: TwilioProvider,
+      SMSSTRIKER: SmsStrikerProvider
     };
 
     let selectedProvider = this.provider;
