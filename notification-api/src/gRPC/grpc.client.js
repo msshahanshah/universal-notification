@@ -9,7 +9,7 @@ const grpcObj = grpc.loadPackageDefinition(packageDef);
 const smsPackage = grpcObj.sms;
 
 const client = new smsPackage.SmsService(
-    "localhost:6000",
+    process.env.GRPC_URL,
     grpc.credentials.createInsecure()
 );
 

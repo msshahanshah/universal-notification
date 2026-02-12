@@ -6,7 +6,6 @@ const SmsSender = require('../utillity/smsSender');
 const { loadClientConfigs } = require('../utillity/loadClientConfigs');
 
 const PROTO_PATH = path.join(__dirname, "../../proto/sms.proto");
-
 // load proto
 const packageDef = protoLoader.loadSync(PROTO_PATH);
 const grpcObj = grpc.loadPackageDefinition(packageDef);
@@ -63,8 +62,7 @@ async function GetBalance(call, callback) {
 function startServer() {
     const server = new grpc.Server();
     server.addService(smsPackage.SmsService.service, { GetBalance });
-
-    server.bindAsync(`0.0.0.0:6000`, grpc.ServerCredentials.createInsecure(), () => {
+    server.bindAsync(process.env.GRPC_URL, grpc.ServerCredentials.createInsecure(), () => {
         console.log("gRPC SMS Server running on port 6001");
         server.start();
     });
