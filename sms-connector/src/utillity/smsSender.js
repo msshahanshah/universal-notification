@@ -20,8 +20,7 @@ class SmsSender {
     };
 
     let selectedProvider = this.provider;
-    console.log(selectedProvider);
-    // console.log(this.clientConfig);
+
     if (selectedProvider === "DEFAULT") {
       const defaultProviderEntry = Object.entries(this.clientConfig).find(
         ([key, value]) => value?.default === true,
@@ -38,7 +37,7 @@ class SmsSender {
     }
 
     const providerConfig = this.clientConfig?.[selectedProvider];
-    console.log(providerConfig);
+    
     if (!providerConfig) {
       throw new Error(`Configuration not found for provider ${this.provider}`);
     }
