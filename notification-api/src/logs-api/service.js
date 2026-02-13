@@ -73,10 +73,6 @@ const viewMessageLogs = async (
       };
     });
 
-    if (!idClient) {
-      throw new Error('Not authorized');
-    }
-
     const { count, rows } = await dbConnect.Notification.findAndCountAll({
       where,
       order:
