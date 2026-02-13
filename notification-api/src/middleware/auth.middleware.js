@@ -30,8 +30,8 @@ const auth = async (req, res, next) => {
         next();
 
     } catch (error) {
-        if (error.name === "JsonWebTokenError") {
-            error.message = "Token is not valid or has expired"
+        if (error.name === "JsonWebTokenError" || error.name === "TokenExpiredError") {
+            return res.status(401).json({ success: false, message: "Token is not valid or has expired" });
         }
         return res.status(error.statusCode || 401).json({ success: false, message: error.message || "Token is not valid or has expired" });
     }
