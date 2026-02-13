@@ -5,8 +5,6 @@
  * handling environment variables, and configuring database pools.
  */
 
-const { migrateAllDatabases } = require("../src/utillity/migrationRunner");
-
 /**
  * Load environment variables from the root .env file.
  * It prioritizes the root .env file, allowing a local .env file
@@ -34,6 +32,7 @@ module.exports = {
     username: process.env.POSTGRES_USER || "intern",
     password: process.env.POSTGRES_PASSWORD || "intern123",
     database: process.env.POSTGRES_DB || "notifications_db",
+    port: process.env.POSTGRES_PORT || 5432,
     host: dbHost, // Use calculated host
     dialect: "postgres",
     dialectOptions: {
@@ -66,6 +65,7 @@ module.exports = {
     password: process.env.POSTGRES_PASSWORD || "password",
     database: process.env.POSTGRES_DB_TEST || "notifications_db_test",
     host: process.env.DB_HOST || "localhost", // Usually localhost for local tests
+    port: process.env.POSTGRES_PORT || 5432,
     dialect: "postgres",
     /**
      * Disable logging for tests unless debugging.
@@ -81,6 +81,7 @@ module.exports = {
     password: process.env.POSTGRES_PASSWORD,
     database: process.env.POSTGRES_DB,
     host: process.env.DB_HOST, // Should be set explicitly in prod env (e.g., 'postgres' service name or external host)
+    port: process.env.POSTGRES_PORT || 5432,
     dialect: "postgres",
     logging: false, // Usually disable logging in prod unless needed
     /**
@@ -107,5 +108,4 @@ module.exports = {
       idle: 10000,
     },
   },
-  migrationRunner: migrateAllDatabases,
 };
