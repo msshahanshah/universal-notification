@@ -72,6 +72,7 @@ const generateNewAccessToken = async (refreshToken) => {
 
     const newPayload = { id: user.id, username: user.username };
     const token = generateTokens(newPayload, { access: true });
+    redisClient.set(AUTH_TOKEN.ACCESS_TOKEN_KEY, token.accessToken);
     return token.accessToken;
   } catch (error) {
     throw { message: "invalid refresh token", statusCode: 401 };
