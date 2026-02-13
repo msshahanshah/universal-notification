@@ -41,27 +41,49 @@ const validateAttachments = (value, helpers) => {
     );
     // array of filename
     if (typeof value[0] === "string") {
-      // removing duplicate filenames
-      const uniqueFilenames = [...new Set(value)];
-      value = uniqueFilenames;
+      // change filename of duplicates filename
+      const map = new Map(); //key value pair of (filename -> count)
 
+      for (let i = 0; i < value.length; i++) {
+        let filename = value[i];
+        if (map.has(filename)) {
+          // update filename
+          let cnt = map.get(filename);
+
+          const idx = Math.max(filename.lastIndexOf("."), filename.length);
+
+          value[i] = filename.slice(0, idx) + String(cnt) + filename.slice(idx);
+
+          // increase the cnt
+          map.set(filename, cnt + 1);
+        } else map.set(filename, 1);
+      }
+      console.log(value);
       for (const filename of value) {
         if (typeof filename !== "string" || !fileNameRegex.test(filename)) {
           return helpers.message(`invalid filename ${filename}`);
         }
       }
     } else if (typeof value[0] === "object") {
-      // removing duplicate filenames
+      // change file name of duplicates filenames
+      const map = new Map(); //key value pair of (filename -> count)
 
-      const set = new Set(); // to store unique filenames
+      for (let i = 0; i < value.length; i++) {
+        let filename = value[i].fileName;
+        if (map.has(filename)) {
+          // it means we have duplicate filename
+          // update filename
+          let cnt = map.get(filename);
 
-      const uniqueFilenames = value.filter((item) => {
-        if (!set.has(item.fileName)) {
-          set.add(item.fileName);
-          return true;
-        } else return false;
-      });
-      value = uniqueFilenames;
+          const idx = Math.max(filename.lastIndexOf("."), filename.length);
+
+          value[i].fileName =
+            filename.slice(0, idx) + String(cnt) + filename.slice(idx);
+
+          // increase the cnt
+          map.set(filename, cnt + 1);
+        } else map.set(filename, 1);
+      }
 
       for (const file of value) {
         if (typeof file !== "object" || file === null) {
