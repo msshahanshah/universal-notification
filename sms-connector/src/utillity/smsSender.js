@@ -1,6 +1,7 @@
 const TextlocalProvider = require("./providers/textlocal");
 const MSG91Provider = require("./providers/msg91");
 const TwilioProvider = require("./providers/twilio");
+const SmsStrikerProvider = require("./providers/smsStriker")
 
 class SmsSender {
   constructor(clientConfig, provider = "DEFAULT") {
@@ -15,9 +16,11 @@ class SmsSender {
       TEXTLOCAL: TextlocalProvider,
       MSG91: MSG91Provider,
       TWILIO: TwilioProvider,
+      SMSSTRIKER: SmsStrikerProvider
     };
 
     let selectedProvider = this.provider;
+
     if (selectedProvider === "DEFAULT") {
       const defaultProviderEntry = Object.entries(this.clientConfig).find(
         ([key, value]) => value?.default === true,
@@ -34,6 +37,7 @@ class SmsSender {
     }
 
     const providerConfig = this.clientConfig?.[selectedProvider];
+    
     if (!providerConfig) {
       throw new Error(`Configuration not found for provider ${this.provider}`);
     }
@@ -54,7 +58,7 @@ class SmsSender {
       const result = await this.sender({ to, message });
       console.log(
         `SMS sent via ${this.provider}:`,
-        result.data || result.sid || result,
+        result?.data || result?.sid || result,
       );
       return result;
     } catch (error) {
