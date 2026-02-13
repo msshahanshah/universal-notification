@@ -35,7 +35,7 @@ const messageLogs = async (req, res) => {
       status = null,
       page = 1,
       limit = 10,
-      order = 'DESC',
+      order = 'desc',
       sort = null,
       message = null,
       destination = null,

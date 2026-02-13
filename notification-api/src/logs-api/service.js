@@ -30,7 +30,7 @@ const viewMessageLogs = async (
   attempts,
   cc,
   bcc,
-  fromEmail
+  fromEmail,
 ) => {
   try {
     const offset = (page - 1) * limit;
@@ -40,10 +40,8 @@ const viewMessageLogs = async (
     let dbConnect = await global.connectionManager.getModels(idClient);
     const validColumns = Object.keys(dbConnect.Notification.rawAttributes);
 
-    order = order.trim();
-
     if (sort && order && (order === 'asc' || order === 'desc')) {
-      keys = sort.split(',');
+      const keys = sort.split(',');
       for (let i = 0; i < keys.length; i++) {
         if (validColumns.includes(keys[i])) {
           sortOrder.push([keys[i], order]);
@@ -53,12 +51,6 @@ const viewMessageLogs = async (
       }
     }
 
-    if (service) {
-      where.service = service;
-    }
-    if (status) {
-      where.status = status;
-    }
     if (attempts && attempts !== 'null') {
       where.attempts = +attempts;
     }
@@ -69,6 +61,8 @@ const viewMessageLogs = async (
       { key: 'content.cc', value: cc, pattern: (v) => `%${v}%` },
       { key: 'content.bcc', value: bcc, pattern: (v) => `%${v}%` },
       { key: 'content.fromEmail', value: fromEmail, pattern: (v) => `%${v}%` },
+      { key: 'service', value: service, pattern: (v) => `%${v}%` },
+      { key: 'status', value: status, pattern: (v) => `%${v}%` },
     ];
 
     filters.forEach(({ key, value, pattern }) => {
@@ -85,7 +79,10 @@ const viewMessageLogs = async (
 
     const { count, rows } = await dbConnect.Notification.findAndCountAll({
       where,
-      order: sortOrder.length === 0 ? [['createdAt', order]] : sortOrder,
+      order:
+        sortOrder.length === 0
+          ? [['createdAt', order.toUpperCase()]]
+          : sortOrder,
       offset,
       limit,
     });
