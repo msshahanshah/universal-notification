@@ -5,6 +5,8 @@ const {
 } = require("../../helpers/jwt.helper");
 const bcrypt = require("bcrypt");
 const globalDatabaseManager = require("../utillity/mainDatabase");
+const redisClient = require("../../config/redisClient");
+const { AUTH_TOKEN } = require("../../constants/index");
 
 const login = async (username, password) => {
   try {
@@ -34,6 +36,10 @@ const login = async (username, password) => {
       refresh: true,
     });
 
+    // adding access and refresh tokens in redis
+    redisClient.set(AUTH_TOKEN.ACCESS_TOKEN_KEY, accessToken);
+    redisClient.set(AUTH_TOKEN.REFRESH_TOKEN_KEY, refreshToken);
+
     return {
       accessToken,
       refreshToken,
@@ -46,8 +52,11 @@ const login = async (username, password) => {
 const generateNewAccessToken = async (refreshToken) => {
   try {
     const payload = verifyToken(refreshToken, TOKEN_TYPES.REFRESH);
+    const isRefreshTokenExistInRedis = await redisClient.get(
+      AUTH_TOKEN.REFRESH_TOKEN_KEY,
+    );
 
-    if (!payload) {
+    if (!payload || !isRefreshTokenExistInRedis) {
       throw { message: "Unauthorized", statusCode: 401 };
     }
 
