@@ -1,13 +1,10 @@
 const { default: parsePhoneNumberFromString } = require("libphonenumber-js");
 const logger = require("../logger");
 const { v4: uuidv4 } = require("uuid");
-const { publishMessage } = require("../rabbitMQClient");
-const { ConnectionManager } = require("../utillity/connectionManager");
-const {
-  RabbitMQManager,
-  SecretManager,
-} = require("@universal-notifier/secret-manager");
 const rabbitManager = require("../utillity/rabbit");
+const { loadClientConfigs } = require("../utillity/loadClientConfigs");
+
+let configs = null;
 
 const creatingNotificationRecord = async (
   clientId,
@@ -16,8 +13,25 @@ const creatingNotificationRecord = async (
   content,
   templateId = null,
 ) => {
-  let dbConnect = await global.connectionManager.getModels(clientId);
+  configs = configs ? configs : await loadClientConfigs();
 
+  const enabledServices = configs?.filter((conf) => conf.ID === clientId)[0]
+    ?.ENABLED_SERVERICES;
+
+  if (!enabledServices || !Array.isArray(enabledServices)) {
+    throw {
+      statusCode: 500,
+      message: `invalid or missing ENABLED_SERVERICES in client config for ${clientId}`,
+    };
+  }
+
+  if (!enabledServices.includes(service)) {
+    throw {
+      statusCode: 403,
+      message: `${service} is not enable for client ${clientId}`,
+    };
+  }
+  let dbConnect = await global.connectionManager.getModels(clientId);
   const results = await Promise.all(
     destination.map(async (number) => {
       try {
