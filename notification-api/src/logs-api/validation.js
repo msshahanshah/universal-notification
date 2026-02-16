@@ -37,7 +37,7 @@ const validateLogsSchema = Joi.object({
   }),
 
   attempts: baseParams.messages({
-    'number.base': 'Value of attempts must be string',
+    'string.base': 'Value of attempts must be string',
     'string.empty': `Value of attempts can't be empty`,
   }),
 
@@ -47,13 +47,24 @@ const validateLogsSchema = Joi.object({
   }),
 
   bcc: baseParams.messages({
-    'stirng.base': 'Value of bcc must be string',
+    'string.base': 'Value of bcc must be string',
     'string.empty': `Value of bcc can't be empty`,
   }),
 
   fromEmail: baseParams.messages({
     'string.base': 'Value of fromEmail must be string',
     'string.empty': `Value of fromEmail can't be empty`,
+  }),
+  'start-time': Joi.date().iso().messages({
+    'date.base': 'Value of start-time must be valid timestamp',
+    'date.format': 'Value of start-time must be in ISO 8601 format (UTC)',
+    'date.empty': `Value of start-time can't be empty`,
+  }),
+
+  'end-time': Joi.date().iso().optional().messages({
+    'date.base': 'Value of end-time must be valid timestamp',
+    'date.format': 'Value of end-time must be in ISO 8601 format (UTC)',
+    'date.empty': `Value of end-time can't be empty`,
   }),
 });
 
