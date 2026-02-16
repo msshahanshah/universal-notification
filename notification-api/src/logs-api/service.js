@@ -50,7 +50,7 @@ const viewMessageLogs = async (
         } else if (keys[i] === 'message') {
           sortOrder.push(['connectorResponse', order.toUpperCase()]);
         } else if (keys[i] === 'messageDate') {
-          sortOrder.push(['createdAt', order.toUpperCase()]);
+          sortOrder.push(['updatedAt', order.toUpperCase()]);
         }
       }
     }
