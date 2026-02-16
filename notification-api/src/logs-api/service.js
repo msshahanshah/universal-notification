@@ -32,7 +32,7 @@ const viewMessageLogs = async (
   bcc,
   fromEmail,
   startTime,
-  endTime
+  endTime,
 ) => {
   try {
     const offset = (page - 1) * limit;
@@ -55,14 +55,12 @@ const viewMessageLogs = async (
       }
     }
 
-      where.createdAt = {
-        [Sequelize.Op.gte]: new Date(startTime),
-      }
+    where.updatedAt = {
+      [Sequelize.Op.gte]: new Date(startTime),
+    };
 
-    if(endTime) {
-      where.createdAt = {
-        [Sequelize.Op.lte]: new Date(endTime)
-      }
+    if (endTime) {
+      where.updatedAt[Sequelize.Op.lte] = new Date(endTime);
     }
 
     if (attempts && attempts !== 'null') {
