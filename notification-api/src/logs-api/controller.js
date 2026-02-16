@@ -42,7 +42,9 @@ const messageLogs = async (req, res) => {
       attempts = null,
       cc = null,
       bcc = null,
-      fromEmail = null
+      fromEmail = null,
+      'start-time': startTime = null,
+      'end-time': endTime = null,
     } = req.query;
 
     const idClient = req.header('X-Client-Id');
@@ -60,7 +62,9 @@ const messageLogs = async (req, res) => {
       attempts,
       cc,
       bcc,
-      fromEmail
+      fromEmail,
+      startTime,
+      endTime
     );
     return res.status(200).send({
       success: true,

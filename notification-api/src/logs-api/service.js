@@ -31,6 +31,8 @@ const viewMessageLogs = async (
   cc,
   bcc,
   fromEmail,
+  startTime,
+  endTime
 ) => {
   try {
     const offset = (page - 1) * limit;
@@ -47,7 +49,19 @@ const viewMessageLogs = async (
           sortOrder.push([keys[i], order]);
         } else if (keys[i] === 'message') {
           sortOrder.push(['connectorResponse', order.toUpperCase()]);
+        } else if (keys[i] === 'messageDate') {
+          sortOrder.push(['createdAt', order.toUpperCase()]);
         }
+      }
+    }
+
+      where.createdAt = {
+        [Sequelize.Op.gte]: new Date(startTime),
+      }
+
+    if(endTime) {
+      where.createdAt = {
+        [Sequelize.Op.lte]: new Date(endTime)
       }
     }
 
