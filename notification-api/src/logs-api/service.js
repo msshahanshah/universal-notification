@@ -63,7 +63,7 @@ const viewMessageLogs = async (
       where.updatedAt[Sequelize.Op.lte] = new Date(endTime);
     }
 
-    if (attempts && attempts !== 'null') {
+    if (attempts) {
       where.attempts = +attempts;
     }
 

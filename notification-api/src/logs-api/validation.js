@@ -36,9 +36,18 @@ const validateLogsSchema = Joi.object({
     'string.empty': `Value of destination can't be empty`,
   }),
 
-  attempts: baseParams.messages({
-    'string.base': 'Value of attempts must be string',
-    'string.empty': `Value of attempts can't be empty`,
+  // attempts: baseParams.messages({
+  //   'string.base': 'Value of attempts must be string',
+  //   'string.empty': `Value of attempts can't be empty`,
+  // }),
+  attempts: Joi.number()
+  .integer()
+  .min(0)
+  .optional()
+  .messages({
+    'number.base': 'Value of attempts must be number',
+    'number.integer': 'Value of attempts must be integer',
+    'number.min': 'Value of attempts must be >= 0',
   }),
 
   cc: baseParams.messages({
