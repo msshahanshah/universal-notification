@@ -50,7 +50,8 @@ const validateAttachments = (value, helpers) => {
           // update filename
           let cnt = map.get(filename);
 
-          const idx = Math.max(filename.lastIndexOf("."), filename.length);
+          let idx = filename.lastIndexOf(".");
+          if (idx == -1) idx = filename.length;
 
           value[i] = filename.slice(0, idx) + String(cnt) + filename.slice(idx);
 
@@ -58,7 +59,7 @@ const validateAttachments = (value, helpers) => {
           map.set(filename, cnt + 1);
         } else map.set(filename, 1);
       }
-      console.log(value);
+
       for (const filename of value) {
         if (typeof filename !== "string" || !fileNameRegex.test(filename)) {
           return helpers.message(`invalid filename ${filename}`);
@@ -75,7 +76,8 @@ const validateAttachments = (value, helpers) => {
           // update filename
           let cnt = map.get(filename);
 
-          const idx = Math.max(filename.lastIndexOf("."), filename.length);
+          let idx = filename.lastIndexOf(".");
+          if (idx == -1) idx = filename.length;
 
           value[i].fileName =
             filename.slice(0, idx) + String(cnt) + filename.slice(idx);
