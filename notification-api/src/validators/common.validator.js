@@ -41,12 +41,52 @@ const validateAttachments = (value, helpers) => {
     );
     // array of filename
     if (typeof value[0] === "string") {
+      // change filename of duplicates filename
+      const map = new Map(); //key value pair of (filename -> count)
+
+      for (let i = 0; i < value.length; i++) {
+        let filename = value[i];
+        if (map.has(filename)) {
+          // update filename
+          let cnt = map.get(filename);
+
+          let idx = filename.lastIndexOf(".");
+          if (idx == -1) idx = filename.length;
+
+          value[i] = filename.slice(0, idx) + String(cnt) + filename.slice(idx);
+
+          // increase the cnt
+          map.set(filename, cnt + 1);
+        } else map.set(filename, 1);
+      }
+
       for (const filename of value) {
         if (typeof filename !== "string" || !fileNameRegex.test(filename)) {
           return helpers.message(`invalid filename ${filename}`);
         }
       }
     } else if (typeof value[0] === "object") {
+      // change file name of duplicates filenames
+      const map = new Map(); //key value pair of (filename -> count)
+
+      for (let i = 0; i < value.length; i++) {
+        let filename = value[i].fileName;
+        if (map.has(filename)) {
+          // it means we have duplicate filename
+          // update filename
+          let cnt = map.get(filename);
+
+          let idx = filename.lastIndexOf(".");
+          if (idx == -1) idx = filename.length;
+
+          value[i].fileName =
+            filename.slice(0, idx) + String(cnt) + filename.slice(idx);
+
+          // increase the cnt
+          map.set(filename, cnt + 1);
+        } else map.set(filename, 1);
+      }
+
       for (const file of value) {
         if (typeof file !== "object" || file === null) {
           return helpers.message(`invalid email attachments format`);
