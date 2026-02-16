@@ -1,9 +1,9 @@
 const jwt = require("jsonwebtoken");
 const { verifyToken } = require("../../helpers/jwt.helper");
 const globalDatabaseManager = require("../utillity/mainDatabase");
-const redisClient = require("../../config/redisClient");
-const { TOKEN_TYPES } = require("../../constants/index.js");
-const RedisUtil = require("../utillity/redis");
+
+const { AUTH_TOKEN } = require("../../constants/index.js");
+const RedisHelper = require("../../helpers/redis.helper.js");
 
 const auth = async (req, res, next) => {
   try {
@@ -24,7 +24,7 @@ const auth = async (req, res, next) => {
       };
     }
 
-    const decodedData = verifyToken(token, TOKEN_TYPES.ACCESS);
+    const decodedData = verifyToken(token, AUTH_TOKEN.ACCESS_TOKEN);
 
     const globalDb = await globalDatabaseManager.getModels();
 
@@ -39,8 +39,8 @@ const auth = async (req, res, next) => {
     //chceking if token present in redis
 
     const username = user.username;
-    const REDIS_ACCESS_TOKEN_KEY = RedisUtil.getAccessTokenRedisKey(username);
-    const isAccessTokenExistInRedis = await redisClient.get(
+    const REDIS_ACCESS_TOKEN_KEY = RedisHelper.getAccessTokenRedisKey(username);
+    const isAccessTokenExistInRedis = await RedisHelper.getValue(
       REDIS_ACCESS_TOKEN_KEY,
     );
 

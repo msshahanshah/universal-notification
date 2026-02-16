@@ -1,9 +1,8 @@
 const { verifyToken, generateTokens } = require("../../helpers/jwt.helper");
 const bcrypt = require("bcrypt");
 const globalDatabaseManager = require("../utillity/mainDatabase");
-const redisClient = require("../../config/redisClient");
-const { TOKEN_TYPES } = require("../../constants/index.js");
-const RedisUtil = require("../utillity/redis");
+const { AUTH_TOKEN } = require("../../constants/index.js");
+const RedisHelper = require("../../helpers/redis.helper.js");
 
 const login = async (username, password) => {
   try {
@@ -36,11 +35,12 @@ const login = async (username, password) => {
 
     // adding access and refresh tokens in redis
 
-    const REDIS_ACCESS_TOKEN_KEY = RedisUtil.getAccessTokenRedisKey(username);
-    const REDIS_REFRESH_TOKEN_KEY = RedisUtil.getRefreshTokenRedisKey(username);
+    const REDIS_ACCESS_TOKEN_KEY = RedisHelper.getAccessTokenRedisKey(username);
+    const REDIS_REFRESH_TOKEN_KEY =
+      RedisHelper.getRefreshTokenRedisKey(username);
 
-    redisClient.set(REDIS_ACCESS_TOKEN_KEY, accessToken);
-    redisClient.set(REDIS_REFRESH_TOKEN_KEY, refreshToken);
+    RedisHelper.setKey(REDIS_ACCESS_TOKEN_KEY, accessToken);
+    RedisHelper.setKey(REDIS_REFRESH_TOKEN_KEY, refreshToken);
 
     return {
       accessToken,
@@ -53,7 +53,7 @@ const login = async (username, password) => {
 
 const generateNewAccessToken = async (refreshToken) => {
   try {
-    const payload = verifyToken(refreshToken, TOKEN_TYPES.REFRESH);
+    const payload = verifyToken(refreshToken, AUTH_TOKEN.REFRESH_TOKEN);
     if (!payload) {
       throw { message: "Unauthorized", statusCode: 401 };
     }
@@ -67,10 +67,11 @@ const generateNewAccessToken = async (refreshToken) => {
       throw { message: "User no longer exists", statusCode: 404 };
     }
     const username = user.username;
-    const REDIS_ACCESS_TOKEN_KEY = RedisUtil.getAccessTokenRedisKey(username);
-    const REDIS_REFRESH_TOKEN_KEY = RedisUtil.getRefreshTokenRedisKey(username);
+    const REDIS_ACCESS_TOKEN_KEY = RedisHelper.getAccessTokenRedisKey(username);
+    const REDIS_REFRESH_TOKEN_KEY =
+      RedisHelper.getRefreshTokenRedisKey(username);
 
-    const isRefreshTokenExistInRedis = await redisClient.get(
+    const isRefreshTokenExistInRedis = await RedisHelper.getValue(
       REDIS_REFRESH_TOKEN_KEY,
     );
     if (!isRefreshTokenExistInRedis) {
@@ -79,7 +80,7 @@ const generateNewAccessToken = async (refreshToken) => {
 
     const newPayload = { id: user.id, username: user.username };
     const token = generateTokens(newPayload, { access: true });
-    redisClient.set(REDIS_ACCESS_TOKEN_KEY, token.accessToken);
+    RedisHelper.setKey(REDIS_ACCESS_TOKEN_KEY, token.accessToken);
     return token.accessToken;
   } catch (error) {
     throw { message: "Invalid refresh token", statusCode: 401 };

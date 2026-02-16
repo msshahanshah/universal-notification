@@ -1,7 +1,5 @@
-const redisClient = require("../../config/redisClient");
-const { AUTH_TOKEN } = require("../../constants");
 const authService = require("./service");
-const RedisUtil = require("../utillity/redis");
+const RedisHelper = require("../../helpers/redis.helper");
 const login = async (req, res) => {
   try {
     const { username, password } = req.body;
@@ -53,11 +51,13 @@ const logout = async (req, res) => {
     // remove access and refresh token from redis
     const username = req.user.username;
 
-    const REDIS_ACCESS_TOKEN_KEY = RedisUtil.getAccessTokenRedisKey(username);
-    const REDIS_REFRESH_TOKEN_KEY = RedisUtil.getRefreshTokenRedisKey(username);
+    const REDIS_ACCESS_TOKEN_KEY = RedisHelper.getAccessTokenRedisKey(username);
+    const REDIS_REFRESH_TOKEN_KEY =
+      RedisHelper.getRefreshTokenRedisKey(username);
 
-    redisClient.del(REDIS_REFRESH_TOKEN_KEY);
-    redisClient.del(REDIS_ACCESS_TOKEN_KEY);
+    RedisHelper.deleteKey(REDIS_REFRESH_TOKEN_KEY);
+    RedisHelper.deleteKey(REDIS_ACCESS_TOKEN_KEY);
+
     return res.status(200).send({
       success: true,
       message: "Logout Successfully",
