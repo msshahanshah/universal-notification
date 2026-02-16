@@ -53,6 +53,7 @@ async function loadClientConfigs() {
         ENABLED_SERVERICES: client.ENABLED_SERVERICES || [],
         DBCONFIG: dbConfig,
         RABBITMQ: rabbitConfig,
+        ...client,
       };
     });
   } catch (error) {
