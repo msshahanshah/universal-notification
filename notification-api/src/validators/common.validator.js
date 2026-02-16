@@ -70,6 +70,8 @@ const validateAttachments = (value, helpers) => {
       const map = new Map(); //key value pair of (filename -> count)
 
       for (let i = 0; i < value.length; i++) {
+        if (Object.keys(value[i]).length == 0) continue;
+
         let filename = value[i].fileName;
         if (map.has(filename)) {
           // it means we have duplicate filename
