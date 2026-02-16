@@ -1,10 +1,6 @@
 const jwt = require("jsonwebtoken");
 require("dotenv").config();
-
-const TOKEN_TYPES = {
-  ACCESS: "access",
-  REFRESH: "refresh",
-};
+const { TOKEN_TYPES } = require("../constants/index.js");
 
 const tokenConfig = {
   [TOKEN_TYPES.ACCESS]: {

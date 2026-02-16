@@ -1,14 +1,11 @@
-const {
-  verifyToken,
-  generateTokens,
-  TOKEN_TYPES,
-} = require("../../helpers/jwt.helper");
+const { verifyToken, generateTokens } = require("../../helpers/jwt.helper");
 const bcrypt = require("bcrypt");
 const globalDatabaseManager = require("../utillity/mainDatabase");
 const redisClient = require("../../config/redisClient");
+const { TOKEN_TYPES } = require("../../constants/index.js");
 const RedisUtil = require("../utillity/redis");
 
-const login = async (username, password, clientId) => {
+const login = async (username, password) => {
   try {
     username = username.toLowerCase();
 
@@ -39,8 +36,8 @@ const login = async (username, password, clientId) => {
 
     // adding access and refresh tokens in redis
 
-    const REDIS_ACCESS_TOKEN_KEY = RedisUtil.getAccessTokenRedisKey(clientId);
-    const REDIS_REFRESH_TOKEN_KEY = RedisUtil.getRefreshTokenRedisKey(clientId);
+    const REDIS_ACCESS_TOKEN_KEY = RedisUtil.getAccessTokenRedisKey(username);
+    const REDIS_REFRESH_TOKEN_KEY = RedisUtil.getRefreshTokenRedisKey(username);
 
     redisClient.set(REDIS_ACCESS_TOKEN_KEY, accessToken);
     redisClient.set(REDIS_REFRESH_TOKEN_KEY, refreshToken);
@@ -54,29 +51,30 @@ const login = async (username, password, clientId) => {
   }
 };
 
-const generateNewAccessToken = async (clientId, refreshToken) => {
+const generateNewAccessToken = async (refreshToken) => {
   try {
     const payload = verifyToken(refreshToken, TOKEN_TYPES.REFRESH);
-
-    const REDIS_ACCESS_TOKEN_KEY = RedisUtil.getAccessTokenRedisKey(clientId);
-    const REDIS_REFRESH_TOKEN_KEY = RedisUtil.getRefreshTokenRedisKey(clientId);
-
-    const isRefreshTokenExistInRedis = await redisClient.get(
-      REDIS_REFRESH_TOKEN_KEY,
-    );
-
-    if (!payload || !isRefreshTokenExistInRedis) {
+    if (!payload) {
       throw { message: "Unauthorized", statusCode: 401 };
     }
 
     const globalDb = await globalDatabaseManager.getModels();
-
     const user = await globalDb.User.findOne({
       where: { username: payload.username },
     });
 
     if (!user) {
-      throw { message: "user no longer exists", statusCode: 404 };
+      throw { message: "User no longer exists", statusCode: 404 };
+    }
+    const username = user.username;
+    const REDIS_ACCESS_TOKEN_KEY = RedisUtil.getAccessTokenRedisKey(username);
+    const REDIS_REFRESH_TOKEN_KEY = RedisUtil.getRefreshTokenRedisKey(username);
+
+    const isRefreshTokenExistInRedis = await redisClient.get(
+      REDIS_REFRESH_TOKEN_KEY,
+    );
+    if (!isRefreshTokenExistInRedis) {
+      throw { message: "Unauthorized", statusCode: 401 };
     }
 
     const newPayload = { id: user.id, username: user.username };

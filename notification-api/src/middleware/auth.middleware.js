@@ -1,9 +1,10 @@
 const jwt = require("jsonwebtoken");
-const { verifyToken, TOKEN_TYPES } = require("../../helpers/jwt.helper");
+const { verifyToken } = require("../../helpers/jwt.helper");
 const globalDatabaseManager = require("../utillity/mainDatabase");
 const redisClient = require("../../config/redisClient");
-const { AUTH_TOKEN } = require("../../constants");
+const { TOKEN_TYPES } = require("../../constants/index.js");
 const RedisUtil = require("../utillity/redis");
+
 const auth = async (req, res, next) => {
   try {
     let token = "";
@@ -23,20 +24,6 @@ const auth = async (req, res, next) => {
       };
     }
 
-    const clientId = req.headers["x-client-id"];
-
-    const REDIS_ACCESS_TOKEN_KEY = RedisUtil.getAccessTokenRedisKey(clientId);
-
-    const isAccessTokenExistInRedis = await redisClient.get(
-      REDIS_ACCESS_TOKEN_KEY,
-    );
-
-    if (!isAccessTokenExistInRedis) {
-      throw {
-        statusCode: 401,
-        message: "Unauthorized ",
-      };
-    }
     const decodedData = verifyToken(token, TOKEN_TYPES.ACCESS);
 
     const globalDb = await globalDatabaseManager.getModels();
@@ -49,7 +36,21 @@ const auth = async (req, res, next) => {
       throw { statusCode: 404, message: "User does not found" };
     }
 
-    req.clientId = clientId;
+    //chceking if token present in redis
+
+    const username = user.username;
+    const REDIS_ACCESS_TOKEN_KEY = RedisUtil.getAccessTokenRedisKey(username);
+    const isAccessTokenExistInRedis = await redisClient.get(
+      REDIS_ACCESS_TOKEN_KEY,
+    );
+
+    if (!isAccessTokenExistInRedis) {
+      throw {
+        statusCode: 401,
+        message: "Unauthorized ",
+      };
+    }
+
     req.user = decodedData;
     next();
   } catch (error) {
