@@ -31,91 +31,111 @@ const commonValidation = {
       }),
     }),
 };
+const { fileNameRegex, urlRegex } = require("../../helpers/regex.helper");
 
-const validateAttachments = (value, helpers) => {
-  if (value.length) {
-    const fileNameRegex = new RegExp(/^(?![ .])(?!.*[ .]$)[A-Za-z0-9._ -]+$/);
-    const urlRegex = new RegExp(
-      "^https?:\\/\\/(?:[a-z0-9.-]+\\.)?s3(?:[.-][a-z0-9-]+)?\\.amazonaws\\.com(?:\\/[\\S]*?)?\\?.*(?:X-Amz-Signature=|X-Amz-Credential=|AWSAccessKeyId=)",
-      "i",
-    );
-    // array of filename
-    if (typeof value[0] === "string") {
-      // change filename of duplicates filename
-      const map = new Map(); //key value pair of (filename -> count)
+//---------email attachments validation----------
 
-      for (let i = 0; i < value.length; i++) {
-        let filename = value[i];
-        if (map.has(filename)) {
-          // update filename
-          let cnt = map.get(filename);
+//taking map for increasing count for duplicate filenames
+let map = new Map();
 
-          let idx = filename.lastIndexOf(".");
-          if (idx == -1) idx = filename.length;
+function changeDuplicateFileName(fileName) {
+  if (map.has(fileName)) {
+    let cnt = map.get(fileName);
 
-          value[i] = filename.slice(0, idx) + String(cnt) + filename.slice(idx);
+    let idx = fileName.lastIndexOf(".");
+    if (idx == -1) idx = fileName.length;
 
-          // increase the cnt
-          map.set(filename, cnt + 1);
-        } else map.set(filename, 1);
-      }
+    const newFileName =
+      fileName.slice(0, idx) + String(cnt) + fileName.slice(idx);
 
-      for (const filename of value) {
-        if (typeof filename !== "string" || !fileNameRegex.test(filename)) {
-          return helpers.message(`invalid filename ${filename}`);
+    // increase the cnt for next duplicate filename
+    map.set(fileName, cnt + 1);
+    return newFileName;
+  } else map.set(fileName, 1);
+
+  return fileName;
+}
+
+function validateFileName(fileName) {
+  if (!fileName?.length) return "FileName cannot be empty";
+  if (!fileNameRegex.test(fileName)) return "FileName is not valid";
+  return null;
+}
+
+function validateUrl(url) {
+  if (!url?.length) return "Url cannot be empty";
+  if (!urlRegex.test(url)) return "Url is not valid";
+  return null;
+}
+
+const validateAttachments = (values, helpers) => {
+  map = new Map();
+  if (values.length) {
+    const allowedKeys = ["fileName", "url"]; // only this keys is allowed in attachemnts
+
+    //checking each value for attachments array
+
+    for (let idx = 0; idx < values.length; idx++) {
+      const item = values[idx];
+
+      switch (typeof item) {
+        case "string": {
+          const clearedFileName = item.trim();
+          const isMessage = validateFileName(clearedFileName);
+
+          if (isMessage) {
+            return helpers.message(isMessage);
+          }
+
+          //changin the name of duplicate files
+          values[idx] = changeDuplicateFileName(clearedFileName);
+          break;
         }
-      }
-    } else if (typeof value[0] === "object") {
-      // change file name of duplicates filenames
-      const map = new Map(); //key value pair of (filename -> count)
+        case "object": {
+          const keys = Object.keys(item);
 
-      for (let i = 0; i < value.length; i++) {
-        if (Object.keys(value[i]).length == 0) continue;
+          if (
+            !(keys.length === allowedKeys.length) ||
+            !("fileName" in item) ||
+            !("url" in item)
+          ) {
+            return helpers.message(
+              "In attachments array object is invalid it must contain only fileName and url",
+            );
+          }
+          const { fileName, url } = item;
 
-        let filename = value[i].fileName;
-        if (map.has(filename)) {
-          // it means we have duplicate filename
-          // update filename
-          let cnt = map.get(filename);
+          //check fileName and validate
 
-          let idx = filename.lastIndexOf(".");
-          if (idx == -1) idx = filename.length;
+          let clearedFileName = fileName.trim();
+          let isMessage = validateFileName(clearedFileName);
+          if (isMessage) {
+            return helpers.message(isMessage);
+          }
 
-          value[i].fileName =
-            filename.slice(0, idx) + String(cnt) + filename.slice(idx);
+          //check url and validate
 
-          // increase the cnt
-          map.set(filename, cnt + 1);
-        } else map.set(filename, 1);
-      }
+          isMessage = validateUrl(url);
+          if (isMessage) {
+            return helpers.message(isMessage);
+          }
 
-      for (const file of value) {
-        if (typeof file !== "object" || file === null) {
-          return helpers.message(`invalid email attachments format`);
+          //changin the name of duplicate files
+          values[idx].fileName = changeDuplicateFileName(clearedFileName);
+          break;
         }
-
-        if (!file.fileName || !file.url) {
+        default: {
           return helpers.message(
-            `missing fields. please provide fileName and url`,
-          );
-        }
-
-        if (
-          typeof file.fileName !== "string" ||
-          !fileNameRegex.test(file.fileName)
-        ) {
-          return helpers.message(`invalid fileName ${file.fileName}`);
-        }
-
-        if (typeof file.url !== "string" || !urlRegex.test(file.url)) {
-          return helpers.message(
-            `invalid s3 presigned url for file ${file.fileName}`,
+            "Expected string of filenames or object with fileName and url",
           );
         }
       }
     }
+  } else {
+    return helpers.message("Attachements can not be empty array");
   }
-  return value;
+
+  return values;
 };
 
 module.exports = { commonValidation, baseOptions, validateAttachments };

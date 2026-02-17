@@ -106,8 +106,11 @@ const emailValidation = {
   attachments: Joi.when("service", {
     is: "email",
     then: Joi.array()
-      .custom((value, helpers) => validateAttachments(value, helpers))
-      .optional(),
+      .optional()
+      .custom((value, helpers) => {
+        return validateAttachments(value, helpers);
+      }),
+
     otherwise: Joi.forbidden(),
   }),
 };

@@ -1,7 +1,7 @@
 const Joi = require("joi");
 const { PhoneNumberUtil } = require("google-libphonenumber");
 const phoneUtil = PhoneNumberUtil.getInstance();
-
+const { phonenNumberRegex } = require("../../helpers/regex.helper");
 const smsValidation = {
   destination: Joi.string()
     .required()
@@ -17,12 +17,9 @@ const smsValidation = {
         return helpers.message("At least one phone number is required");
       }
 
-      // Single phone number regex
-      const phoneRegex = /^\+[0-9]+$/;
-
       // Validate each number
       for (const number of numbers) {
-        if (!phoneRegex.test(number)) {
+        if (!phonenNumberRegex.test(number)) {
           return helpers.message("Invalid phone number ");
         }
 

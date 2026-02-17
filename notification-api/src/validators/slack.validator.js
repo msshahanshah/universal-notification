@@ -1,6 +1,5 @@
 const Joi = require("joi");
-
-const regex = /^[CGD][A-Z0-9]{8,10}$/;
+const { slackChannelIdRegex } = require("../../helpers/regex.helper");
 
 const slackValidation = {
   destination: Joi.string()
@@ -27,7 +26,7 @@ const slackValidation = {
 
       // Validate each channel ID
       for (const channel of channels) {
-        if (!regex.test(channel)) {
+        if (!slackChannelIdRegex.test(channel)) {
           return helpers.message(`Invalid Slack channel ID: ${channel}.`);
         }
       }
