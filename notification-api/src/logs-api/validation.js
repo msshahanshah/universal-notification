@@ -43,11 +43,13 @@ const validateLogsSchema = Joi.object({
   attempts: Joi.number()
   .integer()
   .min(0)
+  .max(3)
   .optional()
   .messages({
     'number.base': 'Value of attempts must be number',
     'number.integer': 'Value of attempts must be integer',
     'number.min': 'Value of attempts must be >= 0',
+    'number.max': 'Value of attempts must be <= 3',
   }),
 
   cc: baseParams.messages({
