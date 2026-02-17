@@ -1,27 +1,19 @@
 # Use an official Node.js runtime as the parent image
-FROM node:18
+FROM node:20
 
-# Set the working directory to /usr/src/app
 WORKDIR /usr/src/app
 
-# Copy package.json and package-lock.json to the working directory
+# Install dependencies first (better caching)
 COPY package*.json ./
-# Install dependencies
-RUN npm install
-# copy env files
-COPY env.sample .env
-
-
-# Install dependencies
 RUN npm install
 
+# Copy app source
+COPY . .
 
+# Entrypoint
+RUN chmod +x /usr/src/app/entrypoint.sh
 
-# Copy all the files from the current directory to the working directory
-COPY . ./
+ENTRYPOINT ["/usr/src/app/entrypoint.sh"]
 
-# Expose port 3000 for the API
-EXPOSE 3000 
-
-# Command to run when the container starts
-CMD ["node", "src/index.js"]
+# Expose only if API uses it
+EXPOSE 3000

@@ -1,17 +1,13 @@
 const jwt = require("jsonwebtoken");
 require("dotenv").config();
-
-const TOKEN_TYPES = {
-  ACCESS: "access",
-  REFRESH: "refresh",
-};
+const { AUTH_TOKEN } = require("../constants/index.js");
 
 const tokenConfig = {
-  [TOKEN_TYPES.ACCESS]: {
+  [AUTH_TOKEN.ACCESS_TOKEN]: {
     secret: process.env.ACCESS_TOKEN_SECRET,
     expiresIn: process.env.ACCESS_TOKEN_TIME,
   },
-  [TOKEN_TYPES.REFRESH]: {
+  [AUTH_TOKEN.REFRESH_TOKEN]: {
     secret: process.env.REFRESH_TOKEN_SECRET,
     expiresIn: process.env.REFRESH_TOKEN_TIME,
   },
@@ -37,17 +33,16 @@ const generateTokens = (payload, options = { access: true, refresh: true }) => {
   const tokens = {};
 
   if (options.access) {
-    tokens.accessToken = signToken(payload, TOKEN_TYPES.ACCESS);
+    tokens.accessToken = signToken(payload, AUTH_TOKEN.ACCESS_TOKEN);
   }
 
   if (options.refresh) {
-    tokens.refreshToken = signToken(payload, TOKEN_TYPES.REFRESH);
+    tokens.refreshToken = signToken(payload, AUTH_TOKEN.REFRESH_TOKEN);
   }
   return tokens;
 };
 
 module.exports = {
-  TOKEN_TYPES,
   signToken,
   verifyToken,
   generateTokens,

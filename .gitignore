@@ -145,6 +145,7 @@ Docker.raw
 package-lock.json
 
 
+default_credentials.json
 default_credentials.txt
 
 

@@ -33,7 +33,9 @@ module.exports = {
         }),
       );
 
-      await queryInterface.bulkInsert(tableName, defaultUsers);
+      await queryInterface.bulkInsert(tableName, defaultUsers, {
+        ignoreDuplicates: true,
+      });
     } catch (error) {
       console.error("Seeder failed:", error);
       throw error;

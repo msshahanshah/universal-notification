@@ -1,5 +1,9 @@
 const Joi = require("joi");
 const baseOptions = { abortEarly: false, stripUnknown: false };
+const { fileNameRegex, urlRegex } = require("../../helpers/regex.helper");
+
+//----------------common validation ----------------------
+
 const commonValidation = {
   page: Joi.number().integer().min(1).optional().messages({
     "number.base": "Page must be a number",
@@ -31,7 +35,7 @@ const commonValidation = {
       }),
     }),
 };
-const { fileNameRegex, urlRegex } = require("../../helpers/regex.helper");
+
 
 //---------email attachments validation----------
 

@@ -77,14 +77,11 @@ const emailValidation = {
   fromEmail: Joi.when("service", {
     is: "email",
     then: Joi.string()
-      .required()
+      .optional()
+      .allow("")
       .custom((value, helpers) =>
         validateEmailList(value, helpers, "fromEmail"),
-      )
-      .messages({
-        "string.empty": "In fromEmail email is required.",
-        "any.required": "In fromEmail email is required for email service.",
-      }),
+      ),
     otherwise: Joi.forbidden(),
   }),
   cc: Joi.when("service", {

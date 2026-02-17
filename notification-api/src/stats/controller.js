@@ -6,6 +6,7 @@ const labelMap = {
     TWILIO: "Amount",
     FAST2SMS: "Credits",
     MSG91: "Wallet Amount",
+    SMSSTRIKER: "Total Messages",
     DEFAULT: "Amount"
 };
 
