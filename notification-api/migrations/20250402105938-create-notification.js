@@ -1,67 +1,89 @@
-// ./notification-api/migrations/YYYYMMDDHHMMSS-create-notification.js
-'use strict';
-/** @type {import('sequelize-cli').Migration} */
+"use strict";
+
+/**
+ * @typedef {import('sequelize').QueryInterface} QueryInterface
+ * @typedef {import('sequelize').Sequelize} Sequelize
+ * @typedef {import('sequelize-cli').Migration} Migration
+ */
+
+/**
+ * @type {Migration}
+ */
 module.exports = {
-  async up(queryInterface, Sequelize) {
-    await queryInterface.createTable('Notifications', {
-      id: { // Use standard integer ID as primary key
+  /**
+   * @param {QueryInterface} queryInterface
+   * @param {Sequelize} Sequelize
+   */
+  async up(queryInterface, Sequelize, schemaName) {
+    const tableName = {
+      tableName: "notifications",
+      schema: schemaName,
+    };
+    await queryInterface.createTable(tableName, {
+      id: {
+        type: Sequelize.INTEGER,
+        primaryKey: true,
         allowNull: false,
         autoIncrement: true,
-        primaryKey: true,
-        type: Sequelize.INTEGER
       },
-      messageId: { // Unique ID for idempotency
-        type: Sequelize.UUID, // Use UUID type
+      messageId: {
+        type: Sequelize.UUID,
         allowNull: false,
-        unique: true // Ensure uniqueness
+        unique: true,
       },
       service: {
         type: Sequelize.STRING,
         allowNull: false,
       },
-      target: { // e.g., Slack channel, email address, Telegram chat ID
-        type: Sequelize.STRING,
-        allowNull: false
-      },
-      content: { // The message body
-        type: Sequelize.TEXT,
-        allowNull: false
-      },
-      status: { // pending, processing, sent, failed
+      destination: {
         type: Sequelize.STRING,
         allowNull: false,
-        defaultValue: 'pending',
-        // Add index for faster status lookups
-        // index: true // Handled below
       },
-      attempts: { // Number of processing attempts
+      content: {
+        type: Sequelize.JSONB,
+        allowNull: false,
+      },
+      status: {
+        type: Sequelize.STRING,
+        allowNull: false,
+        defaultValue: "pending",
+      },
+      attempts: {
         type: Sequelize.INTEGER,
         allowNull: false,
-        defaultValue: 0
+        defaultValue: 0,
       },
-      connectorResponse: { // Store response/error from connector
+      connectorResponse: {
         type: Sequelize.TEXT,
-        allowNull: true
+        allowNull: true,
+      },
+      templateId: {
+        type: Sequelize.STRING,
+        allowNull: true,
       },
       createdAt: {
         allowNull: false,
         type: Sequelize.DATE,
-        defaultValue: Sequelize.NOW // Use Sequelize.NOW for default
+        defaultValue: Sequelize.NOW,
       },
       updatedAt: {
         allowNull: false,
         type: Sequelize.DATE,
-        defaultValue: Sequelize.NOW
-      }
+        defaultValue: Sequelize.NOW,
+      },
     });
 
-     // Add specific indexes after table creation
-    await queryInterface.addIndex('Notifications', ['messageId'], { unique: true });
-    await queryInterface.addIndex('Notifications', ['status']);
-    await queryInterface.addIndex('Notifications', ['service', 'status']); // Useful for finding pending tasks per service
+    // Add indexes for better query performance
+    await queryInterface.addIndex(tableName, ["messageId"], { unique: true });
+    await queryInterface.addIndex(tableName, ["status"]);
+    await queryInterface.addIndex(tableName, ["service", "status"]);
   },
+
+  /**
+   * @param {QueryInterface} queryInterface
+   * @param {Sequelize} Sequelize
+   */
   async down(queryInterface, Sequelize) {
-    await queryInterface.dropTable('Notifications');
-    // No need to remove indexes explicitly when dropping the table
-  }
+    await queryInterface.dropTable("notifications");
+  },
 };

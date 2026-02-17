@@ -1,4 +1,10 @@
 // ./slack-connector/__tests__/connector.test.js
+/**
+ * @fileoverview Tests for the Slack Connector's processMessage function.
+ * This suite focuses on unit testing the core logic of the `processMessage`
+ * function, ensuring it correctly handles various scenarios like successful
+ * message processing, idempotency, failures, and edge cases.
+ */
 const { processMessage } = require('../src/connector'); // Assuming processMessage is exported or accessible for testing
 const db = require('../models'); // Import Sequelize instance and models
 const Notification = db.Notification; // Get the Notification model
@@ -6,11 +12,19 @@ const slackSender = require('../src/slackSender');
 const logger = require('../src/logger');
 const config = require('../src/config'); // To access config like maxProcessingAttempts
 
+
 // --- Mocks ---
 // Mock Sequelize Notification model and transaction
 jest.mock('../models', () => {
+    /**
+     * @typedef {Object} MockNotificationInstance
+     * @property {number} id - Mock ID.
+     * @property {string} messageId - Mock message ID.
+     * @property {string} service - Mock service name.
+     * @property {string} target - Mock target channel.
+     * @property {string} content - Mock message content.
+     */
     const mockNotificationInstance = {
-        // Simulate a Sequelize model instance
         id: 1,
         messageId: 'test-msg-id',
         service: 'slack',
@@ -22,6 +36,10 @@ jest.mock('../models', () => {
         save: jest.fn().mockResolvedValue(this), // Mock save method on instance
         update: jest.fn().mockResolvedValue(this), // Mock update method on instance (if used directly)
         // Add other fields/methods as needed by the code
+    /**
+     * @typedef {Object} MockNotificationModel
+     * @property {Function} findOne - Mock findOne method.
+     */
     };
     const mockNotificationModel = {
         findOne: jest.fn(),
@@ -29,6 +47,9 @@ jest.mock('../models', () => {
         // Add other static methods if needed
     };
     const mockTransaction = {
+        /**
+         * @typedef {Object} MockTransaction - Mock transaction object
+         */
         commit: jest.fn().mockResolvedValue(undefined),
         rollback: jest.fn().mockResolvedValue(undefined),
         LOCK: { UPDATE: 'UPDATE' } // Mock lock object if used
@@ -40,6 +61,12 @@ jest.mock('../models', () => {
             close: jest.fn().mockResolvedValue(true),
         },
         Notification: mockNotificationModel,
+        /**
+        * @typedef {Object} Sequelize - Mock Sequelize object
+        * @property {Object} Op - Mock Operator object
+        */
+        /**@type {Sequelize} */
+
         Sequelize: { Op: {} }, // Mock Op if needed
         // --- Helper to get a fresh mock instance for tests ---
         __getMockNotificationInstance: (overrides = {}) => ({
@@ -72,6 +99,14 @@ jest.mock('../src/logger', () => ({
 // --- Test Suite for processMessage ---
 // NOTE: We are unit testing processMessage, not the full RabbitMQ consumption loop.
 describe('Slack Connector - processMessage Function', () => {
+    /**
+     * @typedef {Object} BaseNotificationData
+     * @property {number} dbId - Mock ID.
+     * @property {string} messageId - Mock message ID.
+     * @property {string} service - Mock service name.
+     * @property {string} channel - Mock target channel.
+     * @property {string} message - Mock message content.
+     */
 
     let mockChannel; // Mock RabbitMQ channel object
     let mockMsg; // Mock RabbitMQ message object
@@ -110,6 +145,14 @@ describe('Slack Connector - processMessage Function', () => {
     });
 
     // --- Success Path ---
+     /**
+      * Test case: should process valid message, send to Slack, update status to sent, and ACK message.
+      *
+      * Verifies that the `processMessage` function correctly handles a valid message by:
+      * 1. Finding and locking the corresponding database record.
+      * 2. Updating the record's status to 'processing'.
+      * 3. Sending the message to Slack.
+      */
     it('should process valid message, send to Slack, update status to sent, and ACK message', async () => {
         const mockRecord = db.__getMockNotificationInstance({ status: 'pending', attempts: 0 });
         Notification.findOne.mockResolvedValue(mockRecord); // Simulate finding the record
@@ -154,6 +197,12 @@ describe('Slack Connector - processMessage Function', () => {
     });
 
     // --- Idempotency Scenarios ---
+    /**
+    * Test case: should ACK immediately if notification status is already "sent".
+    *
+    * Verifies that `processMessage` correctly identifies and handles idempotent
+    * messages with a status of "sent", avoiding redundant processing.
+    */
     it('should ACK immediately if notification status is already "sent"', async () => {
         const mockRecord = db.__getMockNotificationInstance({ status: 'sent', attempts: 1 });
         Notification.findOne.mockResolvedValue(mockRecord);
@@ -169,7 +218,13 @@ describe('Slack Connector - processMessage Function', () => {
         expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining('already marked as sent'), expect.any(Object));
     });
 
-     it('should ACK immediately if notification status is already "processing"', async () => {
+    /**
+    * Test case: should ACK immediately if notification status is already "processing".
+    *
+    * Verifies that `processMessage` correctly identifies and handles idempotent
+    * messages with a status of "processing", avoiding redundant processing.
+    */
+    it('should ACK immediately if notification status is already "processing"', async () => {
         const mockRecord = db.__getMockNotificationInstance({ status: 'processing', attempts: 1 });
         Notification.findOne.mockResolvedValue(mockRecord);
 
@@ -185,6 +240,13 @@ describe('Slack Connector - processMessage Function', () => {
     });
 
     // --- Failure Scenarios ---
+    /**
+    * Test case: should NACK (no requeue) if message has invalid format (JSON parse error).
+    *
+    * Verifies that `processMessage` correctly handles messages with invalid JSON
+    * format by NACKing them without requeueing and logging a critical error.
+    *
+    */
     it('should NACK (no requeue) if message has invalid format (JSON parse error)', async () => {
         mockMsg.content = Buffer.from('{invalid json'); // Malformed JSON
 
@@ -199,6 +261,13 @@ describe('Slack Connector - processMessage Function', () => {
         expect(logger.error).toHaveBeenCalledWith(expect.stringContaining('Critical error processing message'), expect.any(Object));
     });
 
+    /**
+    * Test case: should NACK (no requeue) if message has missing required fields.
+    *
+    * Verifies that `processMessage` correctly handles messages with missing
+    * required fields by NACKing them without requeueing and logging an error.
+    *
+    */
     it('should NACK (no requeue) if message has missing required fields', async () => {
         mockMsg.content = Buffer.from(JSON.stringify({ /* missing dbId */ messageId: '123' }));
 
@@ -213,6 +282,13 @@ describe('Slack Connector - processMessage Function', () => {
         expect(logger.error).toHaveBeenCalledWith(expect.stringContaining('Invalid message format received'), expect.any(Object));
     });
 
+    /**
+    * Test case: should NACK (no requeue) if notification record not found in DB.
+    *
+    * Verifies that `processMessage` correctly handles cases where the
+    * corresponding database record is not found by NACKing without requeueing
+    * and logging an error.
+    */
     it('should NACK (no requeue) if notification record not found in DB', async () => {
         Notification.findOne.mockResolvedValue(null); // Simulate record not found
 
@@ -229,6 +305,13 @@ describe('Slack Connector - processMessage Function', () => {
         expect(logger.error).toHaveBeenCalledWith(expect.stringContaining('Notification record not found'), expect.any(Object));
     });
 
+    /**
+    * Test case: should NACK (no requeue) on DB error during pre-processing (find/update status).
+    *
+    * Verifies that `processMessage` correctly handles database errors during
+    * pre-processing (finding or updating status) by NACKing without requeueing,
+    * rolling back the transaction, and logging an error.
+    */
     it('should NACK (no requeue) on DB error during pre-processing (find/update status)', async () => {
         const dbError = new Error('DB connection failed during find');
         Notification.findOne.mockRejectedValue(dbError); // Simulate error during find
@@ -246,6 +329,13 @@ describe('Slack Connector - processMessage Function', () => {
         expect(logger.error).toHaveBeenCalledWith(expect.stringContaining('Database error during pre-processing'), expect.any(Object));
     });
 
+    /**
+    * Test case: should update status to failed and ACK if Slack sending fails.
+    *
+    * Verifies that `processMessage` correctly handles failures in sending messages
+    * to Slack by updating the status to 'failed', logging the error, and ACK'ing
+    * the message to avoid immediate requeueing.
+    */
     it('should update status to failed and ACK if Slack sending fails', async () => {
         const slackError = { success: false, error: 'Slack API Error: channel_not_found' };
         slackSender.sendSlackMessage.mockResolvedValue(slackError); // Simulate Slack API failure
@@ -272,6 +362,14 @@ describe('Slack Connector - processMessage Function', () => {
         expect(logger.error).toHaveBeenCalledWith(expect.stringContaining('Slack send failed'), expect.any(Object));
     });
 
+    /**
+    * Test case: should NACK (no requeue) on unexpected error during processing or final update.
+    *
+    * Verifies that `processMessage` correctly handles unexpected errors during
+    * message processing or the final database update by NACKing without requeueing,
+    * logging the error, and attempting to update the database status to 'failed'
+    * with the error details.
+    */
     it('should NACK (no requeue) on unexpected error during processing or final update', async () => {
         const unexpectedError = new Error('Something weird happened');
         // Simulate error *after* Slack call but before final DB update
@@ -315,7 +413,14 @@ describe('Slack Connector - processMessage Function', () => {
         expect(logger.error).toHaveBeenCalledWith(expect.stringContaining('Unexpected error during processing or final DB update'), expect.objectContaining({ error: unexpectedError.message }));
      });
 
-     // --- Max Attempts Scenario ---
+    // --- Max Attempts Scenario ---
+    /**
+     * Test case: should ACK and stop processing if max attempts reached.
+     *
+     * Verifies that `processMessage` correctly stops processing a message and ACKs it
+     * if the maximum number of processing attempts has been reached, updating
+     * the status to 'failed' and logging an error.
+     */
      it('should ACK and stop processing if max attempts reached', async () => {
         const maxAttempts = config.maxProcessingAttempts || 3; // Get from config
         const mockRecord = db.__getMockNotificationInstance({ status: 'failed', attempts: maxAttempts });
@@ -341,6 +446,12 @@ describe('Slack Connector - processMessage Function', () => {
 
 // --- Optional: Test Suite for slackSender ---
 describe('Slack Connector - slackSender Function', () => {
+      /**
+    * Test suite for the slackSender functions.
+    *
+    * This suite contains tests for the `slackSender` functions, ensuring that
+    * messages are correctly sent to Slack and errors are handled properly.
+    */
     beforeEach(() => {
       jest.clearAllMocks();
       // Reset mock implementation for Slack WebClient if necessary

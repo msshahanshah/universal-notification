@@ -1,20 +1,36 @@
-// ./notification-api/config/config.js
-// *** This should be a .js file, not .json ***
+/**
+ * @fileoverview Database configuration file.
+ * This file loads environment variables and defines the database connection settings for different environments.
+ * It supports development, test, and production environments.
+ */
 
-// Load environment variables from the root .env file first,
-// then potentially from a local .env if needed (local overrides root)
+/**
+ * Load environment variables from the root .env file first, then potentially from a local .env if needed (local overrides root).
+ */
 require('dotenv').config({ path: require('path').resolve(__dirname, '../../.env') }); // Path relative to config.js
 // require('dotenv').config(); // Uncomment if you have a specific .env in notification-api
 
 const dbHost = process.env.DB_HOST || (process.env.NODE_ENV === 'production' ? 'postgres' : 'localhost');
 // ^ Smart default: 'postgres' when in production (likely Docker), 'localhost' otherwise. Adjust if needed.
 
+/**
+ * Database configuration object.
+ * @type {object}
+ */
 module.exports = {
+  /**
+   * Development environment database configuration.
+   * @type {object}
+   */
   development: {
     username: process.env.POSTGRES_USER || "user",
     password: process.env.POSTGRES_PASSWORD || "password",
     database: process.env.POSTGRES_DB || "notifications_db",
     host: dbHost, // Use calculated host
+    /**
+     * The database dialect.
+     * @type {string}
+     */
     dialect: "postgres",
     dialectOptions: {
       // ssl: { // Uncomment and configure if using SSL
@@ -32,6 +48,10 @@ module.exports = {
       idle: 10000 // Max time (ms) that a connection can be idle before being released
     }
   },
+  /**
+   * Test environment database configuration.
+   * @type {object}
+   */
   test: {
     // Configure for tests (e.g., use sqlite or a test DB)
     username: process.env.POSTGRES_USER || "user",
@@ -41,6 +61,10 @@ module.exports = {
     dialect: "postgres",
     logging: false // Disable logging for tests unless debugging
   },
+  /**
+   * Production environment database configuration.
+   * @type {object}
+   */
   production: {
     // Use environment variables exclusively in production
     username: process.env.POSTGRES_USER,

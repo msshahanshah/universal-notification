@@ -1,0 +1,724 @@
+openapi: 3.0.3
+info:
+  title: Universal Notifier API
+  description: |
+    API specification for the Universal Notifier.
+  version: 1.0.0
+
+servers:
+  - url: https://{baseURL}
+    variables:
+      baseURL:
+        default: localhost:3000
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    LoginRequest:
+      type: object
+      required:
+        - username
+        - password
+      properties:
+        username:
+          type: string
+          minLength: 3
+          maxLength: 16
+          pattern: '^[A-Za-z]{3,10}@[A-Za-z]{3,5}$'
+          example: abcdef@xyz
+          description: Username must be letters(3–10)@letters(3–5)
+        password:
+          type: string
+          minLength: 8
+          maxLength: 12
+          pattern: '^[A-Za-z0-9]{8,12}$'
+          example: Pass1234
+          description: Password must be 8–12 characters and alphanumeric
+
+
+    RefreshRequest:
+      type: object
+      required:
+        - refreshToken
+      properties:
+        refreshToken:
+          type: string
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+          description: Refresh token must be a non-empty string
+
+
+    NotifySms:
+      type: object
+      required:
+        - service
+        - message
+        - destination
+      properties:
+        service:
+          type: string
+          enum: [sms]
+          example: sms
+          description: Notification service type (must be sms)
+
+        message:
+          type: string
+          minLength: 1
+          example: Hello Rahul, how are you
+          
+        
+        destination:
+          type: string
+          pattern: '/^\+[0-9]+$/'
+          example: "+919103324482,+919109224482"
+          description: >
+            Comma-separated list of phone numbers.
+            Each number must be in format .
+            Duplicate numbers are not allowed.
+
+    NotifySlack:
+      type: object
+      required:
+        - service
+        - message
+        - destination
+      properties:
+        service:
+          type: string
+          enum: [slack]
+          example: slack
+          description: Notification service type (must be slack)
+
+        message:
+          type: string
+          minLength: 1
+          example: Good Morning, Guys
+          
+
+        destination:
+          type: string
+          pattern: '/^[CGD][A-Z0-9]{8,10}$/'
+          example: C08Q1E38E10R,G09A1B2C3D
+          description: >
+            Comma-separated list of Slack channel IDs.
+            Each ID must start with C (public), G (private), or D (DM),
+            followed by 8–10 uppercase alphanumeric characters.
+            Duplicate channel IDs are not allowed.
+            characters length must be between 9 to 11
+
+    NotifyEmail:
+      type: object
+      required:
+        - service
+        - destination
+        - subject
+        - body
+        - fromEmail
+      
+      properties:
+        service:
+          type: string
+          enum: [email]
+          example: email
+          description: Notification service type (must be email)
+
+        destination:
+          type: string
+          pattern: '/^(?=.{6,254}$)[a-z0-9._%+-]+@[a-z0-9-]+\.[a-z]{2,}$/i'
+          example: test@gmail.com
+          description: >
+            Comma-separated list of destination email addresses.
+            At least one valid email is required.
+            Duplicate emails are not allowed.
+
+        fromEmail:
+          type: string
+          pattern: '/^(?=.{6,254}$)[a-z0-9._%+-]+@[a-z0-9-]+\.[a-z]{2,}$/i'
+          example: test@gmail.com
+        
+        subject:
+          type: string
+          minLength: 1
+          maxLength: 255
+        
+        body:
+          type: string
+          minLength: 1
+          example: Good Morning Dikshant, Please look into this email.
+        
+        cc:
+          type: string
+          pattern: '/^(?=.{6,254}$)[a-z0-9._%+-]+@[a-z0-9-]+\.[a-z]{2,}$/i'
+          example: "test@gmail.com, test@gmail.com"
+          description: >
+            (Optional) comma-separated CC email addresses.
+            Duplicate emails are not allowed.
+
+        bcc:
+          type: string
+          pattern: '/^(?=.{6,254}$)[a-z0-9._%+-]+@[a-z0-9-]+\.[a-z]{2,}$/i'
+          example: "test@gmail.com, test@gmail.com"
+          description: >
+            (Optional) comma-separated BCC email addresses.
+            Duplicate emails are not allowed.
+
+        attachments:
+          type: array
+          description: >
+            (Optional) Array of objects or Array of files name
+            
+
+    NotifyEmailWithFileAttachment:
+      type: object
+      required:
+        - service
+        - destination
+        - subject
+        - body
+        - fromEmail
+        - attachments
+     
+      properties:
+        service:
+          type: string
+          enum: [email]
+          example: email
+          description: Notification service type (must be email)
+
+        destination:
+          type: string
+          pattern: '/^(?=.{6,254}$)[a-z0-9._%+-]+@[a-z0-9-]+\.[a-z]{2,}$/i'
+          example: test@gmail.com
+          description: >
+            Comma-separated list of destination email addresses.
+            At least one valid email is required.
+            Duplicate emails are not allowed.
+
+        fromEmail:
+          type: string
+          pattern: '/^(?=.{6,254}$)[a-z0-9._%+-]+@[a-z0-9-]+\.[a-z]{2,}$/i'
+          example: test@gmail.com
+        
+        subject:
+          type: string
+          minLength: 1
+          maxLength: 255
+        
+        body:
+          type: string
+          minLength: 1
+          example: Good Morning Dikshant, Please look into this email.
+        
+        cc:
+          type: string
+          pattern: '/^(?=.{6,254}$)[a-z0-9._%+-]+@[a-z0-9-]+\.[a-z]{2,}$/i'
+          example: "test@gmail.com, test@gmail.com"
+          description: >
+            Optional comma-separated CC email addresses.
+            Duplicate emails are not allowed.
+        bcc:
+          type: string
+          example: "test@gmail.com ,test@gmail.com"
+          description: >
+            Optional comma-separated BCC email addresses.
+            Duplicate emails are not allowed.
+
+        attachments:
+          type: array
+          example: ["file1.png", "file2.pdf"]
+          
+    NotifyEmailWithS3FileAttachment:
+      type: object
+      required:
+        - service
+        - destination
+        - subject
+        - body
+        - fromEmail
+        - attachments
+     
+      properties:
+        service:
+          type: string
+          enum: [email]
+          example: email
+          description: Notification service type (must be email)
+
+        destination:
+          type: string
+          pattern: '/^(?=.{6,254}$)[a-z0-9._%+-]+@[a-z0-9-]+\.[a-z]{2,}$/i'
+          example: test@gmail.com
+          description: >
+            Comma-separated list of destination email addresses.
+            At least one valid email is required.
+            Duplicate emails are not allowed.
+
+        fromEmail:
+          type: string
+          pattern: '/^(?=.{6,254}$)[a-z0-9._%+-]+@[a-z0-9-]+\.[a-z]{2,}$/i'
+          example: test@gmail.com
+        
+        subject:
+          type: string
+          minLength: 1
+          maxLength: 255
+        
+        body:
+          type: string
+          minLength: 1
+          example: Good Morning Dikshant, Please look into this email.
+        
+        cc:
+          type: string
+          pattern: '/^(?=.{6,254}$)[a-z0-9._%+-]+@[a-z0-9-]+\.[a-z]{2,}$/i'
+          example: "test@gmail.com, test@gmail.com"
+          description: >
+            Optional comma-separated CC email addresses.
+            Duplicate emails are not allowed.
+
+        bcc:
+          type: string
+          example: "imvidit2@gmail.com , imvidit3@gmail.com"
+          description: >
+            Optional comma-separated BCC email addresses.
+            Duplicate emails are not allowed.
+        attachments:
+          type: array
+          example:
+            [
+              { filename: "file_1.png", url: "https://aws_url_1.com" },
+              { filename: "file_2.png", url: "https://aws_url_2.com" },
+            ]
+
+    PreSignedUrlResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        message:
+          type: string
+          example: "Waiting for file upload on URL (expiry 5 mins). Message Id: 24af1e92-cfa3-4c25-9d13-79841734f1ee"
+        preSignedUrls:
+          type: array
+          example:
+            [
+              {
+                fileName: "file1.pdf",
+                s3:
+                  {
+                    url: "https://bucket.s3.ap-south-1.amazonaws.com/",
+                    fields:
+                      {
+                        bucket: "bucket",
+                        X-Amz-Algorithm: "AWS4-HMAC-SHA256",
+                        X-Amz-Credential: "AKIAZXXXX/20260000/ap-south-1/s3/aws4_request",
+                        X-Amz-Date: "20260205T114229Z",
+                        key: "uploads/TEMP/24af1e92-79841734f1ee?1/file1.pdf",
+                        Policy: "eyJleHBpcmF0aW9uIjoiMjAyNi0wMi0wNVQxMToxxxxxx",
+                        X-Amz-Signature: "eecxxxxxx",
+                      },
+                  },
+              },
+            ]
+    ErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        message:
+          type: string
+          example: "Error detail here"
+
+paths:
+  /health:
+    get:
+      summary: Health check
+      tags: [System]
+      parameters:
+        - name: X-Client-Id
+          in: header
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Service is healthy
+
+  /login:
+    post:
+      summary: User login
+      tags: [Auth]
+      parameters:
+        - name: X-Client-Id
+          in: header
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginRequest"
+      responses:
+        "200":
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: login successful
+                  data:
+                    type: object
+                    properties:
+                      refreshToken:
+                        type: string
+                      accessToken:
+                        type: string
+
+  /refresh:
+    post:
+      summary: Refresh access token
+      tags: [Auth]
+      parameters:
+        - name: X-Client-Id
+          in: header
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RefreshRequest"
+      responses:
+        "200":
+          description: Refresh successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: refresh successful
+                  data:
+                    type: object
+                    properties:
+                      accessToken:
+                        type: string
+
+  /delivery-status/{messageId}:
+    get:
+      summary: Get delivery status
+      tags: [Status]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: X-Client-Id
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: messageId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Delivery status returned
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      messageId:
+                        type: string
+                      deliveryStatus:
+                        type: string
+                        example: pending
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Not Found - Message ID does not exist
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                success: false
+                message: "Message ID not found"
+
+  /notify:
+    post:
+      summary: Send notification (SMS / Slack / Email)
+      tags: [Notification]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: X-Client-Id
+          in: header
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              oneOf:
+                - $ref: "#/components/schemas/NotifySms"
+                - $ref: "#/components/schemas/NotifySlack"
+                - $ref: "#/components/schemas/NotifyEmail"
+                
+              discriminator:
+                propertyName: service
+
+            examples:
+              sms:
+                summary: SMS Notification
+                value:
+                  service: sms
+                  message: "Hello Rahul, how are you"
+                  destination: "+919929797900"
+
+              slack:
+                summary: Slack Notification
+                value:
+                  service: slack
+                  message: "Good Morning, Guys"
+                  destination: "C08Q1239E10R"
+
+              email:
+                summary: Email Notification
+                value:
+                  service: email
+                  destination: "user@example.com"
+                  subject: "Recent Mail"
+                  body: "Email body content"
+                  fromEmail: "sender@example.com"
+                  cc (Optional): "itest@gmail.com , itest@gmail.com"
+                  bcc (Optional): "itest@gmail.com , itest@gmail.com"
+                  attachments (Optional): "Array of objects or Array of files name"
+      responses:
+        "200":
+          description: Accepted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: accepted
+                  message:
+                    type: string
+                    example: Notification request accepted and queued.
+                  messageId:
+                    type: string
+                    example: "7ec67efd-21e1-4189-aa8e-25686a6f8845"
+        "400":
+          description: Bad Request / Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /logs:
+    get:
+      summary: Get notification logs
+      tags: [Logs]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: X-Client-Id
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [pending, processing, failed, sent]
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 0
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 0
+        - name: service
+          in: query
+          schema:
+            type: string
+            enum: [slack, email, sms]
+      responses:
+        "200":
+          description: Logs fetched successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Data fetched successfully
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: number
+                        messageId:
+                          type: string
+                        service:
+                          type: string
+                        destination:
+                          type: string
+                        status:
+                          type: string
+                        attempts:
+                          type: number
+                        messageDate:
+                          type: string
+                          format: date-time
+                  pagination:
+                    type: object
+                    properties:
+                      page:
+                        type: number
+                      limit:
+                        type: number
+                      totalPages:
+                        type: number
+        "400":
+          description: Bad Request - Invalid query parameters
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /balance:
+    get:
+      ummary: Get delivery status
+      tags: [Status]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: X-Client-Id
+          in: header
+          required: true
+          schema:
+          type: string
+
+        - name: service
+          in: query
+          required: true
+          schema:
+          type: string
+          description: Type of service (SMS, Email, Voice, etc.)
+
+        - name: provider
+          in: query
+          required: true
+          schema:
+          type: string
+          description: Provider used to send message (MSG91, Twilio, etc.)
+
+  /refresh-balance:
+    get:
+      summary: Get real-time balance
+      tags: [Status]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: X-Client-Id
+          in: header
+          required: true
+          schema:
+          type: string
+
+        - name: service
+          in: query
+          required: true
+          schema:
+          type: string
+          description: Type of service (SMS, Email, Voice, etc.)
+
+        - name: provider
+          in: query
+          required: true
+          schema:
+          type: string
+          description: Provider used to send message (MSG91, Twilio, etc.)

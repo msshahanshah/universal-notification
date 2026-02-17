@@ -1,0 +1,267 @@
+version: '3.8'
+
+services:
+  # --- RabbitMQ ---
+  rabbitmq:
+    image: rabbitmq:3.11-management
+    container_name: rabbitmq_notifier_prod
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq/
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS}
+    healthcheck:
+      test: ["CMD", "rabbitmqctl", "status"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    networks:
+      - notification_network
+    restart: always
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+
+  # --- Postgres Database ---
+  postgres:
+    image: postgres:15
+    container_name: postgres_notifier_prod
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    networks:
+      - notification_network
+    restart: always
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 2G
+        reservations:
+          cpus: '1'
+          memory: 1G
+
+  # --- Notification API Service ---
+  notification-api:
+    build:
+      context: ./notification-api
+      dockerfile: Dockerfile
+      args:
+        NODE_ENV: production
+    container_name: notification_api_prod
+    ports:
+      - "${API_PORT:-3000}:3000"
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      RABBITMQ_URL: amqp://${RABBITMQ_DEFAULT_USER}:${RABBITMQ_DEFAULT_PASS}@rabbitmq:5672
+      RABBITMQ_EXCHANGE_NAME: notifications_exchange
+      DB_HOST: postgres
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      DB_HOST_OVERRIDE: postgres
+      DB_PORT_OVERRIDE: 5432
+      RABBITMQ_HOST_OVERRIDE: rabbitmq
+      RABBITMQ_PORT_OVERRIDE: 5672
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    networks:
+      - notification_network
+    restart: always
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+    command: sh -c "npx sequelize-cli db:migrate && node src/server.js"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # --- Slack Connector Service ---
+  slack-connector:
+    build:
+      context: ./slack-connector
+      dockerfile: Dockerfile
+      args:
+        NODE_ENV: production
+    container_name: slack_connector_prod
+    environment:
+      NODE_ENV: production
+      RABBITMQ_URL: amqp://${RABBITMQ_DEFAULT_USER}:${RABBITMQ_DEFAULT_PASS}@rabbitmq:5672
+      RABBITMQ_EXCHANGE_NAME: notifications_exchange
+      RABBITMQ_QUEUE_NAME: slack_queue
+      RABBITMQ_BINDING_KEY: slack
+      DB_HOST: postgres
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      SLACK_BOT_TOKEN: ${SLACK_BOT_TOKEN}
+      MAX_PROCESSING_ATTEMPTS: 3
+      DB_HOST_OVERRIDE: postgres
+      DB_PORT_OVERRIDE: 5432
+      RABBITMQ_HOST_OVERRIDE: rabbitmq
+      RABBITMQ_PORT_OVERRIDE: 5672
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    networks:
+      - notification_network
+    restart: always
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+    command: node src/index.js
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # --- Email Connector Service ---
+  email-connector:
+    build:
+      context: ./email-connector
+      dockerfile: Dockerfile
+      args:
+        NODE_ENV: production
+    container_name: email_connector_prod
+    environment:
+      NODE_ENV: production
+      RABBITMQ_URL: amqp://${RABBITMQ_DEFAULT_USER}:${RABBITMQ_DEFAULT_PASS}@rabbitmq:5672
+      RABBITMQ_EXCHANGE_NAME: notifications_exchange
+      RABBITMQ_QUEUE_NAME: email_queue
+      RABBITMQ_BINDING_KEY: email
+      DB_HOST: postgres
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      AWS_REGION: ${AWS_REGION}
+      AWS_S3_BUCKET: ${AWS_S3_BUCKET}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+      MAX_PROCESSING_ATTEMPTS: 3
+      DB_HOST_OVERRIDE: postgres
+      DB_PORT_OVERRIDE: 5432
+      RABBITMQ_HOST_OVERRIDE: rabbitmq
+      RABBITMQ_PORT_OVERRIDE: 5672
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    networks:
+      - notification_network
+    restart: always
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+    command: node src/index.js
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # --- SMS Connector Service ---
+  sms-connector:
+    build:
+      context: ./sms-connector
+      dockerfile: Dockerfile
+      args:
+        NODE_ENV: production
+    container_name: sms_connector_prod
+    environment:
+      NODE_ENV: production
+      RABBITMQ_URL: amqp://${RABBITMQ_DEFAULT_USER}:${RABBITMQ_DEFAULT_PASS}@rabbitmq:5672
+      RABBITMQ_EXCHANGE_NAME: notifications_exchange
+      RABBITMQ_QUEUE_NAME: sms_queue
+      RABBITMQ_BINDING_KEY: sms
+      DB_HOST: postgres
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      AWS_REGION: ${AWS_REGION}
+      AWS_S3_BUCKET: ${AWS_S3_BUCKET}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+      MAX_PROCESSING_ATTEMPTS: 3
+      DB_HOST_OVERRIDE: postgres
+      DB_PORT_OVERRIDE: 5432
+      RABBITMQ_HOST_OVERRIDE: rabbitmq
+      RABBITMQ_PORT_OVERRIDE: 5672
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    networks:
+      - notification_network
+    restart: always
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+    command: node src/index.js
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+# --- Volumes Definition ---
+volumes:
+  rabbitmq_data:
+    driver: local
+  postgres_data:
+    driver: local
+
+# --- Network Definition ---
+networks:
+  notification_network:
+    driver: bridge

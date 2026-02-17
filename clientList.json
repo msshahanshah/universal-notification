@@ -1,0 +1,116 @@
+[
+  {
+    "ID": "GKMIT",
+    "SERVER_PORT": 3001,
+    "ENABLED_SERVERICES": ["slack", "email", "sms"],
+    "SLACKBOT": {
+      "TOKEN": "xoxb-",
+      "RABBITMQ": {
+        "EXCHANGE_NAME": "notifications_exchange",
+        "EXCHANGE_TYPE": "direct",
+        "QUEUE_NAME": "slackbot_queue",
+        "ROUTING_KEY": "slack"
+      }
+    },
+    "EMAIL": {
+      "MAILGUN": {
+        "API_KEY": "xxxx",
+        "DOMAIN": "xxxx"
+      },
+      "RABBITMQ": {
+        "EXCHANGE_NAME": "notifications_exchange",
+        "EXCHANGE_TYPE": "direct",
+        "QUEUE_NAME": "email_queue",
+        "ROUTING_KEY": "email"
+      }
+    },
+    "SMS": {
+      "TWILIO": {
+        "ACCOUNT_SID": "ACXXXX",
+        "AUTH_TOKEN": "XXXX",
+        "FROM_NUMBER": "+111111111"
+      },
+      "RABBITMQ": {
+        "EXCHANGE_NAME": "notifications_exchange",
+        "EXCHANGE_TYPE": "direct",
+        "QUEUE_NAME": "sms_queue",
+        "ROUTING_KEY": "sms"
+      }
+    },
+    "DBCONFIG": {
+      "HOST": "localhost",
+      "PORT": 5432,
+      "NAME": "notifications_db",
+      "USER": "dikshant",
+      "PASSWORD": "postgres"
+    },
+    "RABBITMQ": {
+      "HOST": "localhost",
+      "PORT": 5672,
+      "USER": "guest",
+      "PASSWORD": "guest",
+      "EXCHANGE_NAME": "notifications_exchange",
+      "EXCHANGE_TYPE": "direct",
+      "QUEUE_NAME": "notifications_queue",
+      "ROUTING_KEY": "notifications"
+    }
+  },
+  {
+    "ID": "ACCEL",
+    "SERVER_PORT": 3002,
+    "ENABLED_SERVERICES": ["slack", "email", "sms"],
+    "SLACKBOT": {
+      "TOKEN": "xoxb-",
+      "RABBITMQ": {
+        "EXCHANGE_NAME": "notifications_exchange",
+        "EXCHANGE_TYPE": "direct",
+        "QUEUE_NAME": "slackbot_queue",
+        "ROUTING_KEY": "slack"
+      }
+    },
+    "EMAIL": {
+      "AWS": {
+        "USER_NAME": "xxxx",
+        "PASSWORD": "xxxx",
+        "SENDER_EMAIL": "test@mail.com",
+        "REGION": "ap-south-1"
+      },
+      "RABBITMQ": {
+        "EXCHANGE_NAME": "notifications_exchange",
+        "EXCHANGE_TYPE": "direct",
+        "QUEUE_NAME": "email_queue",
+        "ROUTING_KEY": "email"
+      }
+    },
+    "SMS": {
+      "TWILIO": {
+        "ACCOUNT_SID": "ACXXXX",
+        "AUTH_TOKEN": "XXXX",
+        "FROM_NUMBER": "+111111111"
+      },
+      "RABBITMQ": {
+        "EXCHANGE_NAME": "notifications_exchange",
+        "EXCHANGE_TYPE": "direct",
+        "QUEUE_NAME": "sms_queue",
+        "ROUTING_KEY": "sms"
+      }
+    },
+    "DBCONFIG": {
+      "HOST": "localhost",
+      "PORT": 5432,
+      "NAME": "notifications_db",
+      "USER": "dikshant",
+      "PASSWORD": "postgres"
+    },
+    "RABBITMQ": {
+      "HOST": "localhost",
+      "PORT": 5672,
+      "USER": "guest",
+      "PASSWORD": "guest",
+      "EXCHANGE_NAME": "notifications_exchange",
+      "EXCHANGE_TYPE": "direct",
+      "QUEUE_NAME": "notifications_queue",
+      "ROUTING_KEY": "notifications"
+    }
+  }
+]

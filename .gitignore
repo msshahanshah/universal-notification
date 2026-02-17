@@ -6,7 +6,6 @@ yarn-debug.log*
 yarn-error.log*
 lerna-debug.log*
 .pnpm-debug.log*
-
 # Diagnostic reports (https://nodejs.org/api/report.html)
 report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
 
@@ -127,6 +126,8 @@ dist
 
 # Stores VSCode versions used for testing VSCode extensions
 .vscode-test
+.vscode
+
 
 # yarn v2
 .yarn/cache
@@ -134,3 +135,17 @@ dist
 .yarn/build-state.yml
 .yarn/install-state.gz
 .pnp.*
+
+rabbitmq_data
+
+.DS_Store
+Docker.raw
+
+# package-lock.json
+package-lock.json
+
+
+default_credentials.txt
+
+
+uploads

@@ -2,17 +2,19 @@
   "name": "slack-connector",
   "version": "1.0.0",
   "description": "",
-  "main": "/src/connector.js",
+  "main": "/src/index.js",
   "scripts": {
-    "start": "node src/connector.js",
-    "dev": "nodemon src/connector.js",
+    "start": "node src/index.js",
+    "dev": "nodemon src/index.js",
     "test": "jest --detectOpenHandles --forceExit --coverage"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "20": "^3.1.9",
     "@slack/web-api": "^7.9.1",
+    "@universal-notifier/secret-manager": "github:gkmit-dikshant/aws-secret-manager-package",
     "amqplib": "^0.10.7",
     "axios": "^1.8.4",
     "dotenv": "^16.4.7",
