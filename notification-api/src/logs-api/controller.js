@@ -78,22 +78,8 @@ const messageLogs = async (req, res) => {
     });
   } catch (error) {
     console.log(error);
-    if (error.message === 'Not authorized') {
-      return res.status(401).send({
-        message: error.message,
-        success: false,
-      });
-    }
-
-    if (error.message === `End time can't be greater than start time`) {
-      return res.status(400).send({
-        message: error.message,
-        success: false,
-      });
-    }
-
-    return res.status(500).send({
-      message: 'Internal Server Error',
+    return res.status(error.statusCode || 500).send({
+      message: error.message || 'Internal Server Error',
       success: false,
     });
   }
