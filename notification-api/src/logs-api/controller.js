@@ -64,7 +64,7 @@ const messageLogs = async (req, res) => {
       bcc,
       fromEmail,
       startTime,
-      endTime
+      endTime,
     );
     return res.status(200).send({
       success: true,
@@ -80,6 +80,13 @@ const messageLogs = async (req, res) => {
     console.log(error);
     if (error.message === 'Not authorized') {
       return res.status(401).send({
+        message: error.message,
+        success: false,
+      });
+    }
+
+    if (error.message === `End time can't be greater than start time`) {
+      return res.status(400).send({
         message: error.message,
         success: false,
       });

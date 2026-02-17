@@ -34,13 +34,21 @@ const viewMessageLogs = async (
   startTime,
   endTime,
 ) => {
-  try {
     const offset = (page - 1) * limit;
     const where = {};
     let sortOrder = [];
 
     let dbConnect = await global.connectionManager.getModels(idClient);
     const validColumns = Object.keys(dbConnect.Notification.rawAttributes);
+
+    if(startTime && endTime) {
+      if(endTime < startTime) {
+        throw new Error(`End time can't be greater than start time`);
+      }
+    }
+
+    console.log("Start time", startTime);
+    console.log("End time", endTime);
 
     if (sort && order && (order === 'asc' || order === 'desc')) {
       const keys = sort.split(',');
@@ -97,9 +105,6 @@ const viewMessageLogs = async (
 
     const data = serializeLogs(rows);
     return { data, totalPages };
-  } catch (error) {
-    console.log(error);
-  }
 };
 
 module.exports = { viewDeliveryStatus, viewMessageLogs };
