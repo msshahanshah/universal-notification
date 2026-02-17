@@ -10,7 +10,15 @@ const smsValidation = {
       let numbers = value.split(",");
 
       // Trim & remove empty values
-      numbers = numbers.map((n) => n.trim()).filter((n) => n.length > 0);
+      numbers = numbers.map((n) => n.trim());
+
+      //checking extra commas
+      for (let number of numbers) {
+        if (number.length == 0)
+          return helpers.message(
+            `In destination empty commas are not allowed `,
+          );
+      }
 
       // If after cleanup nothing remains
       if (numbers.length === 0) {

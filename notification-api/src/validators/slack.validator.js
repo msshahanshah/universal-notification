@@ -9,14 +9,24 @@ const slackValidation = {
       let channels = value.split(",");
 
       // Trim & remove empty values
-      channels = channels.map((c) => c.trim()).filter((c) => c.length > 0);
+      channels = channels.map((c) => c.trim());
+
+      //checking extra commas
+
+      for (let channel of channels) {
+        if (channel.length == 0) {
+          return helpers.message(
+            `In destination empty commas are not allowed `,
+          );
+        }
+      }
 
       // If after cleanup nothing remains
       if (channels.length === 0) {
         return helpers.message("At least one Slack channel ID is required");
       }
 
-      // converting into uppercase
+      // converting channel ids into uppercase
 
       for (let i = 0; i < channels.length; i++) {
         channels[i] = channels[i].toUpperCase();

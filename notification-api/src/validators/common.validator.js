@@ -2,8 +2,7 @@ const Joi = require("joi");
 const baseOptions = { abortEarly: false, stripUnknown: false };
 const { fileNameRegex, urlRegex } = require("../../helpers/regex.helper");
 
-//----------------common validation ----------------------
-
+// --------------------COMMON  VALIDATION----------------------------
 const commonValidation = {
   page: Joi.number().integer().min(1).optional().messages({
     "number.base": "Page must be a number",
@@ -36,8 +35,7 @@ const commonValidation = {
     }),
 };
 
-
-//---------email attachments validation----------
+// --------------------ATTACHMENTS VALIDATION----------------------------
 
 //taking map for increasing count for duplicate filenames
 let map = new Map();
@@ -74,28 +72,32 @@ function validateUrl(url) {
 
 const validateAttachments = (values, helpers) => {
   map = new Map();
+
   if (values.length) {
-    const allowedKeys = ["fileName", "url"]; // only this keys is allowed in attachemnts
+    //checking for array of filenames
+    if (typeof values[0] === "string") {
+      for (let idx = 0; idx < values.length; idx++) {
+        const item = values[idx];
 
-    //checking each value for attachments array
-
-    for (let idx = 0; idx < values.length; idx++) {
-      const item = values[idx];
-
-      switch (typeof item) {
-        case "string": {
+        if (typeof item === "string") {
           const clearedFileName = item.trim();
           const isMessage = validateFileName(clearedFileName);
-
-          if (isMessage) {
-            return helpers.message(isMessage);
-          }
+          if (isMessage) return helpers.message(isMessage);
 
           //changin the name of duplicate files
           values[idx] = changeDuplicateFileName(clearedFileName);
-          break;
+        } else {
+          return helpers.message(
+            "Attachments must be array of filenames or array of objects with (fileName and url) fields",
+          );
         }
-        case "object": {
+      }
+    } else if (typeof values[0] === "object") {
+      const allowedKeys = ["fileName", "url"]; // only this keys is allowed in attachemnts
+      for (let idx = 0; idx < values.length; idx++) {
+        const item = values[idx];
+
+        if (typeof item == "object") {
           const keys = Object.keys(item);
 
           if (
@@ -104,7 +106,7 @@ const validateAttachments = (values, helpers) => {
             !("url" in item)
           ) {
             return helpers.message(
-              "In attachments array object is invalid it must contain only fileName and url",
+              "In attachments object must contain only fileName and url",
             );
           }
           const { fileName, url } = item;
@@ -126,19 +128,21 @@ const validateAttachments = (values, helpers) => {
 
           //changin the name of duplicate files
           values[idx].fileName = changeDuplicateFileName(clearedFileName);
-          break;
-        }
-        default: {
+        } else {
           return helpers.message(
-            "Expected string of filenames or object with fileName and url",
+            "Attachments must be array of filenames or array of objects with (fileName and url) fields",
           );
         }
       }
+    } else {
+      return helpers.message(
+        "Attachments must be array of filenames or array of objects with (fileName and url) fields",
+      );
     }
   } else {
     return helpers.message("Attachements can not be empty array");
   }
-
+  console.log(values);
   return values;
 };
 
