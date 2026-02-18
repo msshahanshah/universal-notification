@@ -38,9 +38,8 @@ const commonValidation = {
 // --------------------ATTACHMENTS VALIDATION----------------------------
 
 //taking map for increasing count for duplicate filenames
-let map = new Map();
 
-function changeDuplicateFileName(fileName) {
+function changeDuplicateFileName(fileName, map) {
   if (map.has(fileName)) {
     let cnt = map.get(fileName);
 
@@ -71,7 +70,7 @@ function validateUrl(url) {
 }
 
 const validateAttachments = (values, helpers) => {
-  map = new Map();
+  const map = new Map();
 
   if (values.length) {
     if (values.length > 10)
@@ -85,15 +84,13 @@ const validateAttachments = (values, helpers) => {
 
         if (typeof item === "string") {
           const clearedFileName = item.trim();
-          const isMessage = validateFileName(clearedFileName);
-          if (isMessage) return helpers.message(isMessage);
+          const message = validateFileName(clearedFileName);
+          if (message) return helpers.message(message);
 
           //changin the name of duplicate files
-          values[idx] = changeDuplicateFileName(clearedFileName);
+          values[idx] = changeDuplicateFileName(clearedFileName, map);
         } else {
-          return helpers.message(
-            "Attachments must be array of filenames or array of objects with (fileName and url) fields",
-          );
+          return helpers.message("Attachments must be array of filenames");
         }
       }
     } else if (typeof values[0] === "object") {
@@ -110,7 +107,7 @@ const validateAttachments = (values, helpers) => {
             !("url" in item)
           ) {
             return helpers.message(
-              "In attachments object must contain only fileName and url",
+              "Attachments must contain only fileName and url",
             );
           }
           const { fileName, url } = item;
@@ -118,23 +115,23 @@ const validateAttachments = (values, helpers) => {
           //check fileName and validate
 
           let clearedFileName = fileName.trim();
-          let isMessage = validateFileName(clearedFileName);
-          if (isMessage) {
-            return helpers.message(isMessage);
+          let message = validateFileName(clearedFileName);
+          if (message) {
+            return helpers.message(message);
           }
 
           //check url and validate
 
-          isMessage = validateUrl(url);
-          if (isMessage) {
-            return helpers.message(isMessage);
+          message = validateUrl(url);
+          if (message) {
+            return helpers.message(message);
           }
 
           //changin the name of duplicate files
-          values[idx].fileName = changeDuplicateFileName(clearedFileName);
+          values[idx].fileName = changeDuplicateFileName(clearedFileName, map);
         } else {
           return helpers.message(
-            "Attachments must be array of filenames or array of objects with (fileName and url) fields",
+            "Attachments must be array of objects with (fileName and url) fields",
           );
         }
       }
@@ -143,8 +140,6 @@ const validateAttachments = (values, helpers) => {
         "Attachments must be array of filenames or array of objects with (fileName and url) fields",
       );
     }
-  } else {
-    return helpers.message("Attachements can not be empty array");
   }
 
   return values;
