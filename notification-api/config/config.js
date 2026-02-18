@@ -6,6 +6,7 @@
  */
 
 const { migrateAllDatabases } = require("../src/utillity/migrationRunner");
+const fs = require("fs");
 
 /**
  * Load environment variables from the root .env file.
@@ -90,6 +91,7 @@ module.exports = {
     dialectOptions: {
       ssl: {
         require: true,
+        ca: fs.readFileSync("./global-bundle.pem").toString(),
         /**
          * Default to true unless explicitly set to 'false'.
          */
