@@ -74,6 +74,10 @@ const validateAttachments = (values, helpers) => {
   map = new Map();
 
   if (values.length) {
+    if (values.length > 10)
+      return helpers.message(
+        "Attachments array can not have more then 10 length",
+      );
     //checking for array of filenames
     if (typeof values[0] === "string") {
       for (let idx = 0; idx < values.length; idx++) {
@@ -142,7 +146,7 @@ const validateAttachments = (values, helpers) => {
   } else {
     return helpers.message("Attachements can not be empty array");
   }
-  console.log(values);
+
   return values;
 };
 
