@@ -187,6 +187,7 @@ components:
           type: array
           description: |
             - (Optional) Array of objects or Array of files name
+            - Attachments array length can not more then 10
             
 
     NotifyEmailWithFileAttachment:
@@ -271,6 +272,7 @@ components:
           description: |
             - (Optional) must be array of filenames
             - Empty fileNames are not allowed
+            - Attachments array length can not more then 10
 
     NotifyEmailWithS3FileAttachment:
       type: object
@@ -358,6 +360,7 @@ components:
             - (Optional) must be array of objects with only fileName and url fields.
             - Empty object are not allowed
             - Extra fields are not allowed
+            - Attachments array length can not more then 10
     
 
 
