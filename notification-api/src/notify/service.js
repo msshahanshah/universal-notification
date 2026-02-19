@@ -123,14 +123,14 @@ const creatingNotificationRecord = async (
 
   if (!Array.isArray(enabledServices)) {
     throw {
-      statusCode: 500,
+      statusCode: 400,
       message: `invalid or missing ENABLED_SERVERICES in client config for ${clientId}`,
     };
   }
 
   if (!enabledServices.includes(service)) {
     throw {
-      statusCode: 403,
+      statusCode: 400,
       message: `${service} is not enable for client ${clientId}`,
     };
   }
