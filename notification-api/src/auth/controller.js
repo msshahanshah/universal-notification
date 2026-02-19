@@ -11,7 +11,7 @@ const login = async (req, res) => {
     }
 
     if (userClient.toLowerCase() !== x_clientId.toLowerCase()) {
-      throw { statusCode: 401, message: `invalid client_id ${x_clientId}` };
+      throw { statusCode: 400, message: `invalid client_id ${x_clientId}` };
     }
     const { accessToken, refreshToken } = await authService.login(
       username,

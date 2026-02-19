@@ -69,7 +69,7 @@ const generateNewAccessToken = async (refreshToken, x_clientId) => {
     const username = user.username;
     const userClient = username.split("@")[1];
     if (!userClient) {
-      throw { statusCode: 401, message: `invalid username or password` };
+      throw { statusCode: 400, message: `invalid username or password` };
     }
     if (userClient.toLowerCase() !== x_clientId.toLowerCase()) {
       throw { statusCode: 400, message: `invalid client_id ${x_clientId}` };
