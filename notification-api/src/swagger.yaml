@@ -828,7 +828,7 @@ paths:
                 $ref: "#/components/schemas/ErrorResponse"
 
   /refresh-balance:
-    get:
+    post:
       summary: Refresh balance
       tags: [Balance]
       security:
