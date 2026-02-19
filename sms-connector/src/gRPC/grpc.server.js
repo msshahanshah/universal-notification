@@ -63,7 +63,7 @@ async function GetBalance(call, callback) {
 function startServer() {
     const server = new grpc.Server();
     server.addService(smsPackage.SmsService.service, { GetBalance });
-    server.bindAsync(process.env.GRPC_URL, grpc.ServerCredentials.createInsecure(), () => {
+    server.bindAsync(`${process.env.GRPC_URL}:${process.env.GRPC_PORT}`, grpc.ServerCredentials.createInsecure(), () => {
         logger.info(`gRPC SMS Server running on port ${process.env.GRPC_PORT}`);
         server.start();
     });

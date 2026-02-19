@@ -3,9 +3,9 @@ const Joi = require("joi");
 const authValidation = {
   username: Joi.string()
     .trim()
-    .min(3)
-    .max(30)
-    .pattern(/^[A-Za-z]{3,10}@[A-Za-z]{3,5}$/)
+    // .min(3)
+    // .max(30)
+    // .pattern(/^[A-Za-z]{3,10}@[A-Za-z]{3,5}$/)
     .required()
     .messages({
       "string.base": "Username must be a string",
@@ -19,8 +19,9 @@ const authValidation = {
 
   password: Joi.string()
     .min(8)
-    .max(12)
-    .pattern(/^[A-Za-z0-9]{8,12}$/)
+    .trim()
+    // .max(12)
+    // .pattern(/^[A-Za-z0-9]{8,12}$/)
     .required()
     .messages({
       "string.base": "Password must be a string",

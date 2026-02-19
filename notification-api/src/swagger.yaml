@@ -10,7 +10,6 @@ servers:
     variables:
       baseURL:
         default: localhost:3000
-
 components:
   securitySchemes:
     bearerAuth:
@@ -27,20 +26,14 @@ components:
       properties:
         username:
           type: string
-          minLength: 3
-          maxLength: 16
-          pattern: '^[A-Za-z]{3,10}@[A-Za-z]{3,5}$'
           example: abcdef@xyz
-          description: Username must be letters(3–10)@letters(3–5)
+         
         password:
           type: string
           minLength: 8
-          maxLength: 12
-          pattern: '^[A-Za-z0-9]{8,12}$'
           example: Pass1234
-          description: Password must be 8–12 characters and alphanumeric
-
-
+          
+    
     RefreshRequest:
       type: object
       required:
@@ -63,22 +56,24 @@ components:
           type: string
           enum: [sms]
           example: sms
-          description: Notification service type (must be sms)
+          description: Notification service type must be sms
 
         message:
           type: string
           minLength: 1
           example: Hello Rahul, how are you
           
-        
         destination:
           type: string
           pattern: '/^\+[0-9]+$/'
           example: "+919103324482,+919109224482"
-          description: >
-            Comma-separated list of phone numbers.
-            Each number must be in format .
-            Duplicate numbers are not allowed.
+          description: |
+            - Comma-separated list of phone numbers:
+            - Number must be a valid international phone number
+            - Duplicate numbers are not allowed
+            - Empty commas are not allowed
+            - Must be in the format +<countryCode><phonenumber>
+
 
     NotifySlack:
       type: object
@@ -91,24 +86,28 @@ components:
           type: string
           enum: [slack]
           example: slack
-          description: Notification service type (must be slack)
+          description: Notification service type must be slack
 
         message:
           type: string
           minLength: 1
           example: Good Morning, Guys
           
-
         destination:
           type: string
           pattern: '/^[CGD][A-Z0-9]{8,10}$/'
+          minLength: 9
+          maxLength: 11
           example: C08Q1E38E10R,G09A1B2C3D
-          description: >
-            Comma-separated list of Slack channel IDs.
-            Each ID must start with C (public), G (private), or D (DM),
-            followed by 8–10 uppercase alphanumeric characters.
-            Duplicate channel IDs are not allowed.
-            characters length must be between 9 to 11
+          description: |
+            - Comma-separated list of Slack channel IDs:
+            - Each ID must start with C (public), G (private), or D (Direct Message)
+            - Destination is required
+            - Destination cannot be empty
+            - Duplicate channel IDs are not allowed
+            - Empty commas are not allowed
+            - Case insensitive
+
 
     NotifyEmail:
       type: object
@@ -124,52 +123,71 @@ components:
           type: string
           enum: [email]
           example: email
-          description: Notification service type (must be email)
+          description: Notification service type must be email
 
         destination:
           type: string
-          pattern: '/^(?=.{6,254}$)[a-z0-9._%+-]+@[a-z0-9-]+\.[a-z]{2,}$/i'
           example: test@gmail.com
-          description: >
-            Comma-separated list of destination email addresses.
-            At least one valid email is required.
-            Duplicate emails are not allowed.
+          description: |
+            - Comma-separated list of destination email addresses.
+            - Destination is required.
+            - Destination cannot be empty.
+            - Duplicate emails are allowed.
+            - Empty commas are not allowed.
+            - Case insensitive.
+
 
         fromEmail:
           type: string
-          pattern: '/^(?=.{6,254}$)[a-z0-9._%+-]+@[a-z0-9-]+\.[a-z]{2,}$/i'
           example: test@gmail.com
+          description: |
+            - FromEmail can be only one
+            - FromEmail is required
+            - FromEmail can not be empty
+            - If client allowed then this is mandatory
+            - If client did not allowed then will never be sent
+            - Case insensitive
+
         
         subject:
           type: string
           minLength: 1
           maxLength: 255
-        
+          description: |
+            - Subject can be empty
+            - Subject is required
+           
         body:
           type: string
           minLength: 1
           example: Good Morning Dikshant, Please look into this email.
+          description: |
+            - Body can be empty
+            - Body is required
         
         cc:
           type: string
-          pattern: '/^(?=.{6,254}$)[a-z0-9._%+-]+@[a-z0-9-]+\.[a-z]{2,}$/i'
           example: "test@gmail.com, test@gmail.com"
-          description: >
-            (Optional) comma-separated CC email addresses.
-            Duplicate emails are not allowed.
+          description: |
+            - (Optional) Comma-separated CC email addresses.
+            - Duplicate emails are allowed.
+            - Empty commas are not allowed.
+            - Empty value is possible.
 
         bcc:
           type: string
-          pattern: '/^(?=.{6,254}$)[a-z0-9._%+-]+@[a-z0-9-]+\.[a-z]{2,}$/i'
           example: "test@gmail.com, test@gmail.com"
-          description: >
-            (Optional) comma-separated BCC email addresses.
-            Duplicate emails are not allowed.
+          description: |
+            - (Optional) Comma-separated BCC email addresses.
+            - Duplicate emails are allowed.
+            - Empty commas are not allowed.
+            - Empty value is possible.
 
         attachments:
           type: array
-          description: >
-            (Optional) Array of objects or Array of files name
+          description: |
+            - (Optional) Array of objects or Array of files name
+            - Attachments array length can not more then 10
             
 
     NotifyEmailWithFileAttachment:
@@ -187,50 +205,75 @@ components:
           type: string
           enum: [email]
           example: email
-          description: Notification service type (must be email)
+          description: Notification service type must be email
 
         destination:
           type: string
-          pattern: '/^(?=.{6,254}$)[a-z0-9._%+-]+@[a-z0-9-]+\.[a-z]{2,}$/i'
           example: test@gmail.com
-          description: >
-            Comma-separated list of destination email addresses.
-            At least one valid email is required.
-            Duplicate emails are not allowed.
+          description: |
+            - Comma-separated list of destination email addresses.
+            - Destination is required.
+            - Destination cannot be empty.
+            - Duplicate emails are allowed.
+            - Empty commas are not allowed.
+            - Case insensitive.
+
 
         fromEmail:
           type: string
-          pattern: '/^(?=.{6,254}$)[a-z0-9._%+-]+@[a-z0-9-]+\.[a-z]{2,}$/i'
           example: test@gmail.com
+          description: |
+            - FromEmail can be only one
+            - FromEmail is required
+            - FromEmail can not be empty
+            - If client allowed then this is mandatory
+            - If client did not allowed then will never be sent
+            - Case insensitive
+
         
         subject:
           type: string
           minLength: 1
           maxLength: 255
-        
+          description: |
+            - Subject can be empty
+            - Subject is required
+           
         body:
           type: string
           minLength: 1
           example: Good Morning Dikshant, Please look into this email.
+          description: |
+            - Body can be empty
+            - Body is required
         
         cc:
           type: string
-          pattern: '/^(?=.{6,254}$)[a-z0-9._%+-]+@[a-z0-9-]+\.[a-z]{2,}$/i'
           example: "test@gmail.com, test@gmail.com"
-          description: >
-            Optional comma-separated CC email addresses.
-            Duplicate emails are not allowed.
+          description: |
+            - (Optional) Comma-separated CC email addresses.
+            - Duplicate emails are allowed.
+            - Empty commas are not allowed.
+            - Empty value is possible.
+
         bcc:
           type: string
-          example: "test@gmail.com ,test@gmail.com"
-          description: >
-            Optional comma-separated BCC email addresses.
-            Duplicate emails are not allowed.
+          example: "test@gmail.com, test@gmail.com"
+          description: |
+            - (Optional) Comma-separated BCC email addresses.
+            - Duplicate emails are allowed.
+            - Empty commas are not allowed.
+            - Empty value is possible.
+
 
         attachments:
           type: array
           example: ["file1.png", "file2.pdf"]
-          
+          description: |
+            - (Optional) must be array of filenames
+            - Empty fileNames are not allowed
+            - Attachments array length can not more then 10
+
     NotifyEmailWithS3FileAttachment:
       type: object
       required:
@@ -246,46 +289,66 @@ components:
           type: string
           enum: [email]
           example: email
-          description: Notification service type (must be email)
+          description: Notification service type must be email
 
         destination:
           type: string
-          pattern: '/^(?=.{6,254}$)[a-z0-9._%+-]+@[a-z0-9-]+\.[a-z]{2,}$/i'
           example: test@gmail.com
-          description: >
-            Comma-separated list of destination email addresses.
-            At least one valid email is required.
-            Duplicate emails are not allowed.
+          description: |
+            - Comma-separated list of destination email addresses.
+            - Destination is required.
+            - Destination cannot be empty.
+            - Duplicate emails are allowed.
+            - Empty commas are not allowed.
+            - Case insensitive.
+
 
         fromEmail:
           type: string
-          pattern: '/^(?=.{6,254}$)[a-z0-9._%+-]+@[a-z0-9-]+\.[a-z]{2,}$/i'
           example: test@gmail.com
+          description: |
+            - FromEmail can be only one
+            - FromEmail is required
+            - FromEmail can not be empty
+            - If client allowed then this is mandatory
+            - If client did not allowed then will never be sent
+            - Case insensitive
+
         
         subject:
           type: string
           minLength: 1
           maxLength: 255
-        
+          description: |
+            - Subject can be empty
+            - Subject is required
+           
         body:
           type: string
           minLength: 1
           example: Good Morning Dikshant, Please look into this email.
+          description: |
+            - Body can be empty
+            - Body is required
         
         cc:
           type: string
-          pattern: '/^(?=.{6,254}$)[a-z0-9._%+-]+@[a-z0-9-]+\.[a-z]{2,}$/i'
           example: "test@gmail.com, test@gmail.com"
-          description: >
-            Optional comma-separated CC email addresses.
-            Duplicate emails are not allowed.
+          description: |
+            - (Optional) Comma-separated CC email addresses.
+            - Duplicate emails are allowed.
+            - Empty commas are not allowed.
+            - Empty value is possible.
 
         bcc:
           type: string
-          example: "imvidit2@gmail.com , imvidit3@gmail.com"
-          description: >
-            Optional comma-separated BCC email addresses.
-            Duplicate emails are not allowed.
+          example: "test@gmail.com, test@gmail.com"
+          description: |
+            - (Optional) Comma-separated BCC email addresses.
+            - Duplicate emails are allowed.
+            - Empty commas are not allowed.
+            - Empty value is possible.
+
         attachments:
           type: array
           example:
@@ -293,6 +356,13 @@ components:
               { filename: "file_1.png", url: "https://aws_url_1.com" },
               { filename: "file_2.png", url: "https://aws_url_2.com" },
             ]
+          description: |
+            - (Optional) must be array of objects with only fileName and url fields.
+            - Empty object are not allowed
+            - Extra fields are not allowed
+            - Attachments array length can not more then 10
+    
+
 
     PreSignedUrlResponse:
       type: object
@@ -538,9 +608,11 @@ paths:
                   fromEmail: "sender@example.com"
                   cc (Optional): "itest@gmail.com , itest@gmail.com"
                   bcc (Optional): "itest@gmail.com , itest@gmail.com"
-                  attachments (Optional): "Array of objects or Array of files name"
+                  attachments (Optional): Array of objects or Array of files name
+                  
+                  
       responses:
-        "200":
+        "202":
           description: Accepted
           content:
             application/json:
@@ -607,6 +679,7 @@ paths:
           schema:
             type: string
             enum: [slack, email, sms]
+
       responses:
         "200":
           description: Logs fetched successfully
@@ -671,8 +744,8 @@ paths:
 
   /balance:
     get:
-      ummary: Get delivery status
-      tags: [Status]
+      summary: Get real-time balance
+      tags: [Balance]
       security:
         - bearerAuth: []
       parameters:
@@ -680,26 +753,84 @@ paths:
           in: header
           required: true
           schema:
-          type: string
+            type: string
+          description: Unique client identifier
 
         - name: service
           in: query
           required: true
           schema:
-          type: string
-          description: Type of service (SMS, Email, Voice, etc.)
+            type: string
+          description: Type of service (sms, email, slack, etc.)
 
         - name: provider
           in: query
           required: true
           schema:
-          type: string
+            type: string
           description: Provider used to send message (MSG91, Twilio, etc.)
+
+      responses:
+        "200":
+          description: Balance fetched successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Balance fetched successfully
+                  data:
+                    type: object
+                    properties:
+                      provider:
+                        type: string
+                      label:
+                        type: string
+                      balance:
+                        type: number
+                      currency:
+                        type: string
+                      
+                        
+                      
+
+        "400":
+          description: Service and provider are missing
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+        "500":
+          description: Internal Server Error 
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
 
   /refresh-balance:
     get:
-      summary: Get real-time balance
-      tags: [Status]
+      summary: Refresh balance
+      tags: [Balance]
       security:
         - bearerAuth: []
       parameters:
@@ -707,18 +838,79 @@ paths:
           in: header
           required: true
           schema:
-          type: string
+            type: string
+          description: Unique client identifier
 
         - name: service
           in: query
           required: true
           schema:
-          type: string
-          description: Type of service (SMS, Email, Voice, etc.)
+            type: string
+          description: Type of service (sms, email, slack, etc.)
 
         - name: provider
           in: query
           required: true
           schema:
-          type: string
+            type: string
           description: Provider used to send message (MSG91, Twilio, etc.)
+
+      responses:
+        "200":
+          description: Balance fetched successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Balance fetched successfully
+                  data:
+                    type: object
+                    properties:
+                      provider:
+                        type: string
+                      label:
+                        type: string
+                      balance:
+                        type: number
+                      currency:
+                        type: string
+                      
+
+        "400":
+          description: Service and provider are missing
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+        "500":
+          description: Internal Server Error 
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+           
+      
+ 
+
+      

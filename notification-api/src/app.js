@@ -66,7 +66,7 @@ app.use((err, req, res, next) => {
   ) {
     return res.status(400).json({
       success: false,
-      message: `invalid req.body for ${err?.body}`,
+      message: "Invalid Request Body",
     });
   }
   logger.error("Unhandled error:", {

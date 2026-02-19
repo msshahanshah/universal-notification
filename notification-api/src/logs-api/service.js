@@ -31,14 +31,21 @@ const viewMessageLogs = async (
   cc,
   bcc,
   fromEmail,
+  startTime,
+  endTime,
 ) => {
-  try {
     const offset = (page - 1) * limit;
     const where = {};
     let sortOrder = [];
 
     let dbConnect = await global.connectionManager.getModels(idClient);
     const validColumns = Object.keys(dbConnect.Notification.rawAttributes);
+
+    if(new Date(startTime) && new Date(endTime)) {
+      if(endTime < startTime) {
+        throw { statusCode: 400, message: `End time can't be greater than start time`};
+      }
+    }
 
     if (sort && order && (order === 'asc' || order === 'desc')) {
       const keys = sort.split(',');
@@ -51,7 +58,15 @@ const viewMessageLogs = async (
       }
     }
 
-    if (attempts && attempts !== 'null') {
+    where.updatedAt = {
+      [Sequelize.Op.gte]: new Date(startTime),
+    };
+
+    if (endTime) {
+      where.updatedAt[Sequelize.Op.lte] = new Date(endTime);
+    }
+
+    if (attempts) {
       where.attempts = +attempts;
     }
 
@@ -87,9 +102,6 @@ const viewMessageLogs = async (
 
     const data = serializeLogs(rows);
     return { data, totalPages };
-  } catch (error) {
-    console.log(error);
-  }
 };
 
 module.exports = { viewDeliveryStatus, viewMessageLogs };

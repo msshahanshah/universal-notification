@@ -42,7 +42,9 @@ const messageLogs = async (req, res) => {
       attempts = null,
       cc = null,
       bcc = null,
-      fromEmail = null
+      fromEmail = null,
+      'start-time': startTime = null,
+      'end-time': endTime = null,
     } = req.query;
 
     const idClient = req.header('X-Client-Id');
@@ -60,7 +62,9 @@ const messageLogs = async (req, res) => {
       attempts,
       cc,
       bcc,
-      fromEmail
+      fromEmail,
+      startTime,
+      endTime,
     );
     return res.status(200).send({
       success: true,
@@ -74,15 +78,8 @@ const messageLogs = async (req, res) => {
     });
   } catch (error) {
     console.log(error);
-    if (error.message === 'Not authorized') {
-      return res.status(401).send({
-        message: error.message,
-        success: false,
-      });
-    }
-
-    return res.status(500).send({
-      message: 'Internal Server Error',
+    return res.status(error.statusCode || 500).send({
+      message: error.message || 'Internal Server Error',
       success: false,
     });
   }

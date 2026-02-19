@@ -14,7 +14,7 @@ const serializeLogs = (rows) => {
       destination: log.destination,
       status: log.status,
       attempts: log.attempts,
-      messageDate: log.createdAt,
+      messageDate: log.updatedAt,
       message: log.status === 'failed' ? log.connectorResponse : '',
       attempts: log.attempts,
     };

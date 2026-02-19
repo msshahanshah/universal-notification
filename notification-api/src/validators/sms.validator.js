@@ -1,7 +1,7 @@
 const Joi = require("joi");
 const { PhoneNumberUtil } = require("google-libphonenumber");
 const phoneUtil = PhoneNumberUtil.getInstance();
-
+const { phonenNumberRegex } = require("../../helpers/regex.helper");
 const smsValidation = {
   destination: Joi.string()
     .required()
@@ -10,19 +10,24 @@ const smsValidation = {
       let numbers = value.split(",");
 
       // Trim & remove empty values
-      numbers = numbers.map((n) => n.trim()).filter((n) => n.length > 0);
+      numbers = numbers.map((n) => n.trim());
+
+      //checking extra commas
+      for (let number of numbers) {
+        if (number.length == 0)
+          return helpers.message(
+            `In destination empty commas are not allowed `,
+          );
+      }
 
       // If after cleanup nothing remains
       if (numbers.length === 0) {
         return helpers.message("At least one phone number is required");
       }
 
-      // Single phone number regex
-      const phoneRegex = /^\+[0-9]+$/;
-
       // Validate each number
       for (const number of numbers) {
-        if (!phoneRegex.test(number)) {
+        if (!phonenNumberRegex.test(number)) {
           return helpers.message("Invalid phone number ");
         }
 
