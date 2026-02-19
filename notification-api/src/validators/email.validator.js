@@ -5,16 +5,22 @@ const validateEmailList = (value, helpers, fieldName) => {
   const isValueEmpty = !value || value.trim().length === 0;
   const mandatoryFields = ["fromEmail", "destination"];
 
+  //when fiels name is not cc or bcc then empty value is not allowed
   if (isValueEmpty && fieldName !== "cc" && fieldName != "bcc") {
     return mandatoryFields.includes(fieldName)
       ? helpers.message(`${fieldName} is required and cannot be empty.`)
       : value;
   }
 
-  let emails = value
-    .split(",")
-    .map((e) => e.trim().toLowerCase())
-    .filter((e) => e.length > 0);
+  //spliting string by command and converting into array
+  let emails = value.split(",").map((e) => e.trim().toLowerCase());
+
+  //checking extra commans
+
+  for (let email of emails) {
+    if (email.length == 0)
+      return helpers.message(`In ${fieldName} empty commas are not allowed `);
+  }
 
   if (emails.length === 0) {
     return mandatoryFields.includes(fieldName)
@@ -24,6 +30,7 @@ const validateEmailList = (value, helpers, fieldName) => {
       : "";
   }
 
+  //if field is fromEmail then only one email is allowed
   if (fieldName === "fromEmail" && emails.length > 1) {
     return helpers.message(
       `The fromEmail field can only contain a single email.`,
@@ -103,8 +110,11 @@ const emailValidation = {
   attachments: Joi.when("service", {
     is: "email",
     then: Joi.array()
-      .custom((value, helpers) => validateAttachments(value, helpers))
-      .optional(),
+      .optional()
+      .custom((value, helpers) => {
+        return validateAttachments(value, helpers);
+      }),
+
     otherwise: Joi.forbidden(),
   }),
 };
