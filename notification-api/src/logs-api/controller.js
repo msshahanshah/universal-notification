@@ -1,9 +1,9 @@
-const { viewDeliveryStatus, viewMessageLogs } = require("./service");
+const { viewDeliveryStatus, viewMessageLogs } = require('./service');
 
 const deliveryStatus = async (req, res, next) => {
   try {
     const messageId = req.params.id;
-    const clientId = req.header("X-Client-Id");
+    const clientId = req.header('X-Client-Id');
 
     const result = await viewDeliveryStatus(messageId, clientId);
 
@@ -15,12 +15,12 @@ const deliveryStatus = async (req, res, next) => {
       },
     });
   } catch (error) {
-    if (error.parent?.code === "22P02") {
+    if (error.parent?.code === '22P02') {
       return res
         .status(400)
-        .json({ message: "Message id is not valid", success: false });
+        .json({ message: 'Message id is not valid', success: false });
     }
-    if (error.message === "Message not found") {
+    if (error.message === 'Message not found') {
       return res.status(404).json({ message: error.message, success: false });
     }
 
@@ -30,20 +30,45 @@ const deliveryStatus = async (req, res, next) => {
 
 const messageLogs = async (req, res) => {
   try {
-    const { service = null, status = null, page = 1, limit = 10 } = req.query;
+    const {
+      service = null,
+      status = null,
+      page = 1,
+      limit = 10,
+      order = 'desc',
+      sort = null,
+      message = null,
+      destination = null,
+      attempts = null,
+      cc = null,
+      bcc = null,
+      fromEmail = null,
+      'start-time': startTime = null,
+      'end-time': endTime = null,
+    } = req.query;
 
-    const idClient = req.header("X-Client-Id");
+    const idClient = req.header('X-Client-Id');
 
     const { data, totalPages } = await viewMessageLogs(
       idClient,
       service,
       status,
       page,
-      limit
+      limit,
+      order,
+      sort,
+      message,
+      destination,
+      attempts,
+      cc,
+      bcc,
+      fromEmail,
+      startTime,
+      endTime,
     );
     return res.status(200).send({
       success: true,
-      message: "Data fetched successfully",
+      message: 'Data fetched successfully',
       data,
       pagination: {
         page: +page,
@@ -53,15 +78,8 @@ const messageLogs = async (req, res) => {
     });
   } catch (error) {
     console.log(error);
-    if (error.message === "Not authorized") {
-      return res.status(401).send({
-        message: error.message,
-        success: false,
-      });
-    }
-
-    return res.status(500).send({
-      message: "Internal Server Error",
+    return res.status(error.statusCode || 500).send({
+      message: error.message || 'Internal Server Error',
       success: false,
     });
   }

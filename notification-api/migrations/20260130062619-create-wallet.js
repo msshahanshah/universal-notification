@@ -3,7 +3,7 @@
 module.exports = {
   async up(queryInterface, Sequelize, schemaName) {
     const tableName = {
-      tableName: "routing_rules",
+      tableName: "wallets",
       schema: schemaName,
     };
     await queryInterface.createTable(tableName, {

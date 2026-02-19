@@ -7,7 +7,7 @@
     "start": "node src/server.js",
     "dev": "nodemon src/server.js",
     "migrate": "node src/utillity/migrate.js",
-    "seed": "touch ./helpers/default_credentials.txt & npx sequelize-cli db:seed:all",
+    "seed": "npx sequelize-cli db:seed:all",
     "test": "jest --detectOpenHandles"
   },
   "keywords": [],
@@ -35,6 +35,7 @@
     "path": "^0.12.7",
     "pg": "^8.14.1",
     "pg-hstore": "^2.3.4",
+    "redis": "^5.10.0",
     "sequelize": "^6.37.7",
     "swagger-jsdoc": "^6.2.8",
     "swagger-ui-express": "^5.0.1",

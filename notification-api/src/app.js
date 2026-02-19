@@ -59,6 +59,16 @@ app.use(statRouter);
  * @param {function} next - The next middleware function.
  */
 app.use((err, req, res, next) => {
+  if (
+    err instanceof SyntaxError &&
+    err.status === 400 &&
+    err?.type === "entity.parse.failed"
+  ) {
+    return res.status(400).json({
+      success: false,
+      message: `invalid req.body for ${err?.body}`,
+    });
+  }
   logger.error("Unhandled error:", {
     error: err.message,
     stack: err.stack,
