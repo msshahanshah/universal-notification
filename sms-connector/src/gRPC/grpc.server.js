@@ -7,7 +7,6 @@ const { loadClientConfigs } = require('../utillity/loadClientConfigs');
 const logger = require('../logger');
 
 const PROTO_PATH = path.join(__dirname, "../../proto/sms.proto");
-
 // load proto
 const packageDef = protoLoader.loadSync(PROTO_PATH);
 const grpcObj = grpc.loadPackageDefinition(packageDef);
@@ -49,9 +48,9 @@ async function GetBalance(call, callback) {
         callback(null, {
             provider: smsSender.provider,
             balance: balance.balance,
-            currency: balance.currency
+            currency: balance?.currency
         });
-
+        
     } catch (error) {
         callback({
             code: grpc.status.INTERNAL,

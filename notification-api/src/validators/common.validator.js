@@ -1,5 +1,8 @@
 const Joi = require("joi");
 const baseOptions = { abortEarly: false, stripUnknown: false };
+const { fileNameRegex, urlRegex } = require("../../helpers/regex.helper");
+
+// --------------------COMMON  VALIDATION----------------------------
 const commonValidation = {
   page: Joi.number().integer().min(1).optional().messages({
     "number.base": "Page must be a number",
@@ -32,48 +35,114 @@ const commonValidation = {
     }),
 };
 
-const validateAttachments = (value, helpers) => {
-  if (value.length) {
-    const fileNameRegex = new RegExp(/^(?![ .])(?!.*[ .]$)[A-Za-z0-9._ -]+$/);
-    const urlRegex = new RegExp(
-      "^https?:\\/\\/(?:[a-z0-9.-]+\\.)?s3(?:[.-][a-z0-9-]+)?\\.amazonaws\\.com(?:\\/[\\S]*?)?\\?.*(?:X-Amz-Signature=|X-Amz-Credential=|AWSAccessKeyId=)",
-      "i",
-    );
-    // array of filename
-    if (typeof value[0] === "string") {
-      for (const filename of value) {
-        if (typeof filename !== "string" || !fileNameRegex.test(filename)) {
-          return helpers.message(`invalid filename ${filename}`);
+// --------------------ATTACHMENTS VALIDATION----------------------------
+
+//taking map for increasing count for duplicate filenames
+
+function changeDuplicateFileName(fileName, map) {
+  if (map.has(fileName)) {
+    let cnt = map.get(fileName);
+
+    let idx = fileName.lastIndexOf(".");
+    if (idx == -1) idx = fileName.length;
+
+    const newFileName =
+      fileName.slice(0, idx) + String(cnt) + fileName.slice(idx);
+
+    // increase the cnt for next duplicate filename
+    map.set(fileName, cnt + 1);
+    return newFileName;
+  } else map.set(fileName, 1);
+
+  return fileName;
+}
+
+function validateFileName(fileName) {
+  if (!fileName?.length) return "FileName cannot be empty";
+  if (!fileNameRegex.test(fileName)) return "FileName is not valid";
+  return null;
+}
+
+function validateUrl(url) {
+  if (!url?.length) return "Url cannot be empty";
+  if (!urlRegex.test(url)) return "Url is not valid";
+  return null;
+}
+
+const validateAttachments = (values, helpers) => {
+  const map = new Map();
+
+  if (values.length) {
+    if (values.length > 10)
+      return helpers.message(
+        "Attachments array can not have more then 10 length",
+      );
+    //checking for array of filenames
+    if (typeof values[0] === "string") {
+      for (let idx = 0; idx < values.length; idx++) {
+        const item = values[idx];
+
+        if (typeof item === "string") {
+          const clearedFileName = item.trim();
+          const message = validateFileName(clearedFileName);
+          if (message) return helpers.message(message);
+
+          //changin the name of duplicate files
+          values[idx] = changeDuplicateFileName(clearedFileName, map);
+        } else {
+          return helpers.message("Attachments must be array of filenames");
         }
       }
-    } else if (typeof value[0] === "object") {
-      for (const file of value) {
-        if (typeof file !== "object" || file === null) {
-          return helpers.message(`invalid email attachments format`);
-        }
+    } else if (typeof values[0] === "object") {
+      const allowedKeys = ["fileName", "url"]; // only this keys is allowed in attachemnts
+      for (let idx = 0; idx < values.length; idx++) {
+        const item = values[idx];
 
-        if (!file.fileName || !file.url) {
+        if (typeof item == "object") {
+          const keys = Object.keys(item);
+
+          if (
+            !(keys.length === allowedKeys.length) ||
+            !("fileName" in item) ||
+            !("url" in item)
+          ) {
+            return helpers.message(
+              "Attachments must contain only fileName and url",
+            );
+          }
+          const { fileName, url } = item;
+
+          //check fileName and validate
+
+          let clearedFileName = fileName.trim();
+          let message = validateFileName(clearedFileName);
+          if (message) {
+            return helpers.message(message);
+          }
+
+          //check url and validate
+
+          message = validateUrl(url);
+          if (message) {
+            return helpers.message(message);
+          }
+
+          //changin the name of duplicate files
+          values[idx].fileName = changeDuplicateFileName(clearedFileName, map);
+        } else {
           return helpers.message(
-            `missing fields. please provide fileName and url`,
-          );
-        }
-
-        if (
-          typeof file.fileName !== "string" ||
-          !fileNameRegex.test(file.fileName)
-        ) {
-          return helpers.message(`invalid fileName ${file.fileName}`);
-        }
-
-        if (typeof file.url !== "string" || !urlRegex.test(file.url)) {
-          return helpers.message(
-            `invalid s3 presigned url for file ${file.fileName}`,
+            "Attachments must be array of objects with (fileName and url) fields",
           );
         }
       }
+    } else {
+      return helpers.message(
+        "Attachments must be array of filenames or array of objects with (fileName and url) fields",
+      );
     }
   }
-  return value;
+
+  return values;
 };
 
 module.exports = { commonValidation, baseOptions, validateAttachments };
