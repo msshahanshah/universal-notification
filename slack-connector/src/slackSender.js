@@ -112,7 +112,7 @@ async function sendSlackMessage(authToken, channel, message, messageId) {
     // Rethrow a structured error or return failure info
     // Include specific Slack error if available (e.g., channel_not_found, invalid_auth)
     const errorMessage = `Slack API Error: ${error.data?.error || error.message}`;
-    return { success: false, error: errorMessage, rawError: error }; // Return failure and the original error
+    throw { success: false, error: errorMessage, rawError: error }; // Return failure and the original error
   }
 }
 

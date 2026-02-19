@@ -51,7 +51,7 @@ const login = async (username, password) => {
   }
 };
 
-const generateNewAccessToken = async (refreshToken) => {
+const generateNewAccessToken = async (refreshToken, x_clientId) => {
   try {
     const payload = verifyToken(refreshToken, AUTH_TOKEN.REFRESH_TOKEN);
     if (!payload) {
@@ -67,6 +67,13 @@ const generateNewAccessToken = async (refreshToken) => {
       throw { message: "User no longer exists", statusCode: 404 };
     }
     const username = user.username;
+    const userClient = username.split("@")[1];
+    if (!userClient) {
+      throw { statusCode: 400, message: `invalid username or password` };
+    }
+    if (userClient.toLowerCase() !== x_clientId.toLowerCase()) {
+      throw { statusCode: 400, message: `invalid client_id ${x_clientId}` };
+    }
     const REDIS_ACCESS_TOKEN_KEY = RedisHelper.getAccessTokenRedisKey(username);
     const REDIS_REFRESH_TOKEN_KEY =
       RedisHelper.getRefreshTokenRedisKey(username);
@@ -83,7 +90,10 @@ const generateNewAccessToken = async (refreshToken) => {
     RedisHelper.setKey(REDIS_ACCESS_TOKEN_KEY, token.accessToken);
     return token.accessToken;
   } catch (error) {
-    throw { message: "Invalid refresh token", statusCode: 401 };
+    throw {
+      message: error.message || "Invalid refresh token",
+      statusCode: error.statusCode || 401,
+    };
   }
 };
 
