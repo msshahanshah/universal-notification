@@ -1,73 +1,71 @@
 name: Build & Push Docker Images
 
 on:
-  push:
-    branches:
-      - staging
-    paths:
-      - "email-connector/**"
-      - "notification-api/**"
-      - "slack-connector/**"
-      - "sms-connector/**"
+  # push:
+  #   branches:
+  #     - staging
 
   workflow_dispatch:
     inputs:
-      deploy_branch:
-        description: "Branch to deploy"
+      microservice:
+        description: "Microservice to deploy"
         required: true
-        default: staging
+        type: choice
+        options:
+          - email-connector
+          - notification-api
+          - slack-connector
+          - sms-connector
+      environment:
+        description: "Environment to deploy to"
+        required: true
+        type: choice
+        options:
+          - stage
+          - prod
 
 env:
   REGISTRY: docker.io
   IMAGE_NAMESPACE: msshahanshah
 
 jobs:
-  filter:
-    runs-on: ubuntu-latest
-    outputs:
-      services: ${{ steps.filter.outputs.changes }}
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event.inputs.deploy_branch || github.ref_name }}
-
-
-      - name: Detect changes
-        id: filter
-        uses: dorny/paths-filter@v3
-        with:
-          base: ${{ github.event.inputs.deploy_branch || github.ref_name }}
-          filters: |
-            email-connector: 'email-connector/**'
-            notification-api: 'notification-api/**'
-            slack-connector: 'slack-connector/**'
-            sms-connector: 'sms-connector/**' 
-
   build-and-push:
-    needs: filter
-    if: ${{ needs.filter.outputs.services != '[]' && needs.filter.outputs.services != '' }}
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        service: ${{ fromJSON(needs.filter.outputs.services) }}
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event.inputs.deploy_branch || github.ref_name }}
+        uses: actions/checkout@v6
+
+      - name: Set environment name
+        run: |
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+              echo "ENVIRONMENT=${{ github.event.inputs.environment }}" >> $GITHUB_ENV
+              exit 0
+          fi
+
+          if [ "${GITHUB_REF_NAME}" == "main" ]; then
+            echo "ENVIRONMENT=prod" >> $GITHUB_ENV
+          else
+            echo "ENVIRONMENT=stage" >> $GITHUB_ENV
+          fi
 
       - name: Build and Push Service
         uses: ./.github/actions/build-push
         with:
-          service: ${{ matrix.service }}
+          service: ${{ github.event.inputs.microservice }}
           image_namespace: ${{ env.IMAGE_NAMESPACE }}
           dockerhub_username: ${{ secrets.DOCKERHUB_USERNAME }}
           dockerhub_token: ${{ secrets.DOCKERHUB_TOKEN }}
-          image_name: ${{ matrix.service == 'notification-api' && 'un-api' || format('un-{0}', matrix.service) }}
+          image_name: ${{
+            github.event.inputs.microservice == 'notification-api' && env.ENVIRONMENT == 'prod' && 'un-api-prd' ||
+            github.event.inputs.microservice == 'notification-api' && 'un-api' ||
+            env.ENVIRONMENT == 'prod' && format('un-{0}-prd', github.event.inputs.microservice) ||
+            format('un-{0}', github.event.inputs.microservice)
+            }}
           tag: ${{ github.run_number }}
 
-      - name: Print image tag
+      - name: Print deployment info
         run: |
-          echo "Docker image pushed with tag: ${{ github.run_number }}"
+          echo "Microservice : ${{ github.event.inputs.microservice }}"
+          echo "Environment  : ${{ env.ENVIRONMENT }}"
+          echo "Image tag    : ${{ github.run_number }}"
