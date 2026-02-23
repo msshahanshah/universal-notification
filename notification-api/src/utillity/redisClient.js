@@ -2,24 +2,25 @@ const { createClient } = require("redis");
 
 const redisClient = createClient({
   url: process.env.REDIS_URL,
-  disableOfflineQueue: false,
+  disableOfflineQueue: true,
   socket: {
     reconnectStrategy: (retries) => {
       if (retries > 5) {
-        return new Error("Redis retry attempts exhausted");
+        console.log("Redis retry attempts exhausted");
+        return false;
       }
       return Math.min(retries * 100, 3000);
     },
   },
 });
 
-redisClient.on("error", (err) => {
-  throw { statusCode: 500, message: "Redis Client Offline" };
-});
-
 (async () => {
-  await redisClient.connect();
-  console.log("Connected to Redis");
+  try {
+    await redisClient.connect();
+    console.log("Connected to Redis");
+  } catch (err) {
+    console.error("ERROR: Failed to connect to Redis", err.message);
+  }
 })();
 
 module.exports = redisClient;
