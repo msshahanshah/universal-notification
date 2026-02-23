@@ -66,8 +66,10 @@ const logout = async (req, res) => {
     const REDIS_REFRESH_TOKEN_KEY =
       RedisHelper.getRefreshTokenRedisKey(username);
 
-    RedisHelper.deleteKey(REDIS_REFRESH_TOKEN_KEY);
-    RedisHelper.deleteKey(REDIS_ACCESS_TOKEN_KEY);
+    await Promise.all([
+      RedisHelper.deleteKey(REDIS_REFRESH_TOKEN_KEY),
+      RedisHelper.deleteKey(REDIS_ACCESS_TOKEN_KEY),
+    ]);
 
     return res.status(200).send({
       success: true,

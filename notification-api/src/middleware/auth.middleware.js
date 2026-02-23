@@ -7,6 +7,7 @@ const RedisHelper = require("../../helpers/redis.helper.js");
 
 const auth = async (req, res, next) => {
   try {
+    // get token from request
     let token = "";
 
     if (
@@ -26,6 +27,17 @@ const auth = async (req, res, next) => {
 
     const decodedData = verifyToken(token, AUTH_TOKEN.ACCESS_TOKEN);
 
+    const username = decodedData.username;
+    const REDIS_ACCESS_TOKEN_KEY = RedisHelper.getAccessTokenRedisKey(username);
+    const tokenInRedis = await RedisHelper.getValue(REDIS_ACCESS_TOKEN_KEY);
+
+    if (tokenInRedis !== token) {
+      throw {
+        statusCode: 401,
+        message: "Invalid Token. Please Retry Login",
+      };
+    }
+
     const globalDb = await globalDatabaseManager.getModels();
 
     const user = await globalDb.User.findOne({
@@ -36,22 +48,8 @@ const auth = async (req, res, next) => {
       throw { statusCode: 404, message: "User does not found" };
     }
 
-    //chceking if token present in redis
-
-    const username = user.username;
-    const REDIS_ACCESS_TOKEN_KEY = RedisHelper.getAccessTokenRedisKey(username);
-    const isAccessTokenExistInRedis = await RedisHelper.getValue(
-      REDIS_ACCESS_TOKEN_KEY,
-    );
-
-    if (!isAccessTokenExistInRedis) {
-      throw {
-        statusCode: 401,
-        message: "Unauthorized ",
-      };
-    }
-
     req.user = decodedData;
+
     next();
   } catch (error) {
     if (
