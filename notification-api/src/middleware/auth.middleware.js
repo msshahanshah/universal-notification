@@ -30,7 +30,7 @@ const auth = async (req, res, next) => {
     const username = decodedData.username;
     const REDIS_ACCESS_TOKEN_KEY = RedisHelper.getAccessTokenRedisKey(username);
     const tokenInRedis = await RedisHelper.getValue(REDIS_ACCESS_TOKEN_KEY);
-    console.log(tokenInRedis);
+
     if (tokenInRedis !== token) {
       throw {
         statusCode: 401,
