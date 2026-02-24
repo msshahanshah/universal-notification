@@ -6,6 +6,7 @@ const notify = async (req, res) => {
   const clientId = req.headers["x-client-id"];
   const body = req.body;
   for (const [service, messages] of Object.entries(body)) {
+    const bulkMessages = [];
     for (const msg of messages) {
       const {
         destination,
@@ -17,11 +18,12 @@ const notify = async (req, res) => {
         bcc,
         attachments,
         templateId,
+        uniqueKey,
       } = msg;
 
       const content = textMessage
-        ? { message: textMessage }
-        : { subject, body, fromEmail, cc, bcc, attachments };
+        ? { message: textMessage, uniqueKey }
+        : { subject, body, fromEmail, cc, bcc, attachments, uniqueKey };
 
       // insert into bulk
       bulkMessages.push({
@@ -29,14 +31,38 @@ const notify = async (req, res) => {
         destination,
         content,
         attachments,
+        uniqueKey,
       });
     }
-    const notificationRecords = await notifyV2Service(
-      clientId,
-      service,
-      bulkMessages,
-    );
-    success.push(notificationRecords);
+
+    try {
+      const notificationRecord = await notifyV2Service(
+        clientId,
+        service,
+        bulkMessages,
+      );
+
+      // prepare success response
+      let successRecord = {
+        service,
+        messageIds: notificationRecord.messages?.map((record) => {
+          if (record.preSignedUrls) {
+            preSignedUrls.push(...r.preSignedUrls?.preSignedUrls);
+          }
+          return record.messageId;
+        }),
+      };
+
+      if (notificationRecord.preSignedUrls) {
+        successRecord.preSignedUrls = notificationRecord.preSignedUrls;
+      }
+
+      // insert success response
+      success.push(successRecord);
+    } catch (error) {
+      console.log("error", error);
+      failed.push(error);
+    }
   }
 
   // send response
@@ -51,51 +77,3 @@ const notify = async (req, res) => {
 module.exports = {
   notify,
 };
-
-// console.log("sdfhe", messages);
-// for (const msg of messages) {
-//   const {
-//     destination,
-//     message: textMessage,
-//     subject,
-//     body,
-//     fromEmail,
-//     cc,
-//     bcc,
-//     attachments,
-//     service,
-//   } = msg;
-
-//   const content = textMessage
-//     ? { message: textMessage }
-//     : { subject, body, fromEmail, cc, bcc, attachments };
-
-//   try {
-//     const { notificationRecords, preSignedUrls, publishResults } =
-//       await notifyV2Service(
-//         clientID,
-//         service,
-//         destination,
-//         content,
-//         attachments,
-//       );
-
-//     success.push({
-//       service,
-//       status: "accepted",
-//       messageId: notificationRecords.map((r) => r.messageId),
-//       preSignedUrls,
-//     });
-//   } catch (error) {
-//     failed.push({
-//       message: error.message || "internal server error",
-//     });
-//   }
-// }
-
-// const statusCode =
-//   failed.length && success.length ? 207 : success.length ? 200 : 400;
-
-// return res.status(statusCode).json({
-//   data: { failed, success },
-// });
