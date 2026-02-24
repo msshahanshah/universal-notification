@@ -96,11 +96,21 @@ const validateRequest = async (req, res, next) => {
         baseOptions,
       );
 
-      // checking for uniqueKey for messages with attachments
-      if (uniqueKeySet.size !== messageWithFileAttachmentCount) {
+      // checking for uniqueKey for messages with attachments when there are file attachment
+      if (
+        messageWithFileAttachmentCount !== 0 &&
+        uniqueKeySet.size !== messageWithFileAttachmentCount
+      ) {
         throw {
           statusCode: 400,
           message: `distinct uniqueKey is required to sent message with attachment. Please provide uniqueKey for ${service}`,
+        };
+      }
+
+      if (error) {
+        throw {
+          statusCode: 400,
+          message: error.message || error.details[0].message,
         };
       }
 
