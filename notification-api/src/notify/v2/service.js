@@ -318,7 +318,6 @@ async function getNotificationData(messageId, clientID) {
 }
 
 module.exports = {
-  creatingNotificationRecord,
   publishingNotificationRequest,
   getNotificationData,
   notifyService,
