@@ -22,20 +22,25 @@ const destinationSchema = Joi.alternatives()
   .required()
   .messages({ "string.empty": "Destination is required" });
 
-const validateSchema = Joi.array().items(
-  Joi.object({
-    service: commonValidation.service,
-    destination: destinationSchema,
-    message: commonValidation.message,
-    subject: emailValidation.subject,
-    body: emailValidation.body,
-    fromEmail: emailValidation.fromEmail,
-    cc: emailValidation.cc,
-    bcc: emailValidation.bcc,
-    attachments: emailValidation.attachments,
-    uniqueKey: Joi.string().optional(),
-  }).unknown(false),
-);
+const validateSchema = Joi.array()
+  .max(5)
+  .message({
+    "array.max": "messages should not exceed 5",
+  })
+  .items(
+    Joi.object({
+      service: commonValidation.service,
+      destination: destinationSchema,
+      message: commonValidation.message,
+      subject: emailValidation.subject,
+      body: emailValidation.body,
+      fromEmail: emailValidation.fromEmail,
+      cc: emailValidation.cc,
+      bcc: emailValidation.bcc,
+      attachments: emailValidation.attachments,
+      uniqueKey: Joi.string().optional(),
+    }).unknown(false),
+  );
 
 let configs = null;
 const validateRequest = async (req, res, next) => {
@@ -59,10 +64,10 @@ const validateRequest = async (req, res, next) => {
     // check for enabling service
     services.forEach((service) => {
       if (!enabledServices.includes(service)) {
-        return res.status(403).json({
-          success: false,
+        throw {
+          statusCode: 400,
           message: `${service} is not enabled for client ${clientId}`,
-        });
+        };
       }
     });
 
@@ -99,7 +104,7 @@ const validateRequest = async (req, res, next) => {
       // checking for uniqueKey for messages with attachments when there are file attachment
       if (
         messageWithFileAttachmentCount !== 0 &&
-        uniqueKeySet.size !== messageWithFileAttachmentCount
+        uniqueKeySet.size < messageWithFileAttachmentCount
       ) {
         throw {
           statusCode: 400,
