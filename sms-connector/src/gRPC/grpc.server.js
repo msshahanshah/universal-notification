@@ -59,7 +59,6 @@ async function GetBalance(call, callback) {
     }
 }
 
-
 function startServer() {
     const server = new grpc.Server();
     server.addService(smsPackage.SmsService.service, { GetBalance });

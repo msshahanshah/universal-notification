@@ -39,8 +39,18 @@ const login = async (username, password) => {
     const REDIS_REFRESH_TOKEN_KEY =
       RedisHelper.getRefreshTokenRedisKey(username);
 
-    RedisHelper.setKey(REDIS_ACCESS_TOKEN_KEY, accessToken);
-    RedisHelper.setKey(REDIS_REFRESH_TOKEN_KEY, refreshToken);
+    await Promise.all([
+      await RedisHelper.setKey(
+        REDIS_ACCESS_TOKEN_KEY,
+        accessToken,
+        AUTH_TOKEN.ACCESS_TOKEN,
+      ),
+      await RedisHelper.setKey(
+        REDIS_REFRESH_TOKEN_KEY,
+        refreshToken,
+        AUTH_TOKEN.REFRESH_TOKEN,
+      ),
+    ]);
 
     return {
       accessToken,
@@ -87,7 +97,11 @@ const generateNewAccessToken = async (refreshToken, x_clientId) => {
 
     const newPayload = { id: user.id, username: user.username };
     const token = generateTokens(newPayload, { access: true });
-    RedisHelper.setKey(REDIS_ACCESS_TOKEN_KEY, token.accessToken);
+    await RedisHelper.setKey(
+      REDIS_ACCESS_TOKEN_KEY,
+      token.accessToken,
+      AUTH_TOKEN.ACCESS_TOKEN,
+    );
     return token.accessToken;
   } catch (error) {
     throw {
