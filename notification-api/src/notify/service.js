@@ -44,7 +44,7 @@ const serviceEnforcers = {
     if (!serviceConfig.allowCustomFromEmail && hasFromEmail) {
       throw {
         statusCode: 400,
-        message: `fromEmail is not allowed in ${service} for client ${clientId}`,
+        message: `fromEmail is not allowed in ${service}.`,
       };
     }
 
@@ -122,16 +122,20 @@ const creatingNotificationRecord = async (
   const enabledServices = clientConfig?.ENABLED_SERVERICES;
 
   if (!Array.isArray(enabledServices)) {
+    logger.error("Invalid or missing ENABLED_SERVERICES in client config", {
+      clientId,
+      enabledServices,
+    })
     throw {
       statusCode: 500,
-      message: `invalid or missing ENABLED_SERVERICES in client config for ${clientId}`,
+      message: `invalid or missing ENABLED_SERVERICES. Contact Admin`,
     };
   }
 
   if (!enabledServices.includes(service)) {
     throw {
       statusCode: 403,
-      message: `${service} is not enable for client ${clientId}`,
+      message: `${service} is not enable.`,
     };
   }
 
@@ -235,8 +239,11 @@ const getNotificationData = async (messageId, clientID) => {
   });
 
   if (!details) {
-    logger.error("No message found with this MssageID");
-    throw new Error("No message found with this MessageID");
+    logger.error(`No message found with this MessageID ${messageId}`);
+    throw {
+      statusCode: 404,
+      message: `message not found.`,
+    }
   }
 
   const data = {

@@ -112,7 +112,10 @@ const notifyWithEmailAttachment = async (req, res) => {
       !Array.isArray(attachments) ||
       attachments.length === 0
     ) {
-      throw new Error("Please send media (S3 URL's)");
+      throw {
+        statusCode: 400,
+        message: "Attachments are required. Please provide at least one S3 URL.",
+      };  
     }
 
     const headers = req.headers;
@@ -156,24 +159,9 @@ const notifyWithEmailAttachment = async (req, res) => {
       messageId, // Return the ID to the client
     });
   } catch (err) {
-    console.log("Error in notifying with email attachement", err.message);
-    if (err.message === "Please send media (S3 URL)") {
-      return res.status(400).json({
-        success: false,
-        message: err.message,
-      });
-    }
-
-    if (err.message === "No message found with this MessageID") {
-      return res.status(404).json({
-        success: false,
-        message: err.message,
-      });
-    }
-
-    return res.status(500).json({
+    return res.status(err.statusCode || 500).json({
       success: false,
-      message: "Internal Server Error",
+      message: err.message || "Internal Server Error",
     });
   }
 };

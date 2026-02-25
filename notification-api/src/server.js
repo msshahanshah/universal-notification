@@ -124,8 +124,8 @@ if (cluster.isMaster) {
           if (!client) {
             logger.warn("Invalid or missing X-Client-Id header", { clientId });
             return res
-              .status(400)
-              .json({ error: "Invalid or missing X-Client-Id header" });
+              .status(401)
+              .json({ error: "Invalid headers" });
           }
 
           logger.info(

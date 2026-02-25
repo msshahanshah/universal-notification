@@ -78,7 +78,7 @@ const emailValidation = {
       .trim()
       .min(1)
       .required()
-      .messages({ "string.empty": "Body is required for email service." }),
+      .messages({ "string.empty": "Body can't be empty" }),
     otherwise: Joi.forbidden(),
   }),
   fromEmail: Joi.when("service", {
