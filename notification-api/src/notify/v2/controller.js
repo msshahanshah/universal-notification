@@ -45,12 +45,9 @@ const notify = async (req, res) => {
       // prepare success response
       let successRecord = {
         service,
-        messageIds: notificationRecord.messages?.map((record) => {
-          if (record.preSignedUrls) {
-            preSignedUrls.push(...r.preSignedUrls?.preSignedUrls);
-          }
-          return record.messageId;
-        }),
+        messageIds: notificationRecord.messages?.map(
+          (record) => record.messageId,
+        ),
       };
 
       if (notificationRecord.preSignedUrls) {
