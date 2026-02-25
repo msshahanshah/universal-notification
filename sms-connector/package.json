@@ -4,7 +4,7 @@
   "description": "SMS connector for the notification service",
   "main": "src/index.js",
   "scripts": {
-    "start": "node src/index.js",
+    "start": "node src/index.js & node src/GRPC/grpc.server.js",
     "test": "node __tests__/index.test.js"
   },
   "dependencies": {
