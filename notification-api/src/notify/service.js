@@ -1,8 +1,9 @@
-const { default: parsePhoneNumberFromString } = require("libphonenumber-js");
-const logger = require("../logger");
-const { v4: uuidv4 } = require("uuid");
-const rabbitManager = require("../utillity/rabbit");
-const { loadClientConfigs } = require("../utillity/loadClientConfigs");
+const { default: parsePhoneNumberFromString } = require('libphonenumber-js');
+const logger = require('../logger');
+const { v4: uuidv4 } = require('uuid');
+const rabbitManager = require('../utillity/rabbit');
+const { loadClientConfigs } = require('../utillity/loadClientConfigs');
+const { templateId } = require('../validators/whatsapp.validator');
 
 let configs = null;
 
@@ -20,7 +21,7 @@ function getDefaultProvider(config, service) {
   if (!serviceObj) return null;
 
   for (const [provider, providerConfig] of Object.entries(serviceObj)) {
-    if (typeof providerConfig === "object" && providerConfig?.default) {
+    if (typeof providerConfig === 'object' && providerConfig?.default) {
       return provider;
     }
   }
@@ -63,6 +64,32 @@ const serviceEnforcers = {
   SMS: () => {},
 
   SLACK: () => {},
+
+  WHATSAPP: ({ provider, message, clientConfig }) => {
+    if (!provider) return;
+    const { service, content, clientId } = message;
+    const serviceConfig =
+      clientConfig[service.toUpperCase()][provider.toUpperCase()];
+    const hasFromWhatsNumber = Boolean(content?.fromNumber);
+
+    if (!serviceConfig.allowCustomFromNumber && hasFromWhatsNumber) {
+      throw {
+        statusCode: 400,
+        message: `fromNumber is not allowed in ${service} for client ${clientId}`,
+      };
+    }
+
+    if (serviceConfig.allowCustomFromNumber && !hasFromWhatsNumber) {
+      throw {
+        statusCode: 400,
+        message: `fromNumber can't be empty`,
+      };
+    }
+
+    if (!serviceConfig.allowCustomFromNumber) {
+      content.fromNumber = serviceConfig.TO_NUMBER;
+    }
+  },
 };
 
 const serviceGuard = (provider, message, clientConfig) => {
@@ -78,7 +105,7 @@ const selectProvider = async (service, destination, clientId) => {
   const clientConfig = await getClientConfig(clientId);
   const defaultProvider = getDefaultProvider(clientConfig, service);
   try {
-    if (service === "sms") {
+    if (service === 'sms') {
       const parsed = parsePhoneNumberFromString(destination);
       const countryCode = parsed?.countryCallingCode;
 
@@ -94,7 +121,11 @@ const selectProvider = async (service, destination, clientId) => {
       return routingRole?.provider || defaultProvider?.toUpperCase();
     }
 
-    if (service === "email") {
+    if (service === 'email') {
+      return defaultProvider?.toUpperCase();
+    }
+
+    if(service === 'whatsapp') {
       return defaultProvider?.toUpperCase();
     }
 
@@ -145,8 +176,8 @@ const creatingNotificationRecord = async (
          */
         const provider = await selectProvider(service, number, clientId);
         serviceGuard(provider, { service, content, clientId }, clientConfig);
-        if (service.toLowerCase() === "slack") {
-          service = "slackbot";
+        if (service.toLowerCase() === 'slack') {
+          service = 'slackbot';
         }
 
         content.provider = provider;
@@ -155,12 +186,12 @@ const creatingNotificationRecord = async (
           service,
           destination: number,
           content,
-          status: "pending",
+          status: 'pending',
           attempts: 0,
           templateId,
         });
 
-        logger.info("Notification record created successfully", {
+        logger.info('Notification record created successfully', {
           number,
           ...record.dataValues,
         });
@@ -171,22 +202,22 @@ const creatingNotificationRecord = async (
 
     return results;
   } catch (error) {
-    logger.error("Failed to create notification record", {
+    logger.error('Failed to create notification record', {
       error: error.message,
       error,
     });
 
-    if (error.name === "SequelizeUniqueConstraintError") {
+    if (error.name === 'SequelizeUniqueConstraintError') {
       throw {
         statusCode: 409,
         message:
-          "Conflict: A notification with this identifier potentially exists.",
+          'Conflict: A notification with this identifier potentially exists.',
       };
     }
 
     throw {
       statusCode: error.statusCode || 500,
-      message: error.message || "Failed to create notification",
+      message: error.message || 'Failed to create notification',
     };
   }
 };
@@ -235,8 +266,8 @@ const getNotificationData = async (messageId, clientID) => {
   });
 
   if (!details) {
-    logger.error("No message found with this MssageID");
-    throw new Error("No message found with this MessageID");
+    logger.error('No message found with this MssageID');
+    throw new Error('No message found with this MessageID');
   }
 
   const data = {
@@ -247,6 +278,9 @@ const getNotificationData = async (messageId, clientID) => {
     fromEmail: details.content.fromEmail,
     extension: details.content.extension,
     attachments: details.content.attachments,
+    fromNumber: details.content.fromNumber,
+    message: details.content.message,
+    templateId: details.content.messageId
   };
 
   if (details.content.cc) data.cc = details.content.cc;
