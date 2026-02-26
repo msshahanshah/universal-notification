@@ -58,13 +58,27 @@ const viewMessageLogs = async (
       }
     }
 
+    const newStartTime = new Date(startTime);
+    const newEndTime = new Date(endTime);
+
+    newStartTime.setSeconds(0, 0);
+    newEndTime.setSeconds(0, 0);
+
+    newEndTime.setMinutes(newEndTime.getMinutes() + 1);
+
+    const newStartAlteredTime = newStartTime
+    const newEndAlteredTime = newEndTime
+
     where.updatedAt = {
-      [Sequelize.Op.gte]: new Date(startTime),
+      [Sequelize.Op.gte]: newStartAlteredTime,
     };
 
     if (endTime) {
-      where.updatedAt[Sequelize.Op.lte] = new Date(endTime);
+      where.updatedAt[Sequelize.Op.lt] = newEndAlteredTime;
     }
+
+    console.log("Start time-", newStartAlteredTime);
+    console.log("End time-", newEndAlteredTime);
 
     if (attempts) {
       where.attempts = +attempts;
