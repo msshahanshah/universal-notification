@@ -113,10 +113,11 @@ if (cluster.isMaster) {
         const swaggerDoc = YAML.load(path.join(__dirname, "swagger.yaml"));
         const masterApp = express();
         masterApp.use(require("cors")());
+        const MASTER_SERVER_PORT = process.env.MASTER_SERVER_PORT || 8000;
         masterApp.use(
           "/api-docs",
           swaggerUi.serve,
-          swaggerUi.setup(swaggerDoc)
+          swaggerUi.setup(swaggerDoc),
         );
         masterApp.use((req, res, next) => {
           const clientId = req.headers["x-client-id"];
@@ -142,8 +143,8 @@ if (cluster.isMaster) {
           );
         });
 
-        masterServer = masterApp.listen(3000, () => {
-          logger.info("Master router listening on port 3000");
+        masterServer = masterApp.listen(MASTER_SERVER_PORT, () => {
+          logger.info(`Master router listening on port ${MASTER_SERVER_PORT}`);
         });
       } catch (error) {
         logger.error("Master router error:", {
