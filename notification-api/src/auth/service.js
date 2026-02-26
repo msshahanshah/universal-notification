@@ -22,7 +22,7 @@ const login = async (username, password) => {
     const isCorrect = await bcrypt.compare(password, user.password);
     if (!isCorrect) {
       throw {
-        message: "Incorrect username or password",
+        message: "Invalid username or password",
         statusCode: 401,
       };
     }
@@ -82,7 +82,7 @@ const generateNewAccessToken = async (refreshToken, x_clientId) => {
       throw { statusCode: 400, message: `invalid username or password` };
     }
     if (userClient.toLowerCase() !== x_clientId.toLowerCase()) {
-      throw { statusCode: 400, message: `invalid client_id ${x_clientId}` };
+      throw { statusCode: 400, message: `invalid username or password` };
     }
     const REDIS_ACCESS_TOKEN_KEY = RedisHelper.getAccessTokenRedisKey(username);
     const REDIS_REFRESH_TOKEN_KEY =

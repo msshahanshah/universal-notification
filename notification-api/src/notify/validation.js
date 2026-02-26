@@ -41,13 +41,26 @@ const validateSchema = Joi.object({
 }).unknown(false); // Middleware to validate the request
 
 const validateRequest = (req, res, next) => {
-  const { error, value } = validateSchema.validate(req.body, baseOptions);
-  if (error) {
-    return res
-      .status(400)
-      .json({ success: false, message: error.details[0].message });
+  try {
+    if (!req.body) {
+      throw {
+        statusCode: 422,
+        message: "Invalid Content-Type or Request Body",
+      };
+    }
+    const { error, value } = validateSchema.validate(req.body, baseOptions);
+    if (error) {
+      return res
+        .status(400)
+        .json({ success: false, message: error.details[0].message });
+    }
+    req.body = value;
+    next();
+  } catch (error) {
+    return res.status(error.statusCode || 500).json({
+      success: false,
+      message: error.message || "internal server error",
+    });
   }
-  req.body = value;
-  next();
 };
 module.exports = validateRequest;

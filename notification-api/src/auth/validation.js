@@ -19,17 +19,30 @@ const refreshSchema = Joi.object({
   .unknown(false);
 
 const validateRequest = (schema) => (req, res, next) => {
-  const { error, value } = schema.validate(req.body, baseOptions);
+  try {
+    if (!req.body) {
+      throw {
+        statusCode: 422,
+        message: "Invalid Content-Type or Request Body",
+      };
+    }
+    const { error, value } = schema.validate(req.body, baseOptions);
 
-  if (error) {
-    return res.status(400).json({
+    if (error) {
+      return res.status(400).json({
+        success: false,
+        message: error.details[0].message,
+      });
+    }
+
+    req.body = value;
+    next();
+  } catch (error) {
+    return res.status(error.statusCode || 500).json({
       success: false,
-      message: error.details[0].message,
+      message: error.message || "internal server error",
     });
   }
-
-  req.body = value;
-  next();
 };
 
 module.exports = {
