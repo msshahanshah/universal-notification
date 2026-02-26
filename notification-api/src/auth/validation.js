@@ -39,7 +39,7 @@ const validateRequest = (schema) => (req, res, next) => {
     next();
   } catch (error) {
     return res.status(error.statusCode || 500).json({
-      success: true,
+      success: false,
       message: error.message || "internal server error",
     });
   }

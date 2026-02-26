@@ -116,7 +116,7 @@ if (cluster.isMaster) {
         masterApp.use(
           "/api-docs",
           swaggerUi.serve,
-          swaggerUi.setup(swaggerDoc)
+          swaggerUi.setup(swaggerDoc),
         );
         masterApp.use((req, res, next) => {
           const clientId = req.headers["x-client-id"];
@@ -125,7 +125,7 @@ if (cluster.isMaster) {
             logger.warn("Invalid or missing X-Client-Id header", { clientId });
             return res
               .status(401)
-              .json({ error: "Invalid headers" });
+              .json({ success: false, message: "Invalid headers" });
           }
 
           logger.info(
