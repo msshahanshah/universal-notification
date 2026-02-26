@@ -1,80 +1,56 @@
 const cluster = require("cluster");
-
 const logger = require("./logger");
-const config = require("./config"); // Environment variables or default configs
 const { connectAndConsume, closeConnections } = require("./connector");
 const { SecretManager } = require("@universal-notifier/secret-manager");
+const { loadClientConfigs } = require("./utility/loadClientConfigs.js");
+const connectionManager = require("./utility/connectionManager.js");
+const express = require("express");
+const slackRoute = require("./slack/route.js");
 
 /**
  * Loads client configurations from clientList.json and merges with defaults.
  * @returns {Promise<Array<Object>>} - Array of client configurations.
  */
-async function loadClientConfigs() {
+
+async function startServer(clientConfigList) {
   try {
-    const clients = await SecretManager.getSecrets();
+    // Initialize client-specific Sequelize
 
-    const defaultConfig = {
-      DBCONFIG: {
-        HOST: config.dbHost || "localhost",
-        PORT: config.dbPort || 5432,
-        NAME: config.dbName || "notifications_db",
-        USER: config.dbUser || "postgres",
-        PASSWORD: config.dbPassword || "admin",
-      },
-      RABBITMQ: {
-        HOST: config.rabbitMQHost || "localhost",
-        PORT: config.rabbitMQPort || 5672,
-        USER: config.rabbitMQUser || "user",
-        PASSWORD: config.rabbitMQPassword || "password",
-      },
-      SLACKBOT: {
-        TOKEN: config.slackBotToken || "",
-        RABBITMQ: {
-          EXCHANGE_NAME: config.rabbitMQExchangeName || "notifications",
-          EXCHANGE_TYPE: config.rabbitMQExchangeType || "direct",
-          QUEUE_NAME: config.rabbitMQQueueName || "slack",
-          ROUTING_KEY: config.rabbitMQBindingKey || "slack",
-        },
-      },
-    };
-
-    return clients.map((client) => {
-      const dbConfig = { ...(client.DBCONFIG || defaultConfig.DBCONFIG) };
-      if (process.env.DB_HOST_OVERRIDE)
-        dbConfig.HOST = process.env.DB_HOST_OVERRIDE;
-      if (process.env.DB_PORT_OVERRIDE)
-        dbConfig.PORT = process.env.DB_PORT_OVERRIDE;
-
-      const rabbitConfig = { ...(client.RABBITMQ || defaultConfig.RABBITMQ) };
-      if (process.env.RABBITMQ_HOST_OVERRIDE)
-        rabbitConfig.HOST = process.env.RABBITMQ_HOST_OVERRIDE;
-      if (process.env.RABBITMQ_PORT_OVERRIDE)
-        rabbitConfig.PORT = process.env.RABBITMQ_PORT_OVERRIDE;
-
-      return {
-        ID: client.ID,
-        SERVER_PORT: client.SERVER_PORT || 3000,
-        DBCONFIG: dbConfig,
-        RABBITMQ: rabbitConfig,
-        SLACKBOT: {
-          TOKEN: client.SLACKBOT?.TOKEN || defaultConfig.SLACKBOT.TOKEN,
-          RABBITMQ:
-            client.SLACKBOT?.RABBITMQ || defaultConfig.SLACKBOT.RABBITMQ,
-        },
-      };
+    for (const clientItem of clientConfigList) {
+      await connectionManager.initializeSequelize(
+        clientItem.DBCONFIG,
+        clientItem.ID,
+      );
+    }
+    const SERVER_PORT = 3000;
+    global.connectionManager = connectionManager;
+    const app = express();
+    app.use(express.json());
+    app.use(require("cors")());
+    app.use("/", slackRoute);
+    app.get("/webhook", (req, res) => {
+      console.log(process.env.CLIENT_ID);
+      res.send("Hello", process.env.CLIENT_ID);
     });
+    const server = app.listen(SERVER_PORT, () => {
+      logger.info(`Slack Service is listening on port ${SERVER_PORT}`);
+    });
+    return server;
   } catch (error) {
-    logger.error("Failed to load client configurations:", {
+    logger.error(`[${process.env.clientList}] Failed to start server:`, {
       error: error.message,
+      stack: error.stack,
     });
-    throw error;
+    await shutdown(1, process.env.clientList);
   }
 }
+
 // Master and Worker Logic
 if (cluster.isMaster) {
   (async () => {
     try {
       let clients = await loadClientConfigs();
+
       logger.info(`Master: Loaded ${clients.length} clients.`);
 
       // Map to track worker data for restarts
@@ -122,15 +98,17 @@ if (cluster.isMaster) {
     try {
       let clients = await loadClientConfigs();
       const clientId = process.env.CLIENT_ID;
+
       const client = clients.find((c) => c.ID === clientId);
 
       if (!client) {
         logger.error(`Worker: No configuration found for client ${clientId}`);
         process.exit(1);
       }
-
+      const server = await startServer([client]);
       await connectAndConsume(client);
-
+      process.on("SIGTERM", () => shutdown(0, process.env.clientList, server));
+      process.on("SIGINT", () => shutdown(0, process.env.clientList, server));
       process.on("SIGTERM", () => closeConnections(clientId));
       process.on("SIGINT", () => closeConnections(clientId));
       process.on("unhandledRejection", (reason, promise) => {

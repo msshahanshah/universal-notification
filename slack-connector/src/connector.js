@@ -56,7 +56,7 @@ async function connectAndConsume(client) {
     logger.info(`[${clientId}] Database connection successful.`);
 
     // Define models (assuming models are defined similarly to the original code)
-    const database = require("../models")(sequelize, Sequelize, clientId); // Initialize models for this client's Sequelize instance
+    const database = require("../models")(sequelize, clientId); // Initialize models for this client's Sequelize instance
 
     // consume rabbitmq
 
@@ -83,6 +83,8 @@ async function connectAndConsume(client) {
           client.SLACKBOT.TOKEN,
           payload.to,
           payload.message,
+          messageId,
+          clientId,
         );
       },
       db: database,
