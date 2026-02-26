@@ -125,7 +125,7 @@ const creatingNotificationRecord = async (
     logger.error("Invalid or missing ENABLED_SERVERICES in client config", {
       clientId,
       enabledServices,
-    })
+    });
     throw {
       statusCode: 500,
       message: `invalid or missing ENABLED_SERVERICES. Contact Admin`,
@@ -243,7 +243,7 @@ const getNotificationData = async (messageId, clientID) => {
     throw {
       statusCode: 404,
       message: `message not found.`,
-    }
+    };
   }
 
   const data = {

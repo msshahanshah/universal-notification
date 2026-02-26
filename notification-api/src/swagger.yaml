@@ -381,6 +381,7 @@ components:
                   },
               },
             ]
+
     ErrorResponse:
       type: object
       description: |
@@ -636,6 +637,105 @@ paths:
                 $ref: "#/components/schemas/ErrorResponse"
         "403":
           description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /v2/notify:
+    post:
+      tags:
+        - Notification
+      summary: Send multi-service notifications (V2)
+      description: |
+        Sends notifications for multiple services (SMS, Email, Slack, etc) in a single request.
+
+        ### Constraints
+        - Maximum payload size: 100 KB → returns 413 if exceeded
+        - Maximum 5 messages per service
+        - If both message and commonMessage are missing : 400
+        - If attachments exist without uniqueKey : 400
+        - Duplicate uniqueKey in same request : 400
+        - Messages exceeding configured limit : 400
+
+      operationId: notifyV2
+
+      parameters:
+        - name: X-Client-Id
+          in: header
+          required: true
+          schema:
+            type: string
+          description: |
+            Client identifier header.
+            Must match the authenticated user's client ID.
+
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NotifyV2Request"
+
+      responses:
+        "200":
+          description: Notification processed successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NotifyV2Response"
+
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+        "413":
+          description: Payload Too Large (exceeds 100 KB limit)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+        "417":
+          description: |
+            Expectation Failed — partial success. Some services were processed
+            successfully while others failed. The response body contains both
+            `data.success` and `data.failed` arrays.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NotifyV2Response"
+              example:
+                data:
+                  failed:
+                    - service: sms
+                      statusCode: 400
+                      message: "Bulk insert failed"
+                  success:
+                    - service: email
+                      messages:
+                        - messageId: "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+                          uniqueKey: "email-1"
+
+        "500":
+          description: Internal server error
           content:
             application/json:
               schema:
