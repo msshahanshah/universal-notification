@@ -73,7 +73,7 @@ const logout = async (req, res) => {
 
     return res.status(200).send({
       success: true,
-      message: "Logout Successfully",
+      message: "Logout successfully",
     });
   } catch (err) {
     return res.status(err.statusCode || 500).json({

@@ -488,7 +488,31 @@ paths:
                     properties:
                       accessToken:
                         type: string
-
+  /logout:
+    post:
+      summary: Logout
+      tags: [Auth]
+      parameters:
+        - name: X-Client-Id
+          in: header
+          required: true
+          schema:
+            type: string
+      
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Logout successfully
+                  
   /delivery-status/{messageId}:
     get:
       summary: Get delivery status
