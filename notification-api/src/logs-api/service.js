@@ -77,9 +77,6 @@ const viewMessageLogs = async (
       where.updatedAt[Sequelize.Op.lt] = newEndAlteredTime;
     }
 
-    console.log("Start time-", newStartAlteredTime);
-    console.log("End time-", newEndAlteredTime);
-
     if (attempts) {
       where.attempts = +attempts;
     }
