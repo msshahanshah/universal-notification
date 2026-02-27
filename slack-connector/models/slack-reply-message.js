@@ -8,7 +8,7 @@ module.exports = (sequelize, schemaName) => {
    * @extends Model
    * @classdesc Represents a notification entity in the database.
    */
-  class ThreadReplyReaction extends Model {
+  class SlackReplyMessage extends Model {
     /**
      * @method associate
      * @description Defines associations with other models (if any).
@@ -19,7 +19,7 @@ module.exports = (sequelize, schemaName) => {
     }
   }
 
-  ThreadReplyReaction.init(
+  SlackReplyMessage.init(
     {
       id: {
         type: DataTypes.INTEGER,
@@ -28,17 +28,26 @@ module.exports = (sequelize, schemaName) => {
         autoIncrement: true,
       },
 
-      threadId: {
-        type: DataTypes.STRING,
-        allowNull: false,
-      },
-      userId: {
+      parentReferenceId: {
         type: DataTypes.STRING,
         allowNull: false,
       },
 
-      message: {
-        type: DataTypes.ARRAY(DataTypes.STRING),
+      service: {
+        type: DataTypes.STRING,
+        allowNull: false,
+      },
+      childReferenceId: {
+        type: DataTypes.STRING,
+        allowNull: true,
+      },
+      userReferenceId: {
+        type: DataTypes.STRING,
+        allowNull: false,
+      },
+
+      content: {
+        type: DataTypes.JSON,
         allowNull: false,
       },
 
@@ -49,8 +58,8 @@ module.exports = (sequelize, schemaName) => {
     },
     {
       sequelize,
-      modelName: "ThreadReplyReaction",
-      tableName: "thread_reply_reactions",
+      modelName: "SlackReplyMessage",
+      tableName: "slack_reply_messages",
       schema: schemaName.toLowerCase(),
       timestamps: true,
       paranoid: true, //perform sodt delete
@@ -58,5 +67,5 @@ module.exports = (sequelize, schemaName) => {
     },
   );
 
-  return ThreadReplyReaction;
+  return SlackReplyMessage;
 };

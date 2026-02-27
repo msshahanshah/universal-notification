@@ -1,153 +1,149 @@
-const { where } = require("sequelize");
 const RedisHelper = require("../../helpers/redis.helper");
 
 class SlackService {
   static async getSlackReplyMessage(payload) {
     try {
       const clientId = await RedisHelper.getValue(payload?.team_id);
-
       const dbConnect = await global.connectionManager.getModels(clientId);
-      const ThreadReplyMessage = dbConnect.ThreadReplyMessage;
-      const ThreadReplyReaction = dbConnect.ThreadReplyReaction;
+      const SlackReplyMessage = dbConnect.SlackReplyMessage;
 
+      const service = "slack";
       const { event } = payload;
 
+      if (!event?.type) {
+        throw { statusCode: 400, message: "Event type is missing" };
+      }
+
       switch (event.type) {
+        // APP MENTION
+
         case "app_mention": {
-          try {
-            const {
-              thread_ts: parentThreadId,
-              ts: childThreadId,
-              text: message,
-              user: userId,
-            } = event;
+          const {
+            thread_ts: parentReferenceId,
+            ts: childReferenceId,
+            text: message,
+            user: userReferenceId,
+          } = event;
 
-            // Check if replyed is already exist
-            const existingMessageRecord = await ThreadReplyMessage.findOne({
-              where: {
-                parentThreadId,
-                childThreadId,
-              },
-            });
+          const existingMessage = await SlackReplyMessage.findOne({
+            where: {
+              parentReferenceId,
+              childReferenceId,
+              service,
+            },
+          });
 
-            // then update existing repled message
-            if (existingMessageRecord) {
-              await ThreadReplyMessage.update(
-                { message: message },
-                {
-                  where: { childThreadId },
-                },
-              );
+          const content = { message };
 
-              return;
-            }
-
-            //Add new replyed message
-            const newReplyedMessageRecord = await ThreadReplyMessage.create({
-              parentThreadId,
-              childThreadId,
-              userId,
-              message,
-            });
-
-            await newReplyedMessageRecord.save();
-            break;
-          } catch (err) {
-            throw err;
+          if (existingMessage) {
+            await existingMessage.update({ content });
+            return {
+              success: true,
+              message: "Message updated successfully",
+            };
           }
+
+          const newReplyedMessage = await SlackReplyMessage.create({
+            parentReferenceId,
+            childReferenceId,
+            userReferenceId,
+            content,
+            service,
+          });
+          await newReplyedMessage.save();
+          break;
         }
+
+        // REACTION ADDED
 
         case "reaction_added": {
-          try {
-            const { reaction, user: userId } = event;
-            const { ts: threadId } = event.item;
-            let reactionsArr = [];
+          const { reaction, user: userReferenceId } = event;
+          const { ts: parentReferenceId } = event.item;
 
-            const existingReactionRecord = await ThreadReplyReaction.findOne({
-              where: {
-                threadId,
-                userId,
-              },
+          const existingMessage = await SlackReplyMessage.findOne({
+            where: {
+              parentReferenceId,
+              userReferenceId,
+              service,
+            },
+          });
+
+          if (existingMessage) {
+            const existingReactions = existingMessage.content?.reaction || [];
+
+            const newReactionArr = [...existingReactions, reaction];
+
+            await existingMessage.update({
+              content: { reaction: newReactionArr },
             });
 
-            if (existingReactionRecord) {
-              const newArr = [...existingReactionRecord.message, reaction];
-
-              await ThreadReplyReaction.update(
-                {
-                  message: newArr,
-                },
-                {
-                  where: {
-                    threadId,
-                    userId,
-                  },
-                },
-              );
-
-              return;
-            }
-
-            //create new replyed reaction record
-            reactionsArr.push(reaction);
-            const newReactionRecord = await ThreadReplyReaction.create({
-              threadId,
-              userId,
-              message: reactionsArr,
-            });
-            await newReactionRecord.save();
-            break;
-          } catch (err) {
-            throw err;
+            return {
+              success: true,
+              message: "Reaction added successfully",
+            };
           }
+
+          const newReplyedMessage = await SlackReplyMessage.create({
+            parentReferenceId,
+            userReferenceId,
+            content: { reaction: [reaction] },
+            service,
+          });
+
+          await newReplyedMessage.save();
+          break;
         }
-        case "reaction_removed": {
-          try {
-            const { user: userId, reaction } = event;
-            const { ts: threadId } = event.item;
-            const existingReactionRecord = await ThreadReplyReaction.findOne({
-              where: {
-                threadId,
-                userId,
-              },
-            });
-            if (existingReactionRecord) {
-              //removing the reaction and taking new array
-              const newReactionArr = existingReactionRecord.message.filter(
-                (item) => item != reaction,
-              );
 
-              await ThreadReplyReaction.update(
-                {
-                  message: newReactionArr,
-                },
-                {
-                  where: {
-                    threadId,
-                    userId,
-                  },
-                },
-              );
-            }
-            break;
-          } catch (err) {
-            throw err;
+        // REACTION REMOVED
+
+        case "reaction_removed": {
+          const { user: userReferenceId, reaction } = event;
+          const { ts: parentReferenceId } = event.item;
+
+          const existingMessage = await SlackReplyMessage.findOne({
+            where: {
+              parentReferenceId,
+              userReferenceId,
+              service,
+            },
+          });
+
+          if (!existingMessage) {
+            return {
+              success: true,
+              message: "No existing reaction found",
+            };
           }
+
+          const existingReactions = existingMessage.content?.reaction || [];
+
+          const newReactionArr = existingReactions.filter(
+            (item) => item !== reaction,
+          );
+
+          await existingMessage.update({
+            content: { reaction: newReactionArr },
+          });
+
+          return {
+            success: true,
+            message: "Reaction removed successfully",
+          };
         }
 
         default:
-          throw { statusCode: 400, message: "Event type is wrong" };
+          throw { statusCode: 400, message: "Invalid event type" };
       }
 
       return {
         success: true,
-        message: "Successfully Operation Performed",
+        message: "Operation performed successfully",
       };
     } catch (err) {
-      console.log(err.message);
-      err.statusCode = err?.statusCode || 500;
-      err.message = err?.message || "Internal server error";
-      throw err;
+      throw {
+        statusCode: err?.statusCode || 500,
+        message: err?.message || "Internal server error",
+      };
     }
   }
 }

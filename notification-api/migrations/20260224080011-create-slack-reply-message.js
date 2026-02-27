@@ -16,7 +16,7 @@ module.exports = {
    */
   async up(queryInterface, Sequelize, schemaName) {
     const tableName = {
-      tableName: "thread_reply_reactions",
+      tableName: "slack_reply_messages",
       schema: schemaName,
     };
     await queryInterface.createTable(tableName, {
@@ -27,18 +27,26 @@ module.exports = {
         autoIncrement: true,
       },
 
-      thread_id: {
+      parent_reference_id: {
+        type: Sequelize.STRING,
+        allowNull: false,
+      },
+      service: {
         type: Sequelize.STRING,
         allowNull: false,
       },
 
-      user_id: {
+      child_reference_id: {
+        type: Sequelize.STRING,
+        allowNull: true,
+      },
+      user_reference_id: {
         type: Sequelize.STRING,
         allowNull: false,
       },
 
-      message: {
-        type: Sequelize.ARRAY(Sequelize.STRING),
+      content: {
+        type: Sequelize.JSON,
         allowNull: false,
       },
 
@@ -60,11 +68,14 @@ module.exports = {
 
     // Add indexes for better query performance
 
-    await queryInterface.addIndex(tableName, ["thread_id", "deleted_at"]);
-    await queryInterface.addIndex(tableName, ["thread_id", "user_id"], {
-      unique: true,
-      name: "thread_id_user_id_unique_cidx",
-    });
+    await queryInterface.addIndex(
+      tableName,
+      ["parent_reference_id", "child_reference_id", "service", "deleted_at"],
+      {
+        unique: true,
+        name: "parent_child_service_deleted_unique_cidx",
+      },
+    );
   },
 
   /**
@@ -72,6 +83,6 @@ module.exports = {
    * @param {Sequelize} Sequelize
    */
   async down(queryInterface, Sequelize) {
-    await queryInterface.dropTable("thread_reply_reactions");
+    await queryInterface.dropTable("slack_reply_messages");
   },
 };
