@@ -57,13 +57,15 @@ const viewMessageLogs = async (
         }
       }
     }
-
+   
     where.updatedAt = {
       [Sequelize.Op.gte]: new Date(startTime),
     };
 
     if (endTime) {
-      where.updatedAt[Sequelize.Op.lte] = new Date(endTime);
+      const nextDay = new Date(endTime);
+      nextDay.setDate(nextDay.getDate() + 1);
+      where.updatedAt[Sequelize.Op.lt] = nextDay;
     }
 
     if (attempts) {
