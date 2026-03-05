@@ -43,8 +43,7 @@ const notify = async (req, res) => {
       content,
     );
 
-    logger.info("Notification record created successfully in DB");
-
+    logger.info(`Notification record created successfully | client: ${clientID} | service: ${service}`);
     for (const record of notificationRecords) {
       if (record.statusCode) {
         return res.status(record.statusCode).json({
@@ -62,7 +61,7 @@ const notify = async (req, res) => {
         notificationRecords[0].messageId,
         attachments,
       );
-      logger.info("preSigned URLs generated successfully");
+      logger.info(`preSigned URLs generated successfully for message request: ${notificationRecords[0].messageId}`);
     }
 
     let publishResults;
@@ -74,15 +73,15 @@ const notify = async (req, res) => {
       publishResults = await Promise.all(
         notificationRecords.map(async (record) => {
           try {
-            return await publishingNotificationRequest(record);
+            const result = await publishingNotificationRequest(record);
+            logger.info(`Notification record published successfully |  client: ${clientID} | service: ${service} | messageId: ${record.messageId}`);
+            return result;
           } catch (err) {
             return { success: false, record, error: err.message };
           }
         }),
       );
     }
-
-    logger.info("Notification record published successfully");
 
     const response = {
       success: true,
@@ -137,7 +136,7 @@ const notifyWithEmailAttachment = async (req, res) => {
       attachments,
     };
 
-    logger.info("Notification Data fetched successfully")
+    logger.info(`Notification Data fetched successfully for ${messageId}`);
 
     if (notificationData.cc) {
       content.cc = notificationData.cc;
@@ -161,7 +160,7 @@ const notifyWithEmailAttachment = async (req, res) => {
 
     const result = await publishingNotificationRequest(notificationRecord);
 
-    logger.info(`Notification record with attachment publish successfully`);
+    logger.info(`Notification record with attachment publish successfully | client ${clientId} | messageId ${messageId}`);
 
     return res.status(202).json({
       success: true,

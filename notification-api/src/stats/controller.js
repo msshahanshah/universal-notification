@@ -37,7 +37,7 @@ const getBalance = async (req, res) => {
 
             await updateBalance(clientId, response, label, service.toUpperCase());
 
-            logger.info("Balance updated and fetched successfully");
+            logger.info(`Balance updated and fetched successfully | client ${clientId} | service ${service} | provider ${provider}`);
 
             return res.json({
                 success: true,
@@ -71,7 +71,7 @@ const viewBalance = async (req, res) => {
 
         const response = await fetchBalance(clientId, service.toUpperCase(), provider.toUpperCase());
 
-        logger.info("Balance fetched successfully");
+        logger.info(`Balance fetched successfully | client ${clientId} | service ${service} | provider ${provider}`);
         return res.json({
             success: true,
             message: "Balance fetched successfully",
