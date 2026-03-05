@@ -212,7 +212,6 @@ class EmailSender {
     if (!from) {
       throw new Error("Sender email (from) is required");
     }
-    let dir;
     let inMemoryAttachments;
     if (attachments?.length) {
       if (typeof attachments[0] === "object") {
@@ -228,7 +227,7 @@ class EmailSender {
             );
           }),
         );
-      } else {
+      } else {  
         // download files
         inMemoryAttachments = await Promise.all(
           attachments.map((file) => {
@@ -236,7 +235,7 @@ class EmailSender {
             const s3Url = file;
             const cleanUrl = s3Url.replace(/\?.*?\//, "/");
             const relativePath = cleanUrl.split("/uploads/")[1];
-            const [client, _messageId, fileName] = relativePath.split("/");
+            const [_messageId, fileName] = relativePath.split("/");
             return downloadS3File(s3Url, fileName, messageId);
           }),
         );
@@ -279,11 +278,12 @@ class EmailSender {
         return result;
       } else {
         const result = await this.transporter.sendMail(mailOptions);
-        logger.info(`Email sent via ${this.provider}`, { to, subject });
+        logger.info(`Email sent via ${this.provider} to ${ to } subject ${subject}`, );
+        logger.info(`Email sent successfully to ${to}`)
         return result;
       }
     } catch (error) {
-      logger.error(`Error sending email via ${this.provider}:`, {
+      logger.error(`Error sending email via ${this.provider} to ${to}:`, {
         message: error.message,
         stack: error?.stack
       });
