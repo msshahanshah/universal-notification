@@ -4,7 +4,6 @@ const express = require("express");
 const httpProxy = require("http-proxy");
 const config = require("./config");
 const logger = require("./logger");
-const { Sequelize } = require("sequelize");
 const connectionManager = require("./utillity/connectionManager");
 const { loadClientConfigs } = require("./utillity/loadClientConfigs");
 

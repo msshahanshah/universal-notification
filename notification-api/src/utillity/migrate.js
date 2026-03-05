@@ -1,3 +1,5 @@
+const logger = require('../logger');
+const { messageLogs } = require('../logs-api/controller');
 const { migrateAllDatabases } = require('./migrationRunner');
 
 (async () => {
@@ -5,7 +7,10 @@ const { migrateAllDatabases } = require('./migrationRunner');
         await migrateAllDatabases();
         process.exit(0);
     } catch (error) {
-        console.error('Migration failed:', error);
+        logger.error('Migration failed:', {
+            message: error.message,
+            stack: error?.stack
+        });
         process.exit(1);
     }
 })();
