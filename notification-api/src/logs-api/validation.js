@@ -6,6 +6,12 @@ const {
 
 const baseParams = Joi.string().optional().trim();
 
+
+const dateOnly = /^\d{4}-\d{2}-\d{2}$/;
+const isoDateTime = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,3})?Z$/;
+
+const datePattern = new RegExp(`^(${dateOnly.source})|(${isoDateTime.source})$`);
+
 const validateLogsSchema = Joi.object({
   service: baseParams.messages({
     'string.base': 'Value of service must be a string',
@@ -36,16 +42,16 @@ const validateLogsSchema = Joi.object({
     'string.empty': `Value of destination can't be empty`,
   }),
   attempts: Joi.number()
-  .integer()
-  .min(0)
-  .max(3)
-  .optional()
-  .messages({
-    'number.base': 'Value of attempts must be number',
-    'number.integer': 'Value of attempts must be integer',
-    'number.min': 'Value of attempts must be >= 0',
-    'number.max': 'Value of attempts must be <= 3',
-  }),
+    .integer()
+    .min(0)
+    .max(3)
+    .optional()
+    .messages({
+      'number.base': 'Value of attempts must be number',
+      'number.integer': 'Value of attempts must be integer',
+      'number.min': 'Value of attempts must be >= 0',
+      'number.max': 'Value of attempts must be <= 3',
+    }),
 
   cc: baseParams.messages({
     'string.base': 'Value of cc must be string',
@@ -61,17 +67,44 @@ const validateLogsSchema = Joi.object({
     'string.base': 'Value of fromEmail must be string',
     'string.empty': `Value of fromEmail can't be empty`,
   }),
-  'start-time': Joi.date().iso().messages({
-    'date.base': 'Value of start-time must be valid timestamp',
-    'date.format': 'Value of start-time must be in ISO 8601 format (UTC)',
-    'date.empty': `Value of start-time can't be empty`,
-  }),
 
-  'end-time': Joi.date().iso().optional().messages({
-    'date.base': 'Value of end-time must be valid timestamp',
-    'date.format': 'Value of end-time must be in ISO 8601 format (UTC)',
-    'date.empty': `Value of end-time can't be empty`,
-  }),
+  'from': Joi.string().pattern(datePattern).
+    custom((value, helpers) => {
+      if (!datePattern.test(value)) {
+        return helpers.error('any.invalid');
+      }
+
+      const date = new Date(value);
+      if (isNaN(date.getTime())) {
+        return helpers.error('any.invalid');
+      }
+      return value;
+    }).messages({
+      'string.pattern.base':
+        'Value of start-date is not valid.',
+      'any.invalid':
+        'Value of start-date is incorrect.',
+      'string.empty': `Value of start-time can't be empty`,
+    }),
+
+  'to': Joi.string().pattern(datePattern).optional().
+    custom((value, helpers) => {
+      if (!datePattern.test(value)) {
+        return helpers.error('any.invalid');
+      }
+
+      const date = new Date(value);
+      if (isNaN(date.getTime())) {
+        return helpers.error('any.invalid');
+      }
+      return value;
+    }).messages({
+      'string.pattern.base':
+        'Value of end-date is not valid.',
+      'any.invalid':
+        'Value of end-date is incorrect.',
+      'string.empty': `Value of end-time can't be empty`,
+    }),
 });
 
 const validateLogsQuery = (schema) => (req, res, next) => {

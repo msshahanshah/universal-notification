@@ -31,8 +31,8 @@ const viewMessageLogs = async (
   cc,
   bcc,
   fromEmail,
-  startTime,
-  endTime,
+  from,
+  to,
 ) => {
     const offset = (page - 1) * limit;
     const where = {};
@@ -41,9 +41,9 @@ const viewMessageLogs = async (
     let dbConnect = await global.connectionManager.getModels(idClient);
     const validColumns = Object.keys(dbConnect.Notification.rawAttributes);
 
-    if(new Date(startTime) && new Date(endTime)) {
-      if(endTime < startTime) {
-        throw { statusCode: 400, message: `End time can't be greater than start time`};
+    if(from && to) {
+      if(new Date(to) < new Date(from)) {
+        throw { statusCode: 400, message: `To can't be greater than from`};
       }
     }
 
@@ -58,14 +58,19 @@ const viewMessageLogs = async (
       }
     }
    
-    where.updatedAt = {
-      [Sequelize.Op.gte]: new Date(startTime),
-    };
+    if (from){
+      const startDay = new Date(from);
+      startDay.setHours(0,0,0,0) 
+      where.updatedAt = {
+        [Sequelize.Op.gte] : startDay
+      }
+    }
+    
 
-    if (endTime) {
-      const nextDay = new Date(endTime);
-      nextDay.setDate(nextDay.getDate() + 1);
-      where.updatedAt[Sequelize.Op.lt] = nextDay;
+    if (to) {
+      const endDay = new Date(to);
+      endDay.setHours(0,0,0,0);
+      where.updatedAt[Sequelize.Op.lt] = endDay;
     }
 
     if (attempts) {
