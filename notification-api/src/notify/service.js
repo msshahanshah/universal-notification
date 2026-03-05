@@ -127,7 +127,7 @@ const creatingNotificationRecord = async (
       enabledServices,
     })
     throw {
-      statusCode: 500,
+      statusCode: 422,
       message: `invalid or missing ENABLED_SERVERICES. Contact Admin`,
     };
   }
@@ -163,12 +163,7 @@ const creatingNotificationRecord = async (
           attempts: 0,
           templateId,
         });
-
-        logger.info("Notification record created successfully", {
-          number,
-          ...record.dataValues,
-        });
-
+        
         return { success: true, number, ...record.dataValues };
       }),
     );

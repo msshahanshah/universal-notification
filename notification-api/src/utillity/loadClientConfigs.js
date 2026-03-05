@@ -1,3 +1,4 @@
+const { stack } = require("sequelize/lib/utils");
 const logger = require("../logger");
 const { SecretManager } = require("@universal-notifier/secret-manager");
 
@@ -58,7 +59,8 @@ async function loadClientConfigs() {
     });
   } catch (error) {
     logger.error("Failed to load client configurations:", {
-      error: error.message,
+      message: error.message,
+      stack: error?.stack
     });
     throw error;
   }

@@ -1,6 +1,7 @@
 const grpcClient = require("../gRPC/grpc.client");
 const grpc = require('@grpc/grpc-js');
-const { fetchBalance, updateBalance } = require("./service")
+const { fetchBalance, updateBalance } = require("./service");
+const logger = require("../logger");
 
 const labelMap = {
     TWILIO: "Amount",
@@ -36,6 +37,8 @@ const getBalance = async (req, res) => {
 
             await updateBalance(clientId, response, label, service.toUpperCase());
 
+            logger.info("Balance updated and fetched successfully");
+
             return res.json({
                 success: true,
                 message: "Balance fetched successfully",
@@ -49,6 +52,10 @@ const getBalance = async (req, res) => {
         });
 
     } catch (error) {
+        logger.error({
+            message: error.message,
+            stack: error?.stack
+        });
         return res.status(error.statusCode || 500).json({ success: false, message: error.message });
     }
 };
@@ -64,6 +71,7 @@ const viewBalance = async (req, res) => {
 
         const response = await fetchBalance(clientId, service.toUpperCase(), provider.toUpperCase());
 
+        logger.info("Balance fetched successfully");
         return res.json({
             success: true,
             message: "Balance fetched successfully",
@@ -75,6 +83,10 @@ const viewBalance = async (req, res) => {
             }
         });
     } catch (error) {
+        logger.error({
+            message: error.message,
+            stack: error?.stack
+        });
         return res.status(error.statusCode || 500).json({ success: false, message: error.message })
     }
 }

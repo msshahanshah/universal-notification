@@ -52,6 +52,10 @@ const auth = async (req, res, next) => {
 
     next();
   } catch (error) {
+    logger.error({
+      message: err.message,
+      stack: err?.stack
+    });
     if (
       error.name === "JsonWebTokenError" ||
       error.name === "TokenExpiredError"
