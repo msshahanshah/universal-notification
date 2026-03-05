@@ -102,8 +102,8 @@ const notify = async (req, res) => {
     return res.status(202).json(response);
   } catch (error) {
     logger.error({
-      message: err.message,
-      stack: err?.stack
+      message: error.message,
+      stack: error?.stack
     });
     return res.status(error.statusCode || 500).json({
       success: false,

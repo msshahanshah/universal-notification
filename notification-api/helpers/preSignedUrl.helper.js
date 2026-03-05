@@ -13,8 +13,7 @@ const generatePreSignedUrl = async (clientId, messageId, attachements) => {
   try {
     const urls = await Promise.all(
       attachements?.map(async (file) => {
-        const fileKey = `uploads/${clientId}/${messageId}?${attachements.length}/${file}`; // clientId/messageId?size/file_name
-        const params = {
+        const fileKey = `uploads/${clientId}/${messageId}_${attachements.length}/${file}`; const params = {
           Bucket: process.env.AWS_S3_BUCKET_NAME,
           Key: fileKey, // file name
           Conditions: [["content-length-range", 0, 20 * 1024 * 1024]], // 20 MB
