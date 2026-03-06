@@ -48,10 +48,12 @@ const messageLogs = async (req, res) => {
       cc = null,
       bcc = null,
       fromEmail = null,
-      'start-time': startTime = null,
-      'end-time': endTime = null,
+      'from-date': fromDate = null,
+      "to-date" : toDate =null,
+  
     } = req.query;
 
+    const limitInt = parseInt(limit);
     const idClient = req.header('X-Client-Id');
 
     const { data, totalPages } = await viewMessageLogs(
@@ -59,7 +61,7 @@ const messageLogs = async (req, res) => {
       service,
       status,
       page,
-      limit,
+      limitInt,
       order,
       sort,
       message,
@@ -68,8 +70,8 @@ const messageLogs = async (req, res) => {
       cc,
       bcc,
       fromEmail,
-      startTime,
-      endTime,
+      fromDate,
+      toDate,
     );
     return res.status(200).send({
       success: true,
@@ -83,8 +85,8 @@ const messageLogs = async (req, res) => {
     });
   } catch (error) {
     logger.error({
-      message: err.message,
-      stack: err?.stack
+      message: error.message,
+      stack: error?.stack
     });
     return res.status(error.statusCode || 500).send({
       message: error.message || 'Internal Server Error',
