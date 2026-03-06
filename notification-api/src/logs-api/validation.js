@@ -81,10 +81,10 @@ const validateLogsSchema = Joi.object({
       return value;
     }).messages({
       'string.pattern.base':
-        'Value of start-date is not valid.',
+        'Value of "from is not valid.',
       'any.invalid':
-        'Value of start-date is incorrect.',
-      'string.empty': `Value of start-time can't be empty`,
+        'Value of "from" is incorrect.',
+      'string.empty': `Value of "from" can't be empty`,
     }),
 
   'to': Joi.string().pattern(datePattern).optional().
@@ -100,10 +100,10 @@ const validateLogsSchema = Joi.object({
       return value;
     }).messages({
       'string.pattern.base':
-        'Value of end-date is not valid.',
+        'Value of "to" is not valid.',
       'any.invalid':
-        'Value of end-date is incorrect.',
-      'string.empty': `Value of end-time can't be empty`,
+        'Value of "to" is incorrect.',
+      'string.empty': `Value of "to" can't be empty`,
     }),
 });
 
