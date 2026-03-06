@@ -68,7 +68,7 @@ const validateLogsSchema = Joi.object({
     'string.empty': `Value of fromEmail can't be empty`,
   }),
 
-  'from': Joi.string().pattern(datePattern).
+  'from-date': Joi.string().pattern(datePattern).
     custom((value, helpers) => {
       if (!datePattern.test(value)) {
         return helpers.error('any.invalid');
@@ -81,13 +81,13 @@ const validateLogsSchema = Joi.object({
       return value;
     }).messages({
       'string.pattern.base':
-        'Value of "from is not valid.',
+        'Value of from-date is not valid.',
       'any.invalid':
-        'Value of "from" is incorrect.',
-      'string.empty': `Value of "from" can't be empty`,
+        'Value of from-date is incorrect.',
+      'string.empty': `Value of from-date can't be empty`,
     }),
 
-  'to': Joi.string().pattern(datePattern).optional().
+  'to-date': Joi.string().pattern(datePattern).optional().
     custom((value, helpers) => {
       if (!datePattern.test(value)) {
         return helpers.error('any.invalid');
@@ -100,10 +100,10 @@ const validateLogsSchema = Joi.object({
       return value;
     }).messages({
       'string.pattern.base':
-        'Value of "to" is not valid.',
+        'Value of to-date is not valid.',
       'any.invalid':
-        'Value of "to" is incorrect.',
-      'string.empty': `Value of "to" can't be empty`,
+        'Value of to-date is incorrect.',
+      'string.empty': `Value of to-date can't be empty`,
     }),
 });
 

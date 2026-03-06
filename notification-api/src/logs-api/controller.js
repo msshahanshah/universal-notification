@@ -48,8 +48,9 @@ const messageLogs = async (req, res) => {
       cc = null,
       bcc = null,
       fromEmail = null,
-      from = null,
-      to = null,
+      'from-date': fromDate = null,
+      "to-date" : toDate =null,
+  
     } = req.query;
 
     const limitInt = parseInt(limit);
@@ -69,8 +70,8 @@ const messageLogs = async (req, res) => {
       cc,
       bcc,
       fromEmail,
-      from,
-      to,
+      fromDate,
+      toDate,
     );
     return res.status(200).send({
       success: true,
