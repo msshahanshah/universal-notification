@@ -121,10 +121,14 @@ if (cluster.isMaster) {
           const clientId = req.headers["x-client-id"];
           const client = clients.find((c) => c.ID === clientId);
           if (!client) {
+            const message =
+              req.path === "/login"
+                ? "Incorrect username or password"
+                : "Authentication required";
             logger.warn("Invalid or missing X-Client-Id header", { clientId });
             return res
               .status(401)
-              .json({ success: false, message: "Invalid headers" });
+              .json({ success: false, message: message });
           }
 
           logger.info(
