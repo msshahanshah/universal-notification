@@ -17,8 +17,8 @@ const deliveryStatus = async (req, res, next) => {
     });
   } catch (error) {
     logger.error({
-      message: err.message,
-      stack: err?.stack
+      message: error.message,
+      stack: error?.stack
     });
     if (error.parent?.code === '22P02') {
       return res
