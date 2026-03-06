@@ -1,3 +1,4 @@
+const logger = require('../logger');
 const { viewDeliveryStatus, viewMessageLogs } = require('./service');
 
 const deliveryStatus = async (req, res, next) => {
@@ -15,6 +16,10 @@ const deliveryStatus = async (req, res, next) => {
       },
     });
   } catch (error) {
+    logger.error({
+      message: err.message,
+      stack: err?.stack
+    });
     if (error.parent?.code === '22P02') {
       return res
         .status(400)
@@ -78,6 +83,10 @@ const messageLogs = async (req, res) => {
       },
     });
   } catch (error) {
+    logger.error({
+      message: error.message,
+      stack: error?.stack
+    });
     return res.status(error.statusCode || 500).send({
       message: error.message || 'Internal Server Error',
       success: false,

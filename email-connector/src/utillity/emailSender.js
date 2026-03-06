@@ -3,7 +3,6 @@ const sgMail = require("@sendgrid/mail");
 const Mailgun = require("mailgun.js");
 const logger = require("../logger");
 const { downloadS3File } = require("../helpers/fileOperation.helper");
-const { Readable } = require("stream");
 
 // Email service configuration
 class EmailSender {
@@ -86,9 +85,12 @@ class EmailSender {
         };
         try {
           return awsTransporter.sendMail(info);
-        } catch (err) {
-          console.error("AWS ses mail send failed:");
-          throw err;
+        } catch (error) {
+          logger.error("AWS ses mail send failed:", {
+            message: error.message,
+            stack: error?.stack
+          })
+          throw error;
         }
       },
     };
@@ -146,9 +148,12 @@ class EmailSender {
         };
         try {
           return await mg.messages.create(mgConfig.DOMAIN, msg);
-        } catch (err) {
-          console.error("Mailgun send failed:", err?.message, err?.details);
-          throw err;
+        } catch (error) {
+          logger.error("Mailgun send failed:", {
+            message: error.message,
+            stack: error?.stack
+          })
+          throw error;
         }
       },
     };
@@ -207,7 +212,6 @@ class EmailSender {
     if (!from) {
       throw new Error("Sender email (from) is required");
     }
-    let dir;
     let inMemoryAttachments;
     if (attachments?.length) {
       if (typeof attachments[0] === "object") {
@@ -223,7 +227,7 @@ class EmailSender {
             );
           }),
         );
-      } else {
+      } else {  
         // download files
         inMemoryAttachments = await Promise.all(
           attachments.map((file) => {
@@ -231,7 +235,7 @@ class EmailSender {
             const s3Url = file;
             const cleanUrl = s3Url.replace(/\?.*?\//, "/");
             const relativePath = cleanUrl.split("/uploads/")[1];
-            const [client, _messageId, fileName] = relativePath.split("/");
+            const [_messageId, fileName] = relativePath.split("/");
             return downloadS3File(s3Url, fileName, messageId);
           }),
         );
@@ -274,15 +278,14 @@ class EmailSender {
         return result;
       } else {
         const result = await this.transporter.sendMail(mailOptions);
-        logger.info(`Email sent via ${this.provider}`, { to, subject });
+        logger.info(`Email sent via ${this.provider} to ${ to } subject ${subject}`, );
+        logger.info(`Email sent successfully to ${to}`)
         return result;
       }
     } catch (error) {
-      console.log(error);
-      logger.error(`Error sending email via ${this.provider}:`, {
-        error: error.message,
-        to,
-        subject,
+      logger.error(`Error sending email via ${this.provider} to ${to}:`, {
+        message: error.message,
+        stack: error?.stack
       });
       throw error;
     }

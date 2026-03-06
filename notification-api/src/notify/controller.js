@@ -13,6 +13,7 @@ const {
 } = require("./service");
 
 const { generatePreSignedUrl } = require("../../helpers/preSignedUrl.helper");
+const logger = require("../logger");
 
 const notify = async (req, res) => {
   try {
@@ -42,6 +43,7 @@ const notify = async (req, res) => {
       content,
     );
 
+    logger.info(`Notification record created successfully | client: ${clientID} | service: ${service}`);
     for (const record of notificationRecords) {
       if (record.statusCode) {
         return res.status(record.statusCode).json({
@@ -59,6 +61,7 @@ const notify = async (req, res) => {
         notificationRecords[0].messageId,
         attachments,
       );
+      logger.info(`preSigned URLs generated successfully for message request: ${notificationRecords[0].messageId}`);
     }
 
     let publishResults;
@@ -70,7 +73,9 @@ const notify = async (req, res) => {
       publishResults = await Promise.all(
         notificationRecords.map(async (record) => {
           try {
-            return await publishingNotificationRequest(record);
+            const result = await publishingNotificationRequest(record);
+            logger.info(`Notification record published successfully |  client: ${clientID} | service: ${service} | messageId: ${record.messageId}`);
+            return result;
           } catch (err) {
             return { success: false, record, error: err.message };
           }
@@ -84,9 +89,8 @@ const notify = async (req, res) => {
       message:
         attachments?.length && typeof attachments[0] === "string"
           ? "Waiting for file upload on URL (expiry 5 mins)."
-          : `Notification request accepted ${
-              publishResults ? "and queued." : ""
-            }`,
+          : `Notification request accepted ${publishResults ? "and queued." : ""
+          }`,
       preSignedUrls,
     };
 
@@ -97,6 +101,10 @@ const notify = async (req, res) => {
     }
     return res.status(202).json(response);
   } catch (error) {
+    logger.error({
+      message: error.message,
+      stack: error?.stack
+    });
     return res.status(error.statusCode || 500).json({
       success: false,
       message: error.message || "Internal server error",
@@ -115,10 +123,8 @@ const notifyWithEmailAttachment = async (req, res) => {
       throw {
         statusCode: 400,
         message: "Attachments are required. Please provide at least one S3 URL.",
-      };  
+      };
     }
-
-    const headers = req.headers;
 
     const clientId = req.headers["x-client-id"];
 
@@ -129,6 +135,8 @@ const notifyWithEmailAttachment = async (req, res) => {
       fromEmail: notificationData.fromEmail,
       attachments,
     };
+
+    logger.info(`Notification Data fetched successfully for ${messageId}`);
 
     if (notificationData.cc) {
       content.cc = notificationData.cc;
@@ -150,7 +158,9 @@ const notifyWithEmailAttachment = async (req, res) => {
       attachments,
     };
 
-    result = await publishingNotificationRequest(notificationRecord);
+    const result = await publishingNotificationRequest(notificationRecord);
+
+    logger.info(`Notification record with attachment publish successfully | client ${clientId} | messageId ${messageId}`);
 
     return res.status(202).json({
       success: true,
@@ -159,6 +169,10 @@ const notifyWithEmailAttachment = async (req, res) => {
       messageId, // Return the ID to the client
     });
   } catch (err) {
+    logger.error({
+      message: err.message,
+      stack: err?.stack
+    });
     return res.status(err.statusCode || 500).json({
       success: false,
       message: err.message || "Internal Server Error",

@@ -40,12 +40,12 @@ const login = async (username, password) => {
       RedisHelper.getRefreshTokenRedisKey(username);
 
     await Promise.all([
-      await RedisHelper.setKey(
+      RedisHelper.setKey(
         REDIS_ACCESS_TOKEN_KEY,
         accessToken,
         AUTH_TOKEN.ACCESS_TOKEN,
       ),
-      await RedisHelper.setKey(
+      RedisHelper.setKey(
         REDIS_REFRESH_TOKEN_KEY,
         refreshToken,
         AUTH_TOKEN.REFRESH_TOKEN,
