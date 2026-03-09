@@ -10,11 +10,11 @@ const login = async (req, res) => {
     const userClient = username.split("@")[1];
 
     if (!userClient) {
-      throw { statusCode: 400, message: `invalid username or password` };
+      throw { statusCode: 401, message: `invalid username or password` };
     }
 
     if (userClient.toLowerCase() !== x_clientId.toLowerCase()) {
-      throw { statusCode: 400, message: `invalid username or password` };
+      throw { statusCode: 401, message: `invalid username or password` };
     }
     const { accessToken, refreshToken } = await authService.login(
       username,
@@ -32,7 +32,7 @@ const login = async (req, res) => {
   } catch (err) {
     logger.error({
       message: err.message,
-      stack: err?.stack
+      stack: err?.stack,
     });
     return res.status(err.statusCode || 500).json({
       success: false,
@@ -59,7 +59,7 @@ const refresh = async (req, res) => {
   } catch (err) {
     logger.error({
       message: err.message,
-      stack: err?.stack
+      stack: err?.stack,
     });
     return res.status(err.statusCode || 500).json({
       success: false,
@@ -89,7 +89,7 @@ const logout = async (req, res) => {
   } catch (err) {
     logger.error({
       message: err.message,
-      stack: err?.stack
+      stack: err?.stack,
     });
     return res.status(err.statusCode || 500).json({
       success: false,
