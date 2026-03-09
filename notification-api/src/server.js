@@ -4,7 +4,6 @@ const express = require("express");
 const httpProxy = require("http-proxy");
 const config = require("./config");
 const logger = require("./logger");
-const { Sequelize } = require("sequelize");
 const connectionManager = require("./utillity/connectionManager");
 const { loadClientConfigs } = require("./utillity/loadClientConfigs");
 
@@ -123,10 +122,14 @@ if (cluster.isMaster) {
           const clientId = req.headers["x-client-id"];
           const client = clients.find((c) => c.ID === clientId);
           if (!client) {
+            const message =
+              req.path === "/login"
+                ? "Incorrect username or password"
+                : "Authentication required";
             logger.warn("Invalid or missing X-Client-Id header", { clientId });
             return res
-              .status(400)
-              .json({ error: "Invalid or missing X-Client-Id header" });
+              .status(401)
+              .json({ success: false, message: message });
           }
 
           logger.info(

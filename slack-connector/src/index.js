@@ -102,7 +102,9 @@ if (cluster.isMaster) {
       const client = clients.find((c) => c.ID === clientId);
 
       if (!client) {
-        logger.error(`Worker: No configuration found for client ${clientId}`);
+        logger.error(
+          `Worker: No configuration found for client ${clientId} \n`,
+        );
         process.exit(1);
       }
       const server = await startServer([client]);
@@ -112,14 +114,14 @@ if (cluster.isMaster) {
       process.on("SIGTERM", () => closeConnections(clientId));
       process.on("SIGINT", () => closeConnections(clientId));
       process.on("unhandledRejection", (reason, promise) => {
-        logger.error(`[${clientId}] Unhandled Rejection at:`, {
+        logger.error(`[${clientId}] Unhandled Rejection at: \n`, {
           promise,
           reason: reason.message || reason,
         });
         closeConnections(clientId).then(() => process.exit(1));
       });
       process.on("uncaughtException", (error) => {
-        logger.error(`[${clientId}] Uncaught Exception:`, {
+        logger.error(`[${clientId}] Uncaught Exception: \n`, {
           error: error.message,
           stack: error.stack,
         });
@@ -127,7 +129,7 @@ if (cluster.isMaster) {
       });
     } catch (error) {
       logger.error(
-        `Worker: Failed to start for client ${process.env.CLIENT_ID}:`,
+        `Worker: Failed to start for client ${process.env.CLIENT_ID}: \n`,
         { error: error.message },
       );
       process.exit(1);

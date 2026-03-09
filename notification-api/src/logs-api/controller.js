@@ -1,3 +1,4 @@
+const logger = require('../logger');
 const { viewDeliveryStatus, viewMessageLogs } = require('./service');
 
 const deliveryStatus = async (req, res, next) => {
@@ -15,6 +16,10 @@ const deliveryStatus = async (req, res, next) => {
       },
     });
   } catch (error) {
+    logger.error({
+      message: error.message,
+      stack: error?.stack
+    });
     if (error.parent?.code === '22P02') {
       return res
         .status(400)
@@ -43,10 +48,12 @@ const messageLogs = async (req, res) => {
       cc = null,
       bcc = null,
       fromEmail = null,
-      'start-time': startTime = null,
-      'end-time': endTime = null,
+      'from-date': fromDate = null,
+      "to-date" : toDate =null,
+  
     } = req.query;
 
+    const limitInt = parseInt(limit);
     const idClient = req.header('X-Client-Id');
 
     const { data, totalPages } = await viewMessageLogs(
@@ -54,7 +61,7 @@ const messageLogs = async (req, res) => {
       service,
       status,
       page,
-      limit,
+      limitInt,
       order,
       sort,
       message,
@@ -63,8 +70,8 @@ const messageLogs = async (req, res) => {
       cc,
       bcc,
       fromEmail,
-      startTime,
-      endTime,
+      fromDate,
+      toDate,
     );
     return res.status(200).send({
       success: true,
@@ -77,7 +84,10 @@ const messageLogs = async (req, res) => {
       },
     });
   } catch (error) {
-    console.log(error);
+    logger.error({
+      message: error.message,
+      stack: error?.stack
+    });
     return res.status(error.statusCode || 500).send({
       message: error.message || 'Internal Server Error',
       success: false,

@@ -1,7 +1,10 @@
 const fetchBalance = async (clientId, service, provider) => {
 
     if (!clientId || !service || !provider) {
-        throw { message: "service and provider are missing", statusCode: 400 };
+        throw {
+            statusCode: 400,
+            message: "service or provider is missing"
+        };
     }
 
     const dbConnect = await global.connectionManager.getModels(clientId);
@@ -11,9 +14,10 @@ const fetchBalance = async (clientId, service, provider) => {
     });
 
     if (!balance) {
-        const error = new Error("Provider Not Found");
-        error.status = 404;
-        throw error;
+        throw {
+            statusCode: 404,    
+            message: "Provider Not Found"
+        }
     }
 
     return balance;
