@@ -43,7 +43,7 @@ const viewMessageLogs = async (
 
     if(fromDate && toDate) {
       if(new Date(toDate) < new Date(fromDate)) {
-        throw { statusCode: 400, message: `From can't be greater than To`};
+        throw { statusCode: 400, message: `from-date can't be greater than to-date`};
       }
     }
 
