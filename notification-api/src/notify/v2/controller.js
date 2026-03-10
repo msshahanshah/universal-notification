@@ -1,3 +1,4 @@
+const logger = require("../../logger");
 const { notifyService: notifyV2Service } = require("./service");
 const notify = async (req, res) => {
   const failed = [];
@@ -57,7 +58,7 @@ const notify = async (req, res) => {
       // insert success response
       success.push(successRecord);
     } catch (error) {
-      console.log("error", error);
+      logger.error("ERROR: In creating notify record: v2", error);
       failed.push(error);
     }
   }

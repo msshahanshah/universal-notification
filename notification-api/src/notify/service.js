@@ -127,15 +127,15 @@ const creatingNotificationRecord = async (
       enabledServices,
     });
     throw {
-      statusCode: 422,
-      message: `invalid or missing ENABLED_SERVERICES. Contact Admin`,
+      statusCode: 400,
+      message: `invalid or missing ENABLED_SERVERICES in client config for ${clientId}`,
     };
   }
 
   if (!enabledServices.includes(service)) {
     throw {
-      statusCode: 403,
-      message: `${service} is not enable.`,
+      statusCode: 400,
+      message: `${service} is not enable for client ${clientId}`,
     };
   }
 
@@ -163,7 +163,7 @@ const creatingNotificationRecord = async (
           attempts: 0,
           templateId,
         });
-        
+
         return { success: true, number, ...record.dataValues };
       }),
     );
