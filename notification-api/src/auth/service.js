@@ -79,23 +79,24 @@ const generateNewAccessToken = async (refreshToken, x_clientId) => {
     const username = user.username;
     const userClient = username.split("@")[1];
     if (!userClient) {
-      throw { statusCode: 400, message: `invalid username or password` };
+      throw { statusCode: 401, message: `Invalid refresh token` };
     }
     if (userClient.toLowerCase() !== x_clientId.toLowerCase()) {
-      throw { statusCode: 400, message: `invalid username or password` };
+      throw { statusCode: 401, message: `Invalid refresh token` };
     }
     const REDIS_ACCESS_TOKEN_KEY = RedisHelper.getAccessTokenRedisKey(username);
-    const REDIS_REFRESH_TOKEN_KEY = RedisHelper.getRefreshTokenRedisKey(username);
+    const REDIS_REFRESH_TOKEN_KEY =
+      RedisHelper.getRefreshTokenRedisKey(username);
 
     const isRefreshTokenExistInRedis = await RedisHelper.getValue(
       REDIS_REFRESH_TOKEN_KEY,
     );
 
-    if (!isRefreshTokenExistInRedis ) {
+    if (!isRefreshTokenExistInRedis) {
       throw { message: "Unauthorized", statusCode: 401 };
     }
 
-    if (isRefreshTokenExistInRedis !== refreshToken){
+    if (isRefreshTokenExistInRedis !== refreshToken) {
       throw { message: "Unauthorized", statusCode: 401 };
     }
 
