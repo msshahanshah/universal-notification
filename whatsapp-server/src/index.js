@@ -40,6 +40,21 @@ if (cluster.isMaster) {
 } else {
     (async () => {
         try {
+            const port = process.env.PORT;
+            const client = process.env.clientList;
+            const express = require('express');
+            const app = express();
+            const webhookRouter = require('./webhooks/route');
+            app.use(express.json());
+            app.use(express.urlencoded({ extended: false }));
+            logger.info(`[${client}] Starting whatsapp server at port ${port}...`);
+
+            app.use(webhookRouter);
+
+            app.listen(port, () => {
+                logger.info(`[${client}] Whatsapp server is listening at port ${port}`);
+            });
+
             let clients = await loadClientConfigs();
             const clientConfigList = clients.filter(c => c.SERVER_PORT === +process.env.SERVER_PORT);
 

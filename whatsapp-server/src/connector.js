@@ -28,13 +28,23 @@ async function connectAndConsume(clientConfigList) {
         await rabbitClient.consume({
           service: 'whatsapp',
           sender: async (payload, messageId) => {
-            const { destination } = payload;
+            const { destination, content, provider } = payload;
             const {
               fromNumber,
               templateId,
               attachments = [],
               message,
-            } = payload.content;
+              contentVariables,
+            } = content;
+
+            const msgData = {
+              fromNumber,
+              templateId,
+              attachments,
+              message,
+              destination,
+              contentVariables,
+            };
 
             if (process.env.NODE_ENV === 'testing') {
               const msg = await db.Notification.findOne({
@@ -52,19 +62,24 @@ async function connectAndConsume(clientConfigList) {
               return;
             }
             if (!attachments.length) {
-              return whatsAppSender.sendWhatsAppMessage(
-                { fromNumber, templateId, attachments, message, destination },
-                messageId,
-              );
+              return whatsAppSender.sendWhatsAppMessage(msgData, messageId);
             }
-            return Promise.all(
-              attachments?.map((attachment) => {
+            const result = await Promise.all(
+              msgData.attachments?.map((attachment) => {
                 return whatsAppSender.sendWhatsAppMessage(
-                  { fromNumber, templateId, attachment, message, destination },
+                  {
+                    fromNumber,
+                    templateId,
+                    attachment,
+                    message,
+                    destination,
+                    contentVariables,
+                  },
                   messageId,
                 );
               }),
             );
+            return result.length === 1 ? result[0] : result;
           },
           db,
           maxProcessAttemptCount: 3,
