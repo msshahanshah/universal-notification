@@ -18,7 +18,6 @@ const authValidation = {
     }),
 
   password: Joi.string()
-    .min(8)
     .trim()
     // .max(12)
     // .pattern(/^[A-Za-z0-9]{8,12}$/)
@@ -26,9 +25,6 @@ const authValidation = {
     .messages({
       "string.base": "Password must be a string",
       "string.empty": "Password cannot be empty",
-      "string.min": "Password must be at least 8 characters long",
-      "string.max": "Password must not exceed 12 characters",
-      "string.pattern.base": "Password must be alphanumeric",
       "any.required": "Password is required",
     }),
 };

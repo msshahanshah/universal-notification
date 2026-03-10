@@ -10,7 +10,7 @@ const accessControl = (req, res, next) => {
         req.user.clientId = X_Client_ID.toLowerCase();
         next();
     } else {
-        return res.status(401).json({ success: false, message: 'Invalid headers' });
+        return res.status(401).json({ success: false, message: 'Invalid username or password' });
     }
 }
 
