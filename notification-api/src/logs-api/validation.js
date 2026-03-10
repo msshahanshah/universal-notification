@@ -49,8 +49,8 @@ const validateLogsSchema = Joi.object({
     .messages({
       'number.base': 'Value of attempts must be number',
       'number.integer': 'Value of attempts must be integer',
-      'number.min': 'Value of attempts must be >= 0',
-      'number.max': 'Value of attempts must be <= 3',
+      'number.min': 'Attempts must be between 0 and 3',
+      'number.max': 'Attempts must be between 0 and 3'
     }),
 
   cc: baseParams.messages({
@@ -83,7 +83,7 @@ const validateLogsSchema = Joi.object({
       'string.pattern.base':
         'Value of from-date is not valid.',
       'any.invalid':
-        'Value of from-date is incorrect.',
+        'Value of from-date is not valid.',
       'string.empty': `Value of from-date can't be empty`,
     }),
 
@@ -102,7 +102,7 @@ const validateLogsSchema = Joi.object({
       'string.pattern.base':
         'Value of to-date is not valid.',
       'any.invalid':
-        'Value of to-date is incorrect.',
+        'Value of to-date is not valid.',
       'string.empty': `Value of to-date can't be empty`,
     }),
 });
