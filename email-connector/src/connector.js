@@ -28,6 +28,18 @@ async function connectAndConsume(clientConfigList) {
         await rabbitClient.consume({
           service: "email",
           sender: async (payload, messageId) => {
+            // destructor payload
+            const { content, destination, provider } = payload;
+            const msgData = {
+              to: destination,
+              subject: content.subject,
+              html: content.body,
+              from: content.fromEmail,
+              cc: content.cc,
+              bcc: content.bcc,
+              attachments: content.attachments,
+              provider: provider,
+            };
             if (process.env.NODE_ENV === "testing") {
               const msg = await db.Notification.findOne({
                 where: { messageId },
@@ -41,7 +53,7 @@ async function connectAndConsume(clientConfigList) {
                 { where: { messageId } },
               );
             }
-            return emailSender.sendEmail(messageId, payload);
+            return emailSender.sendEmail(messageId, msgData);
           },
           db,
           maxProcessAttemptCount: 3,

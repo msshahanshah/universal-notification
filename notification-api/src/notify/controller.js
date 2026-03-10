@@ -114,8 +114,9 @@ const notifyWithEmailAttachment = async (req, res) => {
     ) {
       throw {
         statusCode: 400,
-        message: "Attachments are required. Please provide at least one S3 URL.",
-      };  
+        message:
+          "Attachments are required. Please provide at least one S3 URL.",
+      };
     }
 
     const headers = req.headers;

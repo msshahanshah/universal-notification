@@ -8,7 +8,7 @@
     "test": "node __tests__/index.test.js"
   },
   "dependencies": {
-    "@universal-notifier/secret-manager": "github:gkmit-dikshant/aws-secret-manager-package",
+    "@universal-notifier/secret-manager": "github:gkmit-dikshant/aws-secret-manager-package#development",
     "@grpc/grpc-js": "^1.14.3",
     "@grpc/proto-loader": "^0.8.0",
     "amqplib": "^0.10.8",
