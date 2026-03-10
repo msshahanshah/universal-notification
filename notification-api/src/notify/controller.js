@@ -13,6 +13,7 @@ const {
 } = require("./service");
 
 const { generatePreSignedUrl } = require("../../helpers/preSignedUrl.helper");
+const logger = require("../logger");
 
 const notify = async (req, res) => {
   try {
@@ -42,6 +43,9 @@ const notify = async (req, res) => {
       content,
     );
 
+    logger.info(
+      `Notification record created successfully | client: ${clientID} | service: ${service}`,
+    );
     for (const record of notificationRecords) {
       if (record.statusCode) {
         return res.status(record.statusCode).json({
@@ -59,6 +63,9 @@ const notify = async (req, res) => {
         notificationRecords[0].messageId,
         attachments,
       );
+      logger.info(
+        `preSigned URLs generated successfully for message request: ${notificationRecords[0].messageId}`,
+      );
     }
 
     let publishResults;
@@ -70,7 +77,11 @@ const notify = async (req, res) => {
       publishResults = await Promise.all(
         notificationRecords.map(async (record) => {
           try {
-            return await publishingNotificationRequest(record);
+            const result = await publishingNotificationRequest(record);
+            logger.info(
+              `Notification record published successfully |  client: ${clientID} | service: ${service} | messageId: ${record.messageId}`,
+            );
+            return result;
           } catch (err) {
             return { success: false, record, error: err.message };
           }
@@ -97,6 +108,10 @@ const notify = async (req, res) => {
     }
     return res.status(202).json(response);
   } catch (error) {
+    logger.error({
+      message: error.message,
+      stack: error?.stack,
+    });
     return res.status(error.statusCode || 500).json({
       success: false,
       message: error.message || "Internal server error",
@@ -119,8 +134,6 @@ const notifyWithEmailAttachment = async (req, res) => {
       };
     }
 
-    const headers = req.headers;
-
     const clientId = req.headers["x-client-id"];
 
     const notificationData = await getNotificationData(messageId, clientId);
@@ -130,6 +143,8 @@ const notifyWithEmailAttachment = async (req, res) => {
       fromEmail: notificationData.fromEmail,
       attachments,
     };
+
+    logger.info(`Notification Data fetched successfully for ${messageId}`);
 
     if (notificationData.cc) {
       content.cc = notificationData.cc;
@@ -151,7 +166,11 @@ const notifyWithEmailAttachment = async (req, res) => {
       attachments,
     };
 
-    result = await publishingNotificationRequest(notificationRecord);
+    const result = await publishingNotificationRequest(notificationRecord);
+
+    logger.info(
+      `Notification record with attachment publish successfully | client ${clientId} | messageId ${messageId}`,
+    );
 
     return res.status(202).json({
       success: true,
@@ -160,6 +179,10 @@ const notifyWithEmailAttachment = async (req, res) => {
       messageId, // Return the ID to the client
     });
   } catch (err) {
+    logger.error({
+      message: err.message,
+      stack: err?.stack,
+    });
     return res.status(err.statusCode || 500).json({
       success: false,
       message: err.message || "Internal Server Error",

@@ -65,6 +65,10 @@ async function connectAndConsume(clientConfigList) {
     global.connectionManager = connectionManager;
     logger.info("All connections initialized successfully.");
   } catch (error) {
+    logger.error({
+      message: error.message,
+      stack: error?.stack,
+    });
     logger.error(
       "Failed to connect or consume from RabbitMQ / DB check failed:",
       { error: error.message, stack: error.stack },
@@ -82,6 +86,10 @@ async function closeConnections(clientId) {
       logger.info("Closed all connections");
     }
   } catch (error) {
+    logger.error({
+      message: error.message,
+      stack: error?.stack,
+    });
     logger.error("Failed to close connections:", { error: error.message });
   }
 }

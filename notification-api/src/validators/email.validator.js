@@ -19,7 +19,9 @@ const validateEmailList = (value, helpers, fieldName) => {
 
   for (let email of emails) {
     if (email.length == 0)
-      return helpers.message(`In ${fieldName} empty commas are not allowed `);
+      return helpers.message(
+        `An invalid ${fieldName} is not allowed. An empty or invalid destination value was detected`,
+      );
   }
 
   if (emails.length === 0) {

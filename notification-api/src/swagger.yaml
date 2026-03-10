@@ -69,7 +69,7 @@ components:
             - Comma-separated list of phone numbers:
             - Number must be a valid international phone number
             - Duplicate numbers are not allowed
-            - Empty commas are not allowed
+            - Invalid commas are not allowed
             - Must be in the format +<countryCode><phonenumber>
 
     NotifySlack:
@@ -102,7 +102,7 @@ components:
             - Destination is required
             - Destination cannot be empty
             - Duplicate channel IDs are not allowed
-            - Empty commas are not allowed
+            - Invalid commas are not allowed
             - Case insensitive
 
     NotifyEmail:
@@ -129,7 +129,7 @@ components:
             - Destination is required.
             - Destination cannot be empty.
             - Duplicate emails are allowed.
-            - Empty commas are not allowed.
+            - Invalid commas are not allowed.
             - Case insensitive.
 
         fromEmail:
@@ -165,7 +165,7 @@ components:
           description: |
             - (Optional) Comma-separated CC email addresses.
             - Duplicate emails are allowed.
-            - Empty commas are not allowed.
+            - Invalid commas are not allowed.
             - Empty value is possible.
 
         bcc:
@@ -174,7 +174,7 @@ components:
           description: |
             - (Optional) Comma-separated BCC email addresses.
             - Duplicate emails are allowed.
-            - Empty commas are not allowed.
+            - Invalid commas are not allowed.
             - Empty value is possible.
 
         attachments:
@@ -208,7 +208,7 @@ components:
             - Destination is required.
             - Destination cannot be empty.
             - Duplicate emails are allowed.
-            - Empty commas are not allowed.
+            - Invalid commas are not allowed.
             - Case insensitive.
 
         fromEmail:
@@ -244,7 +244,7 @@ components:
           description: |
             - (Optional) Comma-separated CC email addresses.
             - Duplicate emails are allowed.
-            - Empty commas are not allowed.
+            - Invalid commas are not allowed.
             - Empty value is possible.
 
         bcc:
@@ -253,7 +253,7 @@ components:
           description: |
             - (Optional) Comma-separated BCC email addresses.
             - Duplicate emails are allowed.
-            - Empty commas are not allowed.
+            - Invalid commas are not allowed.
             - Empty value is possible.
 
         attachments:
@@ -289,7 +289,7 @@ components:
             - Destination is required.
             - Destination cannot be empty.
             - Duplicate emails are allowed.
-            - Empty commas are not allowed.
+            - Invalid commas are not allowed.
             - Case insensitive.
 
         fromEmail:
@@ -325,7 +325,7 @@ components:
           description: |
             - (Optional) Comma-separated CC email addresses.
             - Duplicate emails are allowed.
-            - Empty commas are not allowed.
+            - Invalid commas are not allowed.
             - Empty value is possible.
 
         bcc:
@@ -334,7 +334,7 @@ components:
           description: |
             - (Optional) Comma-separated BCC email addresses.
             - Duplicate emails are allowed.
-            - Empty commas are not allowed.
+            - Invalid commas are not allowed.
             - Empty value is possible.
 
         attachments:
@@ -414,7 +414,7 @@ paths:
             type: string
       responses:
         "200":
-          description: Service is healthy
+          description: ok
 
   /login:
     post:
@@ -489,7 +489,31 @@ paths:
                     properties:
                       accessToken:
                         type: string
-
+  /logout:
+    post:
+      summary: Logout
+      tags: [Auth]
+      parameters:
+        - name: X-Client-Id
+          in: header
+          required: true
+          schema:
+            type: string
+      
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Logout successfully
+                  
   /delivery-status/{messageId}:
     get:
       summary: Get delivery status

@@ -1,12 +1,8 @@
-const amqp = require("amqplib");
 const logger = require("./logger");
 const { Sequelize } = require("sequelize");
 const rabbitManager = require("./rabbit");
 const { sendSlackMessage } = require("./slackSender");
 
-let connection = null;
-let channel = null;
-let consumerTag = null; // Store consumer tag to allow cancellation
 let sequelize = null;
 
 /**
@@ -25,7 +21,7 @@ function initializeSequelize(dbConfig, clientId) {
     username: dbConfig.USER,
     password: dbConfig.PASSWORD,
     schema: clientId.toLowerCase(),
-    logging: (msg) => logger.debug(`[${clientId}] Sequelize: ${msg}`),
+    logging: (msg) => logger.debug(`[${clientId}] Sequelize: ${msg} \n`),
     pool: {
       max: 5,
       min: 0,
@@ -46,6 +42,7 @@ function initializeSequelize(dbConfig, clientId) {
  */
 async function connectAndConsume(client) {
   const clientId = client.ID;
+
   // get rabbit mq
   try {
     const rabbitClient = await rabbitManager.getClient(clientId);
@@ -53,14 +50,12 @@ async function connectAndConsume(client) {
     const sequelize = initializeSequelize(client.DBCONFIG, clientId);
 
     await sequelize.authenticate();
-    logger.info(`[${clientId}] Database connection successful.`);
+    logger.info(`[${clientId}] Database connection successful. \n`);
 
     // Define models (assuming models are defined similarly to the original code)
     const database = require("../models")(sequelize, Sequelize, clientId); // Initialize models for this client's Sequelize instance
 
     // consume rabbitmq
-
-    // if testing env
 
     await rabbitClient.consume({
       service: "slackbot",
@@ -73,7 +68,9 @@ async function connectAndConsume(client) {
           });
 
           if (!message) {
-            logger.error("Message not found for messageId : " + messageId);
+            logger.error(
+              `Message not found for messageId :${messageId} in slack service`,
+            );
             return;
           }
           await database.Notification.update(
@@ -91,10 +88,12 @@ async function connectAndConsume(client) {
       maxProcessAttemptCount: 3,
     });
   } catch (error) {
-    logger.error(
-      `[${clientId}] Failed to connect or consume from RabbitMQ / DB check failed:`,
-      { error: error.message, stack: error.stack },
-    );
+    logger.error({
+      message: error.message,
+      stack: error?.stack,
+      clientId,
+    });
+
     await closeConnections(clientId, true);
     logger.info(`[${clientId}] Retrying connection in 10 seconds...`);
     setTimeout(() => connectAndConsume(client), 10000);
@@ -105,16 +104,6 @@ async function connectAndConsume(client) {
 let isShuttingDown = false; // Prevent duplicate shutdown attempts
 /**
  * Handles the RabbitMQ connection close event. */
-function handleRabbitClose() {
-  if (isShuttingDown) return; // Already handling shutdown
-  logger.warn("RabbitMQ connection closed.");
-  consumerTag = null; // Invalidate consumer tag
-  channel = null; // Clear channel and connection
-  connection = null;
-  // Implement robust reconnection strategy (e.g., exponential backoff)
-  logger.info("Attempting RabbitMQ reconnection in 10 seconds...");
-  setTimeout(connectAndConsume, 10000); // Simple retry delay
-}
 
 /**
  * Closes all open connections (RabbitMQ channel, connection, and database) and performs cleanup.
@@ -128,18 +117,22 @@ async function closeConnections(clientId, attemptReconnect = false) {
   if (isShuttingDown && !attemptReconnect) return;
 
   isShuttingDown = !attemptReconnect;
-  logger.info(`[${clientId}] Closing connections...`);
+  logger.info(`[${clientId}] Closing connections for ${clientId}`);
 
   // --- RabbitMQ ---
   try {
     const rabbitClient = await rabbitManager.getClient(clientId);
 
     if (rabbitClient) {
-      logger.info(`[${clientId}] Closing RabbitMQ client...`);
+      logger.info(`[${clientId}] Closing RabbitMQ for client ${clientId}`);
       await rabbitClient.close();
-      logger.info(`[${clientId}] RabbitMQ client closed.`);
+      logger.info(`[${clientId}] RabbitMQ client ${clientId} closed.`);
     }
   } catch (err) {
+    logger.error({
+      message: err.message,
+      stack: err?.stack,
+    });
     logger.error(`[${clientId}] Error closing RabbitMQ client`, {
       errorMessage: err.message,
     });
@@ -151,6 +144,10 @@ async function closeConnections(clientId, attemptReconnect = false) {
       await sequelize.close();
       logger.info(`[${clientId}] Database connection closed.`);
     } catch (err) {
+      logger.error({
+        message: err.message,
+        stack: err?.stack,
+      });
       logger.error(`[${clientId}] Error closing database connection`, {
         errorMessage: err.message,
       });

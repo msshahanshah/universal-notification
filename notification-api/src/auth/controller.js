@@ -1,5 +1,8 @@
 const authService = require("./service");
 const RedisHelper = require("../../helpers/redis.helper");
+const logger = require("../logger");
+const { stack } = require("sequelize/lib/utils");
+const { error } = require("winston");
 const login = async (req, res) => {
   try {
     const { username, password } = req.body;
@@ -7,11 +10,11 @@ const login = async (req, res) => {
     const userClient = username.split("@")[1];
 
     if (!userClient) {
-      throw { statusCode: 400, message: `invalid username or password` };
+      throw { statusCode: 401, message: `invalid username or password` };
     }
 
     if (userClient.toLowerCase() !== x_clientId.toLowerCase()) {
-      throw { statusCode: 400, message: `invalid username or password` };
+      throw { statusCode: 401, message: `invalid username or password` };
     }
     const { accessToken, refreshToken } = await authService.login(
       username,
@@ -27,6 +30,10 @@ const login = async (req, res) => {
       },
     });
   } catch (err) {
+    logger.error({
+      message: err.message,
+      stack: err?.stack,
+    });
     return res.status(err.statusCode || 500).json({
       success: false,
       message: err.message || "Internal Server Error",
@@ -50,6 +57,10 @@ const refresh = async (req, res) => {
       },
     });
   } catch (err) {
+    logger.error({
+      message: err.message,
+      stack: err?.stack,
+    });
     return res.status(err.statusCode || 500).json({
       success: false,
       message: err.message || "Internal Server Error",
@@ -73,9 +84,13 @@ const logout = async (req, res) => {
 
     return res.status(200).send({
       success: true,
-      message: "Logout Successfully",
+      message: "Logout successfully",
     });
   } catch (err) {
+    logger.error({
+      message: err.message,
+      stack: err?.stack,
+    });
     return res.status(err.statusCode || 500).json({
       success: false,
       message: err.message || "Internal Server Error",
