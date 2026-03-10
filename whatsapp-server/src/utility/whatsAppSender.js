@@ -45,35 +45,71 @@ class WhatsAppSender {
     const { ACCOUNT_SID, AUTH_TOKEN, FROM_NUMBER } = this.clientConfig.TWILIO;
     const client = twilio(ACCOUNT_SID, AUTH_TOKEN);
 
-    this.sender = async ({fromNumber, templateId, attachment, message, destination}, messageId) => {
+    this.sender = async (
+      {
+        fromNumber,
+        templateId,
+        attachment,
+        message,
+        destination,
+        contentVariables
+      },
+      messageId,
+    ) => {
       logger.info('Sending WhatsApp via Twilio...');
 
-      if(typeof attachment === 'object') {
+      if (typeof attachment === 'object') {
         attachment = attachment.url;
       }
 
-      if(!fromNumber){
-         fromNumber = FROM_NUMBER;
+      if (!fromNumber) {
+        fromNumber = FROM_NUMBER;
       }
 
-        const res = await client.messages.create({
-          from: `whatsapp:${fromNumber}`,
-          to: `whatsapp:${destination}`,
-          body: message,
-          mediaUrl: [attachment],
-          templateId: templateId
-        });
-      return res;
+      const clientId = process.env.clientList;
+      const data = {
+        from: `whatsapp:${fromNumber}`,
+        to: `whatsapp:${destination}`,
+        statusCallback: `${process.env.WEBHOOK_CALLBACK_URL}/webhook/whatsapp?id=${clientId}`,
+      };
+
+      if (message) {
+        data.body = message;
+      }
+
+      if (attachment) {
+        data.mediaUrl = [attachment];
+      }
+
+      if (templateId) {
+        data.contentSid = templateId;
+      }
+
+      if (contentVariables) {
+        data.contentVariables = JSON.stringify(contentVariables);
+      }
+
+      console.log("Lambda data of in wp sender", data);
+
+      let res = await client.messages.create(data);
+      const newObj = {...res.toJSON(),referenceId: res.sid};
+      return newObj;
     };
 
     this.provider = 'TWILIO';
   }
 
-  async sendWhatsAppMessage({fromNumber, templateId, attachment, message, destination}, messageId) {
+  async sendWhatsAppMessage(
+    { fromNumber, templateId, attachment, message, destination, contentVariables },
+    messageId,
+  ) {
     if (!this.sender)
       throw new Error('WhatsApp message sender not initialized');
     try {
-      const result = await this.sender({fromNumber, templateId, attachment, message, destination}, messageId);
+      const result = await this.sender(
+        { fromNumber, templateId, attachment, message, destination, contentVariables },
+        messageId,
+      );
       logger.info(`SMS sent via whatsapp, provider: ${this.provider}`);
       return result;
     } catch (err) {
