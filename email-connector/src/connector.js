@@ -5,7 +5,7 @@ async function connectAndConsume(clientConfigList) {
   try {
     await Promise.all(
       clientConfigList.map(async (clientItem) => {
-        await connectionManager.initializeSequelize(
+        connectionManager.initializeSequelize(
           clientItem.DBCONFIG,
           clientItem.ID,
         );
@@ -56,7 +56,7 @@ async function connectAndConsume(clientConfigList) {
   } catch (error) {
     logger.error(
       "Failed to connect or consume from RabbitMQ / DB check failed:",
-      { error: error.message, stack: error.stack },
+      { message: error.message, stack: error?.stack },
     );
     throw error; // Re-throw to let caller handle retry logic
   }
@@ -72,7 +72,7 @@ async function closeConnections(clientId) {
       logger.info("Closed all connections");
     }
   } catch (error) {
-    logger.error("Failed to close connections:", { error: error.message });
+    logger.error("Failed to close connections:", { message: error.message, stack: error?.stack });
   }
 }
 module.exports = {

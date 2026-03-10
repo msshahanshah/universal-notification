@@ -16,7 +16,7 @@ const smsValidation = {
       for (let number of numbers) {
         if (number.length == 0)
           return helpers.message(
-            `In destination empty commas are not allowed `,
+            `An invalid destination is not allowed. An empty or invalid destination value was detected`,
           );
       }
 

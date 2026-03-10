@@ -4,7 +4,6 @@ const express = require("express");
 const httpProxy = require("http-proxy");
 const config = require("./config");
 const logger = require("./logger");
-const { Sequelize } = require("sequelize");
 const connectionManager = require("./utillity/connectionManager");
 const { loadClientConfigs } = require("./utillity/loadClientConfigs");
 
@@ -112,25 +111,40 @@ if (cluster.isMaster) {
         const swaggerUi = require("swagger-ui-express");
         const swaggerDoc = YAML.load(path.join(__dirname, "swagger.yaml"));
         const masterApp = express();
+
+        // cors setting
         masterApp.use(require("cors")());
+
+        // api documentation
         masterApp.use(
           "/api-docs",
           swaggerUi.serve,
-          swaggerUi.setup(swaggerDoc)
+          swaggerUi.setup(swaggerDoc),
         );
+
+        // health check for master app
+        masterApp.use("/health", (req, res) => {
+          logger.debug("Health check endpoint hit");
+          res.status(200).send("OK");
+        });
+
+        // routing for client's requests
         masterApp.use((req, res, next) => {
           const clientId = req.headers["x-client-id"];
           const client = clients.find((c) => c.ID === clientId);
           if (!client) {
+            const message =
+              req.path === "/login"
+                ? "invalid username or password"
+                : "Authentication required";
             logger.warn("Invalid or missing X-Client-Id header", { clientId });
-            return res
-              .status(400)
-              .json({ error: "Invalid or missing X-Client-Id header" });
+            return res.status(401).json({ success: false, message: message });
           }
 
           logger.info(
             `Routing request for client ${clientId} to port ${client.SERVER_PORT}`,
           );
+
           proxy.web(
             req,
             res,
