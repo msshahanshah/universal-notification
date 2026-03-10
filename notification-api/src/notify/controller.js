@@ -30,16 +30,25 @@ const notify = async (req, res) => {
       attachments,
       templateId,
       fromNumber,
+      contentVariables,
     } = req.body;
 
     const clientID = req.headers['x-client-id'];
 
-    console.log("Attachments", attachments);
-
     // Build content
-    const content = message
-      ? { message, attachments, templateId, fromNumber } // added attachments, fromNumber here
+    let content = message
+      ? { message, attachments, templateId, fromNumber, contentVariables }
       : { subject, body, fromEmail, cc, bcc, attachments };
+
+    if (contentVariables) {
+      content = {
+        message,
+        attachments,
+        templateId,
+        fromNumber,
+        contentVariables,
+      };
+    }
 
     const notificationRecords = await creatingNotificationRecord(
       clientID,
@@ -127,8 +136,6 @@ const notifyWithEmailAttachment = async (req, res) => {
     ) {
       throw new Error("Please send media (S3 URL's)");
     }
-
-    console.log("Req body", req.body);
 
     const headers = req.headers;
 
