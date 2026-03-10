@@ -34,7 +34,7 @@ async function notifyService(clientId, service, bulkMessages) {
           attachments,
         );
       } catch (error) {
-        console.log("failed to publish message", error);
+        logger.error("failed to publish message", error);
         throw { statusCode: 500, message: "failed to create presigned urls" };
       }
 
@@ -285,40 +285,7 @@ async function publishingNotificationRequest(notificationRecord) {
   });
 }
 
-/**
- * Fetch Notification
- */
-
-async function getNotificationData(messageId, clientID) {
-  const dbConnect = await global.connectionManager.getModels(clientID);
-
-  const details = await dbConnect.Notification.findOne({
-    where: { messageId },
-  });
-
-  if (!details) {
-    logger.error("No message found with this MssageID");
-    throw new Error("No message found with this MessageID");
-  }
-
-  const data = {
-    service: details.service,
-    destination: details.destination,
-    subject: details.content.subject,
-    body: details.content.body,
-    fromEmail: details.content.fromEmail,
-    extension: details.content.extension,
-    attachments: details.content.attachments,
-  };
-
-  if (details.content.cc) data.cc = details.content.cc;
-  if (details.content.bcc) data.bcc = details.content.bcc;
-
-  return data;
-}
-
 module.exports = {
   publishingNotificationRequest,
-  getNotificationData,
   notifyService,
 };

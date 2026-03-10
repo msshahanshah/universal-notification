@@ -7,6 +7,7 @@ const {
 const emailValidation = require("../../validators/email.validator");
 const slackValidation = require("../../validators/slack.validator");
 const smsValidation = require("../../validators/sms.validator");
+const logger = require("../../logger");
 
 const destinationSchema = Joi.alternatives()
   .conditional("service", {
@@ -121,7 +122,7 @@ const validateRequest = async (req, res, next) => {
 
       sanitizeBody[service] = value;
       if (error) {
-        console.log(error);
+        logger.error("ERROR: validation failed notify: v2", error);
         return res.status(400).json({
           success: false,
           message: error.details[0].message,
