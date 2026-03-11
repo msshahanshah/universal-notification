@@ -113,9 +113,6 @@ async function creatingBulkNotificationRecord(clientId, service, messages) {
 
         serviceGuard(provider, { service, content, clientId }, clientConfig);
 
-        // const normalizedService =
-        //   service.toLowerCase() === "slack" ? "slackbot" : service;
-
         records.push({
           messageId: uuidv4(),
           service,
