@@ -1,10 +1,10 @@
-const logger = require('../logger');
-const { viewDeliveryStatus, viewMessageLogs } = require('./service');
-
+const { viewDeliveryStatus, viewMessageLogs } = require("./service");
+const { LOG_TYPE } = require("../../constants/index.js");
+const logger = require("../logger.js");
 const deliveryStatus = async (req, res, next) => {
   try {
     const messageId = req.params.id;
-    const clientId = req.header('X-Client-Id');
+    const clientId = req.header("X-Client-Id");
 
     const result = await viewDeliveryStatus(messageId, clientId);
 
@@ -18,14 +18,14 @@ const deliveryStatus = async (req, res, next) => {
   } catch (error) {
     logger.error({
       message: error.message,
-      stack: error?.stack
+      stack: error?.stack,
     });
-    if (error.parent?.code === '22P02') {
+    if (error.parent?.code === "22P02") {
       return res
         .status(400)
-        .json({ message: 'Message id is not valid', success: false });
+        .json({ message: "Message id is not valid", success: false });
     }
-    if (error.message === 'Message not found') {
+    if (error.message === "Message not found") {
       return res.status(404).json({ message: error.message, success: false });
     }
 
@@ -40,7 +40,7 @@ const messageLogs = async (req, res) => {
       status = null,
       page = 1,
       limit = 10,
-      order = 'desc',
+      order = "desc",
       sort = null,
       message = null,
       destination = null,
@@ -48,16 +48,17 @@ const messageLogs = async (req, res) => {
       cc = null,
       bcc = null,
       fromEmail = null,
-      'from-date': fromDate = null,
-      "to-date" : toDate =null,
-  
+      "from-date": fromDate = null,
+      "to-date": toDate = null,
     } = req.query;
 
     const limitInt = parseInt(limit);
-    const idClient = req.header('X-Client-Id');
+    const idClient = req.header("X-Client-Id");
+    const logType = LOG_TYPE.COMMON_LOGS;
 
     const { data, totalPages } = await viewMessageLogs(
       idClient,
+      logType,
       service,
       status,
       page,
@@ -75,7 +76,7 @@ const messageLogs = async (req, res) => {
     );
     return res.status(200).send({
       success: true,
-      message: 'Data fetched successfully',
+      message: "Data fetched successfully",
       data,
       pagination: {
         page: +page,
@@ -86,13 +87,71 @@ const messageLogs = async (req, res) => {
   } catch (error) {
     logger.error({
       message: error.message,
-      stack: error?.stack
+      stack: error?.stack,
     });
     return res.status(error.statusCode || 500).send({
-      message: error.message || 'Internal Server Error',
+      message: error.message || "Internal Server Error",
       success: false,
     });
   }
 };
 
-module.exports = { deliveryStatus, messageLogs };
+const slackMessageLogs = async (req, res) => {
+  try {
+    const {
+      service = null,
+      status = null,
+      page = 1,
+      limit = 10,
+      order = "desc",
+      sort = null,
+      message = null,
+      destination = null,
+      attempts = null,
+      cc = null,
+      bcc = null,
+      fromEmail = null,
+      "from-date": fromDate = null,
+      "to-date": toDate = null,
+    } = req.query;
+
+    const limitInt = parseInt(limit);
+    const idClient = req.header("X-Client-Id");
+    const logType = LOG_TYPE.SLACK_LOGS;
+
+    const { data, totalPages } = await viewMessageLogs(
+      idClient,
+      logType,
+      service,
+      status,
+      page,
+      limitInt,
+      order,
+      sort,
+      message,
+      destination,
+      attempts,
+      cc,
+      bcc,
+      fromEmail,
+      fromDate,
+      toDate,
+    );
+    return res.status(200).send({
+      success: true,
+      message: "Data fetched successfully",
+      data,
+      pagination: {
+        page: +page,
+        limit: data.length,
+        totalPages,
+      },
+    });
+  } catch (error) {
+    return res.status(error.statusCode || 500).send({
+      message: error.message || "Internal Server Error",
+      success: false,
+    });
+  }
+};
+module.exports = { deliveryStatus, messageLogs, slackMessageLogs };

@@ -81,6 +81,9 @@ async function connectAndConsume(client) {
           client.SLACKBOT.TOKEN,
           msgData.to,
           msgData.message,
+          messageId,
+          clientId,
+         
         );
       },
       db: database,

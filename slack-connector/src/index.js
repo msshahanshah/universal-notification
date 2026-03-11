@@ -1,7 +1,6 @@
 const cluster = require("cluster");
 const logger = require("./logger");
 const { connectAndConsume, closeConnections } = require("./connector");
-const { SecretManager } = require("@universal-notifier/secret-manager");
 const { loadClientConfigs } = require("./utility/loadClientConfigs.js");
 const connectionManager = require("./utility/connectionManager.js");
 const express = require("express");
@@ -22,16 +21,13 @@ async function startServer(clientConfigList) {
         clientItem.ID,
       );
     }
-    const SERVER_PORT = 3000;
+    const SERVER_PORT = process.env.PORT || 3000;
     global.connectionManager = connectionManager;
     const app = express();
     app.use(express.json());
     app.use(require("cors")());
     app.use("/", slackRoute);
-    app.get("/webhook", (req, res) => {
-      console.log(process.env.CLIENT_ID);
-      res.send("Hello", process.env.CLIENT_ID);
-    });
+
     const server = app.listen(SERVER_PORT, () => {
       logger.info(`Slack Service is listening on port ${SERVER_PORT}`);
     });
@@ -107,7 +103,9 @@ if (cluster.isMaster) {
         );
         process.exit(1);
       }
+
       const server = await startServer([client]);
+
       await connectAndConsume(client);
       process.on("SIGTERM", () => shutdown(0, process.env.clientList, server));
       process.on("SIGINT", () => shutdown(0, process.env.clientList, server));

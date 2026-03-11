@@ -11,7 +11,6 @@ const { loadClientConfigs } = require("./utillity/loadClientConfigs");
  * @type {import('http').Server|null}
  */
 let server = null;
-let masterServer = null;
 
 /**
  * Starts the server for a specific client.
@@ -114,7 +113,7 @@ if (cluster.isMaster) {
 
         // cors setting
         masterApp.use(require("cors")());
-        const MASTER_SERVER_PORT = process.env.MASTER_SERVER_PORT || 8000;
+        const MASTER_SERVER_PORT = process.env.PORT || 8000;
         masterApp.use(
           "/api-docs",
           swaggerUi.serve,
