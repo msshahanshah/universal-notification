@@ -45,6 +45,8 @@ const viewMessageLogs = async (
     if (new Date(toDate) < new Date(fromDate)) {
       throw { statusCode: 400, message: `From can't be greater than To` };
     }
+  } else {
+    throw { statusCode: 400, message: `from-date and to-date both are required`}
   }
 
   if (sort && order && (order === "asc" || order === "desc")) {
