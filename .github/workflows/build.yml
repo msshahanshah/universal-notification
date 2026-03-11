@@ -69,3 +69,13 @@ jobs:
           echo "Microservice : ${{ github.event.inputs.microservice }}"
           echo "Environment  : ${{ env.ENVIRONMENT }}"
           echo "Image tag    : ${{ github.run_number }}"
+          
+      - name: Send Slack notification
+        if: always()
+        uses: rtCamp/action-slack-notify@v2
+        env:
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
+          SLACK_MESSAGE: "Status: ${{ job.status }}\nMicro Service: ${{ github.event.inputs.microservice }}\nBranch: ${{ github.ref_name }}\n${{ github.event.head_commit.url }}"
+          SLACK_FOOTER: "Universal Notification UI"
+          SLACK_COLOR: ${{ job.status }}
+          MSG_MINIMAL: event,actions url

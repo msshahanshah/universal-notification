@@ -2,6 +2,7 @@ const { Sequelize } = require("sequelize");
 const path = require("path");
 const Umzug = require("umzug");
 const { loadClientConfigs } = require("./loadClientConfigs");
+const logger = require("../logger");
 
 async function runMigrations(sequelize, clientId) {
   // Ensure schema exists
@@ -51,9 +52,12 @@ async function migrateAllDatabases() {
       await runMigrations(clientSequelize, client.ID);
       await clientSequelize.close();
     }
-    console.log("All migrations completed successfully");
+    logger.info("All migrations completed successfully");
   } catch (error) {
-    console.error("Migration process failed:", error);
+    logger.error("Migration process failed:", {
+      message: error.message,
+      stack: error?.stack
+    });
     process.exit(1);
   }
 }

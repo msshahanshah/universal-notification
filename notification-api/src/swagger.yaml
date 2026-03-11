@@ -27,13 +27,12 @@ components:
         username:
           type: string
           example: abcdef@xyz
-         
+
         password:
           type: string
           minLength: 8
           example: Pass1234
-          
-    
+
     RefreshRequest:
       type: object
       required:
@@ -43,7 +42,6 @@ components:
           type: string
           example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
           description: Refresh token must be a non-empty string
-
 
     NotifySms:
       type: object
@@ -62,7 +60,7 @@ components:
           type: string
           minLength: 1
           example: Hello Rahul, how are you
-          
+
         destination:
           type: string
           pattern: '/^\+[0-9]+$/'
@@ -71,9 +69,8 @@ components:
             - Comma-separated list of phone numbers:
             - Number must be a valid international phone number
             - Duplicate numbers are not allowed
-            - Empty commas are not allowed
+            - Invalid commas are not allowed
             - Must be in the format +<countryCode><phonenumber>
-
 
     NotifySlack:
       type: object
@@ -92,10 +89,10 @@ components:
           type: string
           minLength: 1
           example: Good Morning, Guys
-          
+
         destination:
           type: string
-          pattern: '/^[CGD][A-Z0-9]{8,10}$/'
+          pattern: "/^[CGD][A-Z0-9]{8,10}$/"
           minLength: 9
           maxLength: 11
           example: C08Q1E38E10R,G09A1B2C3D
@@ -105,9 +102,8 @@ components:
             - Destination is required
             - Destination cannot be empty
             - Duplicate channel IDs are not allowed
-            - Empty commas are not allowed
+            - Invalid commas are not allowed
             - Case insensitive
-
 
     NotifyEmail:
       type: object
@@ -117,7 +113,7 @@ components:
         - subject
         - body
         - fromEmail
-      
+
       properties:
         service:
           type: string
@@ -133,9 +129,8 @@ components:
             - Destination is required.
             - Destination cannot be empty.
             - Duplicate emails are allowed.
-            - Empty commas are not allowed.
+            - Invalid commas are not allowed.
             - Case insensitive.
-
 
         fromEmail:
           type: string
@@ -148,7 +143,6 @@ components:
             - If client did not allowed then will never be sent
             - Case insensitive
 
-        
         subject:
           type: string
           minLength: 1
@@ -156,7 +150,7 @@ components:
           description: |
             - Subject can be empty
             - Subject is required
-           
+
         body:
           type: string
           minLength: 1
@@ -164,14 +158,14 @@ components:
           description: |
             - Body can be empty
             - Body is required
-        
+
         cc:
           type: string
           example: "test@gmail.com, test@gmail.com"
           description: |
             - (Optional) Comma-separated CC email addresses.
             - Duplicate emails are allowed.
-            - Empty commas are not allowed.
+            - Invalid commas are not allowed.
             - Empty value is possible.
 
         bcc:
@@ -180,7 +174,7 @@ components:
           description: |
             - (Optional) Comma-separated BCC email addresses.
             - Duplicate emails are allowed.
-            - Empty commas are not allowed.
+            - Invalid commas are not allowed.
             - Empty value is possible.
 
         attachments:
@@ -188,7 +182,6 @@ components:
           description: |
             - (Optional) Array of objects or Array of files name
             - Attachments array length can not more then 10
-            
 
     NotifyEmailWithFileAttachment:
       type: object
@@ -199,7 +192,7 @@ components:
         - body
         - fromEmail
         - attachments
-     
+
       properties:
         service:
           type: string
@@ -215,9 +208,8 @@ components:
             - Destination is required.
             - Destination cannot be empty.
             - Duplicate emails are allowed.
-            - Empty commas are not allowed.
+            - Invalid commas are not allowed.
             - Case insensitive.
-
 
         fromEmail:
           type: string
@@ -230,7 +222,6 @@ components:
             - If client did not allowed then will never be sent
             - Case insensitive
 
-        
         subject:
           type: string
           minLength: 1
@@ -238,7 +229,7 @@ components:
           description: |
             - Subject can be empty
             - Subject is required
-           
+
         body:
           type: string
           minLength: 1
@@ -246,14 +237,14 @@ components:
           description: |
             - Body can be empty
             - Body is required
-        
+
         cc:
           type: string
           example: "test@gmail.com, test@gmail.com"
           description: |
             - (Optional) Comma-separated CC email addresses.
             - Duplicate emails are allowed.
-            - Empty commas are not allowed.
+            - Invalid commas are not allowed.
             - Empty value is possible.
 
         bcc:
@@ -262,9 +253,8 @@ components:
           description: |
             - (Optional) Comma-separated BCC email addresses.
             - Duplicate emails are allowed.
-            - Empty commas are not allowed.
+            - Invalid commas are not allowed.
             - Empty value is possible.
-
 
         attachments:
           type: array
@@ -283,7 +273,7 @@ components:
         - body
         - fromEmail
         - attachments
-     
+
       properties:
         service:
           type: string
@@ -299,9 +289,8 @@ components:
             - Destination is required.
             - Destination cannot be empty.
             - Duplicate emails are allowed.
-            - Empty commas are not allowed.
+            - Invalid commas are not allowed.
             - Case insensitive.
-
 
         fromEmail:
           type: string
@@ -314,7 +303,6 @@ components:
             - If client did not allowed then will never be sent
             - Case insensitive
 
-        
         subject:
           type: string
           minLength: 1
@@ -322,7 +310,7 @@ components:
           description: |
             - Subject can be empty
             - Subject is required
-           
+
         body:
           type: string
           minLength: 1
@@ -330,14 +318,14 @@ components:
           description: |
             - Body can be empty
             - Body is required
-        
+
         cc:
           type: string
           example: "test@gmail.com, test@gmail.com"
           description: |
             - (Optional) Comma-separated CC email addresses.
             - Duplicate emails are allowed.
-            - Empty commas are not allowed.
+            - Invalid commas are not allowed.
             - Empty value is possible.
 
         bcc:
@@ -346,7 +334,7 @@ components:
           description: |
             - (Optional) Comma-separated BCC email addresses.
             - Duplicate emails are allowed.
-            - Empty commas are not allowed.
+            - Invalid commas are not allowed.
             - Empty value is possible.
 
         attachments:
@@ -361,8 +349,6 @@ components:
             - Empty object are not allowed
             - Extra fields are not allowed
             - Attachments array length can not more then 10
-    
-
 
     PreSignedUrlResponse:
       type: object
@@ -397,13 +383,22 @@ components:
             ]
     ErrorResponse:
       type: object
+      description: |
+        Standard error response object.
+
+        ⚠️ Header Validation Errors:
+        If you receive an error related to invalid headers,
+        ensure the following:
+
+        - `X-Client-Id` header is present
+        - `X-Client-Id` matches the client ID of the currently authenticated user
       properties:
         success:
           type: boolean
           example: false
         message:
           type: string
-          example: "Error detail here"
+          example: "error details"
 
 paths:
   /health:
@@ -418,7 +413,7 @@ paths:
             type: string
       responses:
         "200":
-          description: Service is healthy
+          description: ok
 
   /login:
     post:
@@ -493,7 +488,31 @@ paths:
                     properties:
                       accessToken:
                         type: string
-
+  /logout:
+    post:
+      summary: Logout
+      tags: [Auth]
+      parameters:
+        - name: X-Client-Id
+          in: header
+          required: true
+          schema:
+            type: string
+      
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Logout successfully
+                  
   /delivery-status/{messageId}:
     get:
       summary: Get delivery status
@@ -579,7 +598,7 @@ paths:
                 - $ref: "#/components/schemas/NotifySms"
                 - $ref: "#/components/schemas/NotifySlack"
                 - $ref: "#/components/schemas/NotifyEmail"
-                
+
               discriminator:
                 propertyName: service
 
@@ -609,8 +628,7 @@ paths:
                   cc (Optional): "itest@gmail.com , itest@gmail.com"
                   bcc (Optional): "itest@gmail.com , itest@gmail.com"
                   attachments (Optional): Array of objects or Array of files name
-                  
-                  
+
       responses:
         "202":
           description: Accepted
@@ -795,9 +813,6 @@ paths:
                         type: number
                       currency:
                         type: string
-                      
-                        
-                      
 
         "400":
           description: Service and provider are missing
@@ -821,7 +836,7 @@ paths:
                 $ref: "#/components/schemas/ErrorResponse"
 
         "500":
-          description: Internal Server Error 
+          description: Internal Server Error
           content:
             application/json:
               schema:
@@ -880,7 +895,6 @@ paths:
                         type: number
                       currency:
                         type: string
-                      
 
         "400":
           description: Service and provider are missing
@@ -904,13 +918,8 @@ paths:
                 $ref: "#/components/schemas/ErrorResponse"
 
         "500":
-          description: Internal Server Error 
+          description: Internal Server Error
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
-           
-      
- 
-
-      

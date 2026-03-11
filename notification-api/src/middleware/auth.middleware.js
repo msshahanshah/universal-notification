@@ -3,6 +3,7 @@ const globalDatabaseManager = require("../utillity/mainDatabase");
 
 const { AUTH_TOKEN } = require("../../constants/index.js");
 const RedisHelper = require("../../helpers/redis.helper.js");
+const logger = require("../logger.js");
 
 const auth = async (req, res, next) => {
   try {
@@ -51,6 +52,10 @@ const auth = async (req, res, next) => {
 
     next();
   } catch (error) {
+    logger.error({
+      message: error.message,
+      stack: error?.stack,
+    });
     if (
       error.name === "JsonWebTokenError" ||
       error.name === "TokenExpiredError"

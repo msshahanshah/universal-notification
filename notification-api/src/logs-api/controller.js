@@ -15,7 +15,11 @@ const deliveryStatus = async (req, res, next) => {
       },
     });
   } catch (error) {
-    if (error.parent?.code === "22P02") {
+    logger.error({
+      message: error.message,
+      stack: error?.stack
+    });
+    if (error.parent?.code === '22P02') {
       return res
         .status(400)
         .json({ message: "Message id is not valid", success: false });
@@ -55,7 +59,7 @@ const messageLogs = async (req, res) => {
       service,
       status,
       page,
-      limit,
+      limitInt,
       order,
       sort,
       message,
@@ -64,8 +68,8 @@ const messageLogs = async (req, res) => {
       cc,
       bcc,
       fromEmail,
-      startTime,
-      endTime,
+      fromDate,
+      toDate,
     );
     return res.status(200).send({
       success: true,
@@ -78,7 +82,10 @@ const messageLogs = async (req, res) => {
       },
     });
   } catch (error) {
-    console.log(error);
+    logger.error({
+      message: error.message,
+      stack: error?.stack
+    });
     return res.status(error.statusCode || 500).send({
       message: error.message || "Internal Server Error",
       success: false,

@@ -1,6 +1,5 @@
 // ./slack-connector/src/slackSender.js
 const { WebClient } = require("@slack/web-api");
-const config = require("./config");
 const logger = require("./logger");
 const RedisHelper = require("../helpers/redis.helper");
 // Map to cache Slack clients per bot token
@@ -8,7 +7,7 @@ const slackClients = new Map();
 
 function getSlackClient(botToken) {
   if (!botToken) {
-    logger.error("Slack Bot Token is not provided!");
+    logger.error("Slack Bot Token is not provided! \n");
     throw new Error("Missing Slack configuration: Bot Token");
   }
 
@@ -19,11 +18,13 @@ function getSlackClient(botToken) {
 
   // Log only a portion to avoid exposing the full token in logs
   const tokenSnippet = `${botToken.substring(0, 10)}...${botToken.substring(botToken.length - 4)}`;
-  logger.info(`Initializing Slack WebClient. Token snippet: [${tokenSnippet}]`);
+  logger.info(
+    `Initializing Slack WebClient. Token snippet: [${tokenSnippet}] \n`,
+  );
 
   const client = new WebClient(botToken);
   slackClients.set(botToken, client);
-  logger.info("Slack WebClient initialized and cached.");
+  logger.info("Slack WebClient initialized and cached.\n");
 
   return client;
 }
@@ -37,9 +38,9 @@ async function sendSlackMessage(
 ) {
   const client = getSlackClient(authToken); // Get initialized client
 
-  logger.debug(`Attempting to send message to Slack channel: ${channel}`, {
-    messageId,
-  });
+  logger.debug(
+    `Attempting to send message to Slack channel: ${channel} , messageId:${messageId} \n`,
+  );
 
   try {
     if (process.env.NODE_ENV === "testing") {
@@ -73,10 +74,13 @@ async function sendSlackMessage(
         },
       };
       if (result.ok) {
-        logger.info(`Message sent successfully to Slack channel: ${channel}`, {
-          messageId,
-          slackMessageTs: result.ts,
-        });
+        logger.info(
+          `Message sent successfully to Slack channel: ${channel} ,messageId : ${messageId} \n`,
+          {
+            messageId,
+            slackMessageTs: result.ts,
+          },
+        );
         return { success: true, response: result };
       }
     } else {
@@ -109,18 +113,20 @@ async function sendSlackMessage(
       } else {
         // This path might not be hit often if errors throw exceptions, but handle defensively
         logger.error(
-          `Slack API indicated failure, but no exception was thrown.`,
-          { messageId, channel, error: result.error, response: result },
+          `Slack API indicated failure, but no exception was thrown.\n`,
+          {
+            messageId,
+          },
         );
         return {
           success: false,
-          error: `Slack API error: ${result.error || "Unknown error"}`,
+          error: `Slack API error: ${result.error || "Unknown error"} \n`,
           response: result,
         };
       }
     }
   } catch (error) {
-    logger.error(`Error sending message to Slack via API`, {
+    logger.error(`Error sending message to Slack via API \n`, {
       messageId,
       channel,
       errorCode: error.code, // e.g., 'slack_error_code'
@@ -132,7 +138,7 @@ async function sendSlackMessage(
 
     // Rethrow a structured error or return failure info
     // Include specific Slack error if available (e.g., channel_not_found, invalid_auth)
-    const errorMessage = `Slack API Error: ${error.data?.error || error.message}`;
+    const errorMessage = `Slack API Error: ${error.data?.error || error.message} \n`;
     throw { success: false, error: errorMessage, rawError: error }; // Return failure and the original error
   }
 }

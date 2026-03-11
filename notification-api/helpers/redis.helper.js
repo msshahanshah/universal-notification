@@ -38,7 +38,7 @@ class RedisHelper {
     } catch (err) {
       throw {
         statusCode: 500,
-        message: "Redis Client is Offline",
+        message: "Internal Server Error",
         originalError: err.message,
       };
     }
@@ -50,7 +50,7 @@ class RedisHelper {
     } catch (err) {
       throw {
         statusCode: 500,
-        message: "Redis Client is Offline",
+        message: "Internal Server Error",
         originalError: err.message,
       };
     }
@@ -61,7 +61,7 @@ class RedisHelper {
     } catch (err) {
       throw {
         statusCode: 500,
-        message: "Redis Client is Offline",
+        message: "Internal Server Error",
         originalError: err.message,
       };
     }
