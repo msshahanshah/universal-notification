@@ -1,7 +1,6 @@
 const cluster = require("cluster");
 const logger = require("./logger");
 const { connectAndConsume, closeConnections } = require("./connector");
-const { SecretManager } = require("@universal-notifier/secret-manager");
 const { loadClientConfigs } = require("./utility/loadClientConfigs.js");
 const connectionManager = require("./utility/connectionManager.js");
 const express = require("express");
@@ -22,7 +21,7 @@ async function startServer(clientConfigList) {
         clientItem.ID,
       );
     }
-    const SERVER_PORT = 3000;
+    const SERVER_PORT = process.env.SERVER_PORT;
     global.connectionManager = connectionManager;
     const app = express();
     app.use(express.json());
@@ -105,7 +104,9 @@ if (cluster.isMaster) {
         logger.error(`Worker: No configuration found for client ${clientId}`);
         process.exit(1);
       }
+
       const server = await startServer([client]);
+
       await connectAndConsume(client);
       process.on("SIGTERM", () => shutdown(0, process.env.clientList, server));
       process.on("SIGINT", () => shutdown(0, process.env.clientList, server));

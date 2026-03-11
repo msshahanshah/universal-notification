@@ -46,6 +46,16 @@ module.exports = (sequelize, schemaName) => {
         allowNull: false,
       },
 
+      workspaceChannelKey: {
+        type: DataTypes.STRING,
+        allowNull: false,
+      },
+
+      userReferenceName: {
+        type: DataTypes.STRING,
+        allowNull: false,
+      },
+
       content: {
         type: DataTypes.JSON,
         allowNull: false,

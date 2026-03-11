@@ -1,12 +1,8 @@
-const amqp = require("amqplib");
 const logger = require("./logger");
 const { Sequelize } = require("sequelize");
 const rabbitManager = require("./rabbit");
 const { sendSlackMessage } = require("./slackSender");
 
-let connection = null;
-let channel = null;
-let consumerTag = null; // Store consumer tag to allow cancellation
 let sequelize = null;
 
 /**

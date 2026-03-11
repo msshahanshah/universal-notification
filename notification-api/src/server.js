@@ -4,7 +4,6 @@ const express = require("express");
 const httpProxy = require("http-proxy");
 const config = require("./config");
 const logger = require("./logger");
-const { Sequelize } = require("sequelize");
 const connectionManager = require("./utillity/connectionManager");
 const { loadClientConfigs } = require("./utillity/loadClientConfigs");
 
@@ -12,7 +11,6 @@ const { loadClientConfigs } = require("./utillity/loadClientConfigs");
  * @type {import('http').Server|null}
  */
 let server = null;
-let masterServer = null;
 
 /**
  * Starts the server for a specific client.
