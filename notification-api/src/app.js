@@ -16,6 +16,7 @@ const slackRouter = require("./slack/route");
 const app = express();
 
 // Global Middlewares
+// default payload size limit is 100 KB
 app.use(express.json());
 
 app.use(notificationRouter);
@@ -48,23 +49,29 @@ app.use(slackRouter);
  * @param {function} next - The next middleware function.
  */
 app.use((err, req, res, next) => {
-  if (
-    err instanceof SyntaxError &&
-    err.status === 400 &&
-    err?.type === "entity.parse.failed"
-  ) {
-    return res.status(400).json({
-      success: false,
-      message: "Invalid Request Body",
-    });
+  switch (err.type) {
+    case "entity.parse.failed":
+      return res.status(400).json({
+        success: false,
+        message: "Invalid Request Body",
+      });
+    case "entity.too.large":
+      return res.status(413).json({
+        success: false,
+        message: "Too large request",
+      });
+    default:
+      logger.error("Unhandled error:", {
+        error: err.message,
+        stack: err.stack,
+        url: req.originalUrl,
+        method: req.method,
+      });
+
+      return res.status(500).json({
+        message: "Something broke!",
+      });
   }
-  logger.error("Unhandled error:", {
-    error: err.message,
-    stack: err.stack,
-    url: req.originalUrl,
-    method: req.method,
-  });
-  res.status(500).send("Something broke!");
 });
 
 module.exports = app;
