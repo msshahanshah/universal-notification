@@ -113,12 +113,12 @@ async function creatingBulkNotificationRecord(clientId, service, messages) {
 
         serviceGuard(provider, { service, content, clientId }, clientConfig);
 
-        const normalizedService =
-          service.toLowerCase() === "slack" ? "slackbot" : service;
+        // const normalizedService =
+        //   service.toLowerCase() === "slack" ? "slackbot" : service;
 
         records.push({
           messageId: uuidv4(),
-          service: normalizedService,
+          service,
           destination: number,
           content: { ...content, provider },
           status: "pending",
@@ -271,9 +271,13 @@ async function publishingNotificationRequest(notificationRecord) {
   const rabbitConnect = await rabbitManager.getClient(clientId);
 
   if (!rabbitConnect) return;
+  let updatedService = service;
+  if (service.toLowerCase() === "slack") {
+    updatedService = "slackbot";
+  }
 
-  return rabbitConnect.publishMessage(service, {
-    service,
+  return rabbitConnect.publishMessage(updatedService, {
+    service: updatedService,
     destination,
     content,
     messageId,
