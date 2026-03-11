@@ -6,10 +6,10 @@
  */
 
 module.exports = {
-  async up(queryInterface, Sequelize) {
+  async up(queryInterface, Sequelize, schemaName) {
     const tableName = {
       tableName: "notifications",
-      schema: "gkmit", // change if schema dynamic
+      schema: schemaName,
     };
 
     await queryInterface.addColumn(tableName, "referenceId", {
@@ -23,10 +23,10 @@ module.exports = {
     });
   },
 
-  async down(queryInterface, Sequelize) {
+  async down(queryInterface, Sequelize, schemaName) {
     const tableName = {
       tableName: "notifications",
-      schema: "gkmit",
+      schema: schemaName,
     };
 
     await queryInterface.removeColumn(tableName, "referenceId");
