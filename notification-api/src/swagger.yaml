@@ -27,13 +27,12 @@ components:
         username:
           type: string
           example: abcdef@xyz
-         
+
         password:
           type: string
           minLength: 8
           example: Pass1234
-          
-    
+
     RefreshRequest:
       type: object
       required:
@@ -43,7 +42,6 @@ components:
           type: string
           example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
           description: Refresh token must be a non-empty string
-
 
     NotifySms:
       type: object
@@ -62,7 +60,7 @@ components:
           type: string
           minLength: 1
           example: Hello Rahul, how are you
-          
+
         destination:
           type: string
           pattern: '/^\+[0-9]+$/'
@@ -71,9 +69,8 @@ components:
             - Comma-separated list of phone numbers:
             - Number must be a valid international phone number
             - Duplicate numbers are not allowed
-            - Empty commas are not allowed
+            - Invalid commas are not allowed
             - Must be in the format +<countryCode><phonenumber>
-
 
     NotifySlack:
       type: object
@@ -92,10 +89,10 @@ components:
           type: string
           minLength: 1
           example: Good Morning, Guys
-          
+
         destination:
           type: string
-          pattern: '/^[CGD][A-Z0-9]{8,10}$/'
+          pattern: "/^[CGD][A-Z0-9]{8,10}$/"
           minLength: 9
           maxLength: 11
           example: C08Q1E38E10R,G09A1B2C3D
@@ -105,9 +102,8 @@ components:
             - Destination is required
             - Destination cannot be empty
             - Duplicate channel IDs are not allowed
-            - Empty commas are not allowed
+            - Invalid commas are not allowed
             - Case insensitive
-
 
     NotifyEmail:
       type: object
@@ -117,7 +113,7 @@ components:
         - subject
         - body
         - fromEmail
-      
+
       properties:
         service:
           type: string
@@ -133,9 +129,8 @@ components:
             - Destination is required.
             - Destination cannot be empty.
             - Duplicate emails are allowed.
-            - Empty commas are not allowed.
+            - Invalid commas are not allowed.
             - Case insensitive.
-
 
         fromEmail:
           type: string
@@ -148,7 +143,6 @@ components:
             - If client did not allowed then will never be sent
             - Case insensitive
 
-        
         subject:
           type: string
           minLength: 1
@@ -156,7 +150,7 @@ components:
           description: |
             - Subject can be empty
             - Subject is required
-           
+
         body:
           type: string
           minLength: 1
@@ -164,14 +158,14 @@ components:
           description: |
             - Body can be empty
             - Body is required
-        
+
         cc:
           type: string
           example: "test@gmail.com, test@gmail.com"
           description: |
             - (Optional) Comma-separated CC email addresses.
             - Duplicate emails are allowed.
-            - Empty commas are not allowed.
+            - Invalid commas are not allowed.
             - Empty value is possible.
 
         bcc:
@@ -180,7 +174,7 @@ components:
           description: |
             - (Optional) Comma-separated BCC email addresses.
             - Duplicate emails are allowed.
-            - Empty commas are not allowed.
+            - Invalid commas are not allowed.
             - Empty value is possible.
 
         attachments:
@@ -188,7 +182,6 @@ components:
           description: |
             - (Optional) Array of objects or Array of files name
             - Attachments array length can not more then 10
-            
 
     NotifyEmailWithFileAttachment:
       type: object
@@ -199,7 +192,7 @@ components:
         - body
         - fromEmail
         - attachments
-     
+
       properties:
         service:
           type: string
@@ -215,9 +208,8 @@ components:
             - Destination is required.
             - Destination cannot be empty.
             - Duplicate emails are allowed.
-            - Empty commas are not allowed.
+            - Invalid commas are not allowed.
             - Case insensitive.
-
 
         fromEmail:
           type: string
@@ -230,7 +222,6 @@ components:
             - If client did not allowed then will never be sent
             - Case insensitive
 
-        
         subject:
           type: string
           minLength: 1
@@ -238,7 +229,7 @@ components:
           description: |
             - Subject can be empty
             - Subject is required
-           
+
         body:
           type: string
           minLength: 1
@@ -246,14 +237,14 @@ components:
           description: |
             - Body can be empty
             - Body is required
-        
+
         cc:
           type: string
           example: "test@gmail.com, test@gmail.com"
           description: |
             - (Optional) Comma-separated CC email addresses.
             - Duplicate emails are allowed.
-            - Empty commas are not allowed.
+            - Invalid commas are not allowed.
             - Empty value is possible.
 
         bcc:
@@ -262,9 +253,8 @@ components:
           description: |
             - (Optional) Comma-separated BCC email addresses.
             - Duplicate emails are allowed.
-            - Empty commas are not allowed.
+            - Invalid commas are not allowed.
             - Empty value is possible.
-
 
         attachments:
           type: array
@@ -283,7 +273,7 @@ components:
         - body
         - fromEmail
         - attachments
-     
+
       properties:
         service:
           type: string
@@ -299,9 +289,8 @@ components:
             - Destination is required.
             - Destination cannot be empty.
             - Duplicate emails are allowed.
-            - Empty commas are not allowed.
+            - Invalid commas are not allowed.
             - Case insensitive.
-
 
         fromEmail:
           type: string
@@ -314,7 +303,6 @@ components:
             - If client did not allowed then will never be sent
             - Case insensitive
 
-        
         subject:
           type: string
           minLength: 1
@@ -322,7 +310,7 @@ components:
           description: |
             - Subject can be empty
             - Subject is required
-           
+
         body:
           type: string
           minLength: 1
@@ -330,14 +318,14 @@ components:
           description: |
             - Body can be empty
             - Body is required
-        
+
         cc:
           type: string
           example: "test@gmail.com, test@gmail.com"
           description: |
             - (Optional) Comma-separated CC email addresses.
             - Duplicate emails are allowed.
-            - Empty commas are not allowed.
+            - Invalid commas are not allowed.
             - Empty value is possible.
 
         bcc:
@@ -346,7 +334,7 @@ components:
           description: |
             - (Optional) Comma-separated BCC email addresses.
             - Duplicate emails are allowed.
-            - Empty commas are not allowed.
+            - Invalid commas are not allowed.
             - Empty value is possible.
 
         attachments:
@@ -361,8 +349,235 @@ components:
             - Empty object are not allowed
             - Extra fields are not allowed
             - Attachments array length can not more then 10
-    
 
+    NotifyV2Request:
+      type: object
+      description: |
+        Multi-service notification request payload.
+
+        ### Validation Rules
+
+        - Maximum payload size: **100 KB**
+          - If exceeded → return `413 Payload Too Large`
+        - Maximum messages per service: **5**
+        - If both `message` and `commonMessage` are missing → `400`
+        - If `attachments` are present but `uniqueKey` is missing → `400`
+        - If duplicate `uniqueKey` exists in same request → `400`
+        - If messages exceed configured limit → `400`
+
+      properties:
+        commonMessage:
+          type: string
+          description: |
+            Common message used when individual service message/body is not provided.
+          example: "This is common message"
+
+        sms:
+          type: array
+          description: List of SMS notifications
+          maxItems: 5
+          example:
+            - destination: "+919876543210"
+              message: "Hello Rahul, your order has been shipped."
+            - destination: "+919123456789"
+              message: "Hello Priya, your appointment is confirmed."
+          items:
+            type: object
+            required:
+              - destination
+            properties:
+              destination:
+                type: string
+                description: Recipient phone number in E.164 format
+                example: "+919876543210"
+              message:
+                type: string
+                description: |
+                  Optional SMS message.
+                  Falls back to `commonMessage` if not provided.
+                example: "Hello, your order has been shipped."
+
+        email:
+          type: array
+          description: List of Email notifications
+          maxItems: 5
+          example:
+            - destination: "alice@example.com"
+              subject: "Order Confirmation"
+              body: "Hi Alice, your order #1001 has been confirmed."
+              fromEmail: "noreply@company.com"
+              uniqueKey: "email-1"
+              attachments:
+                - "invoice.pdf"
+                - "receipt.png"
+            - destination: "bob@example.com"
+              subject: "Shipment Update"
+              body: "Hi Bob, your order #1002 has been shipped."
+              fromEmail: "noreply@company.com"
+              uniqueKey: "email-2"
+          items:
+            type: object
+            required:
+              - destination
+              - subject
+            properties:
+              destination:
+                type: string
+                format: email
+                description: Recipient email address
+                example: "user@example.com"
+              subject:
+                type: string
+                description: Email subject line
+                example: "Order Confirmation"
+              body:
+                type: string
+                description: |
+                  Optional email body.
+                  Falls back to `commonMessage` if not provided.
+                example: "Hi, your order has been confirmed."
+              uniqueKey:
+                type: string
+                description: |
+                  Required if `attachments` are present.
+                  Must be unique within the same request.
+                example: "email-1"
+              attachments:
+                type: array
+                description: List of attachment file names to upload
+                example:
+                  - "invoice.pdf"
+                  - "receipt.png"
+                  - "terms.docx"
+                items:
+                  type: string
+                  description: Name of the file to be uploaded
+                  example: "invoice.pdf"
+
+    NotifyV2Response:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            failed:
+              type: array
+              description: List of failed notifications
+              example: []
+            success:
+              type: array
+              items:
+                $ref: "#/components/schemas/V2ServiceSuccess"
+
+    V2ServiceFailure:
+      type: object
+      properties:
+        service:
+          type: string
+          enum: [email, sms]
+          example: sms
+        statusCode:
+          type: integer
+          example: 400
+        message:
+          type: string
+          example: "Bulk insert failed"
+
+    V2ServiceSuccess:
+      type: object
+      properties:
+        service:
+          type: string
+          enum: [email, sms]
+          example: email
+        messageIds:
+          type: array
+          example:
+            - "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+            - "b2c3d4e5-f6a7-8901-bcde-f12345678901"
+          items:
+            type: string
+            format: uuid
+            example: "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+        preSignedUrls:
+          type: array
+          example:
+            - uniqueKey: "email-1"
+              urls:
+                - fileName: "invoice.pdf"
+                  s3:
+                    url: "https://bucket.s3.ap-south-1.amazonaws.com/"
+                    fields:
+                      bucket: "bucket"
+                      key: "uploads/CLIENT/msg-uuid-1/invoice.pdf"
+                      X-Amz-Algorithm: "AWS4-HMAC-SHA256"
+                      X-Amz-Signature: "abc123"
+                - fileName: "receipt.png"
+                  s3:
+                    url: "https://bucket.s3.ap-south-1.amazonaws.com/"
+                    fields:
+                      bucket: "bucket"
+                      key: "uploads/CLIENT/msg-uuid-1/receipt.png"
+                      X-Amz-Algorithm: "AWS4-HMAC-SHA256"
+                      X-Amz-Signature: "def456"
+            - uniqueKey: "email-2"
+              urls:
+                - fileName: "terms.docx"
+                  s3:
+                    url: "https://bucket.s3.ap-south-1.amazonaws.com/"
+                    fields:
+                      bucket: "bucket"
+                      key: "uploads/CLIENT/msg-uuid-2/terms.docx"
+                      X-Amz-Algorithm: "AWS4-HMAC-SHA256"
+                      X-Amz-Signature: "ghi789"
+          items:
+            $ref: "#/components/schemas/V2PreSignedUrlGroup"
+
+    V2PreSignedUrlGroup:
+      type: object
+      properties:
+        uniqueKey:
+          type: string
+          example: "email-1"
+        urls:
+          type: array
+          example:
+            - fileName: "invoice.pdf"
+              s3:
+                url: "https://bucket.s3.ap-south-1.amazonaws.com/"
+                fields:
+                  bucket: "bucket"
+                  key: "uploads/CLIENT/msg-uuid/invoice.pdf"
+                  X-Amz-Algorithm: "AWS4-HMAC-SHA256"
+                  X-Amz-Signature: "abc123"
+            - fileName: "receipt.png"
+              s3:
+                url: "https://bucket.s3.ap-south-1.amazonaws.com/"
+                fields:
+                  bucket: "bucket"
+                  key: "uploads/CLIENT/msg-uuid/receipt.png"
+                  X-Amz-Algorithm: "AWS4-HMAC-SHA256"
+                  X-Amz-Signature: "def456"
+          items:
+            $ref: "#/components/schemas/V2PreSignedUrl"
+
+    V2PreSignedUrl:
+      type: object
+      properties:
+        fileName:
+          type: string
+          example: "invoice.pdf"
+        s3:
+          type: object
+          properties:
+            url:
+              type: string
+              format: uri
+              example: "https://bucket.s3.ap-south-1.amazonaws.com/"
+            fields:
+              type: object
+              additionalProperties:
+                type: string
 
     PreSignedUrlResponse:
       type: object
@@ -395,15 +610,25 @@ components:
                   },
               },
             ]
+
     ErrorResponse:
       type: object
+      description: |
+        Standard error response object.
+
+        ⚠️ Header Validation Errors:
+        If you receive an error related to invalid headers,
+        ensure the following:
+
+        - `X-Client-Id` header is present
+        - `X-Client-Id` matches the client ID of the currently authenticated user
       properties:
         success:
           type: boolean
           example: false
         message:
           type: string
-          example: "Error detail here"
+          example: "error details"
 
 paths:
   /health:
@@ -418,7 +643,7 @@ paths:
             type: string
       responses:
         "200":
-          description: Service is healthy
+          description: ok
 
   /login:
     post:
@@ -493,6 +718,30 @@ paths:
                     properties:
                       accessToken:
                         type: string
+  /logout:
+    post:
+      summary: Logout
+      tags: [Auth]
+      parameters:
+        - name: X-Client-Id
+          in: header
+          required: true
+          schema:
+            type: string
+
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Logout successfully
 
   /delivery-status/{messageId}:
     get:
@@ -579,7 +828,7 @@ paths:
                 - $ref: "#/components/schemas/NotifySms"
                 - $ref: "#/components/schemas/NotifySlack"
                 - $ref: "#/components/schemas/NotifyEmail"
-                
+
               discriminator:
                 propertyName: service
 
@@ -609,8 +858,7 @@ paths:
                   cc (Optional): "itest@gmail.com , itest@gmail.com"
                   bcc (Optional): "itest@gmail.com , itest@gmail.com"
                   attachments (Optional): Array of objects or Array of files name
-                  
-                  
+
       responses:
         "202":
           description: Accepted
@@ -642,6 +890,105 @@ paths:
                 $ref: "#/components/schemas/ErrorResponse"
         "403":
           description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /v2/notify:
+    post:
+      tags:
+        - Notification
+      summary: Send multi-service notifications (V2)
+      description: |
+        Sends notifications for multiple services (SMS, Email, Slack, etc) in a single request.
+
+        ### Constraints
+        - Maximum payload size: 100 KB → returns 413 if exceeded
+        - Maximum 5 messages per service
+        - If both message and commonMessage are missing : 400
+        - If attachments exist without uniqueKey : 400
+        - Duplicate uniqueKey in same request : 400
+        - Messages exceeding configured limit : 400
+
+      operationId: notifyV2
+
+      parameters:
+        - name: X-Client-Id
+          in: header
+          required: true
+          schema:
+            type: string
+          description: |
+            Client identifier header.
+            Must match the authenticated user's client ID.
+
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NotifyV2Request"
+
+      responses:
+        "200":
+          description: Notification processed successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NotifyV2Response"
+
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+        "413":
+          description: Payload Too Large (exceeds 100 KB limit)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+        "417":
+          description: |
+            Expectation Failed — partial success. Some services were processed
+            successfully while others failed. The response body contains both
+            `data.success` and `data.failed` arrays.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NotifyV2Response"
+              example:
+                data:
+                  failed:
+                    - service: sms
+                      statusCode: 400
+                      message: "Bulk insert failed"
+                  success:
+                    - service: email
+                      messages:
+                        - messageId: "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+                          uniqueKey: "email-1"
+
+        "500":
+          description: Internal server error
           content:
             application/json:
               schema:
@@ -795,9 +1142,6 @@ paths:
                         type: number
                       currency:
                         type: string
-                      
-                        
-                      
 
         "400":
           description: Service and provider are missing
@@ -821,7 +1165,7 @@ paths:
                 $ref: "#/components/schemas/ErrorResponse"
 
         "500":
-          description: Internal Server Error 
+          description: Internal Server Error
           content:
             application/json:
               schema:
@@ -880,7 +1224,6 @@ paths:
                         type: number
                       currency:
                         type: string
-                      
 
         "400":
           description: Service and provider are missing
@@ -904,13 +1247,8 @@ paths:
                 $ref: "#/components/schemas/ErrorResponse"
 
         "500":
-          description: Internal Server Error 
+          description: Internal Server Error
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
-           
-      
- 
-
-      

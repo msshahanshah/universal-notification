@@ -45,7 +45,7 @@ const serviceEnforcers = {
     if (!serviceConfig.allowCustomFromEmail && hasFromEmail) {
       throw {
         statusCode: 400,
-        message: `fromEmail is not allowed in ${service} for client ${clientId}`,
+        message: `fromEmail is not allowed in ${service}.`,
       };
     }
 
@@ -153,15 +153,19 @@ const creatingNotificationRecord = async (
   const enabledServices = clientConfig?.ENABLED_SERVERICES;
 
   if (!Array.isArray(enabledServices)) {
+    logger.error("Invalid or missing ENABLED_SERVERICES in client config", {
+      clientId,
+      enabledServices,
+    });
     throw {
-      statusCode: 500,
+      statusCode: 400,
       message: `invalid or missing ENABLED_SERVERICES in client config for ${clientId}`,
     };
   }
 
   if (!enabledServices.includes(service)) {
     throw {
-      statusCode: 403,
+      statusCode: 400,
       message: `${service} is not enable for client ${clientId}`,
     };
   }
@@ -176,9 +180,6 @@ const creatingNotificationRecord = async (
          */
         const provider = await selectProvider(service, number, clientId);
         serviceGuard(provider, { service, content, clientId }, clientConfig);
-        if (service.toLowerCase() === 'slack') {
-          service = 'slackbot';
-        }
 
         content.provider = provider;
         const record = await dbConnect.Notification.create({
@@ -241,8 +242,13 @@ const publishingNotificationRequest = async (notificationRecord) => {
 
   if (!rabbitConnect) return;
 
-  return rabbitConnect.publishMessage(service, {
-    service,
+  let updatedService = service;
+  if (service.toLowerCase() === "slack") {
+    updatedService = "slackbot";
+  }
+
+  return rabbitConnect.publishMessage(updatedService, {
+    service: updatedService,
     destination,
     content,
     messageId,
@@ -266,8 +272,11 @@ const getNotificationData = async (messageId, clientID) => {
   });
 
   if (!details) {
-    logger.error('No message found with this MssageID');
-    throw new Error('No message found with this MessageID');
+    logger.error(`No message found with this MessageID ${messageId}`);
+    throw {
+      statusCode: 404,
+      message: `message not found.`,
+    };
   }
 
   const data = {

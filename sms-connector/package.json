@@ -4,11 +4,12 @@
   "description": "SMS connector for the notification service",
   "main": "src/index.js",
   "scripts": {
-    "start": "node src/index.js",
-    "test": "node __tests__/index.test.js"
+    "start": "node src/index.js & node src/GRPC/grpc.server.js",
+    "test": "node __tests__/index.test.js",
+    "dev": "nodemon src/index.js"
   },
   "dependencies": {
-    "@universal-notifier/secret-manager": "github:gkmit-dikshant/aws-secret-manager-package",
+    "@universal-notifier/secret-manager": "github:gkmit-dikshant/aws-secret-manager-package#development",
     "@grpc/grpc-js": "^1.14.3",
     "@grpc/proto-loader": "^0.8.0",
     "amqplib": "^0.10.8",
@@ -24,6 +25,7 @@
     "winston": "^3.11.0"
   },
   "devDependencies": {
-    "jest": "^29.7.0"
+    "jest": "^29.7.0",
+    "nodemon": "^3.1.14"
   }
 }

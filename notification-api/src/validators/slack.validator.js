@@ -3,6 +3,7 @@ const { slackChannelIdRegex } = require("../../helpers/regex.helper");
 
 const slackValidation = {
   destination: Joi.string()
+    .trim()
     .required()
     .custom((value, helpers) => {
       // Split by comma
@@ -16,7 +17,7 @@ const slackValidation = {
       for (let channel of channels) {
         if (channel.length == 0) {
           return helpers.message(
-            `In destination empty commas are not allowed `,
+            `An invalid destination is not allowed. An empty or invalid destination value was detected`,
           );
         }
       }
