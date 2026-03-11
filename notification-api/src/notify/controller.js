@@ -43,7 +43,9 @@ const notify = async (req, res) => {
       content,
     );
 
-    logger.info(`Notification record created successfully | client: ${clientID} | service: ${service}`);
+    logger.info(
+      `Notification record created successfully | client: ${clientID} | service: ${service}`,
+    );
     for (const record of notificationRecords) {
       if (record.statusCode) {
         return res.status(record.statusCode).json({
@@ -61,7 +63,9 @@ const notify = async (req, res) => {
         notificationRecords[0].messageId,
         attachments,
       );
-      logger.info(`preSigned URLs generated successfully for message request: ${notificationRecords[0].messageId}`);
+      logger.info(
+        `preSigned URLs generated successfully for message request: ${notificationRecords[0].messageId}`,
+      );
     }
 
     let publishResults;
@@ -74,7 +78,9 @@ const notify = async (req, res) => {
         notificationRecords.map(async (record) => {
           try {
             const result = await publishingNotificationRequest(record);
-            logger.info(`Notification record published successfully |  client: ${clientID} | service: ${service} | messageId: ${record.messageId}`);
+            logger.info(
+              `Notification record published successfully |  client: ${clientID} | service: ${service} | messageId: ${record.messageId}`,
+            );
             return result;
           } catch (err) {
             return { success: false, record, error: err.message };
@@ -89,8 +95,9 @@ const notify = async (req, res) => {
       message:
         attachments?.length && typeof attachments[0] === "string"
           ? "Waiting for file upload on URL (expiry 5 mins)."
-          : `Notification request accepted ${publishResults ? "and queued." : ""
-          }`,
+          : `Notification request accepted ${
+              publishResults ? "and queued." : ""
+            }`,
       preSignedUrls,
     };
 
@@ -103,7 +110,7 @@ const notify = async (req, res) => {
   } catch (error) {
     logger.error({
       message: error.message,
-      stack: error?.stack
+      stack: error?.stack,
     });
     return res.status(error.statusCode || 500).json({
       success: false,
@@ -122,7 +129,8 @@ const notifyWithEmailAttachment = async (req, res) => {
     ) {
       throw {
         statusCode: 400,
-        message: "Attachments are required. Please provide at least one S3 URL.",
+        message:
+          "Attachments are required. Please provide at least one S3 URL.",
       };
     }
 
@@ -160,7 +168,9 @@ const notifyWithEmailAttachment = async (req, res) => {
 
     const result = await publishingNotificationRequest(notificationRecord);
 
-    logger.info(`Notification record with attachment publish successfully | client ${clientId} | messageId ${messageId}`);
+    logger.info(
+      `Notification record with attachment publish successfully | client ${clientId} | messageId ${messageId}`,
+    );
 
     return res.status(202).json({
       success: true,
@@ -171,7 +181,7 @@ const notifyWithEmailAttachment = async (req, res) => {
   } catch (err) {
     logger.error({
       message: err.message,
-      stack: err?.stack
+      stack: err?.stack,
     });
     return res.status(err.statusCode || 500).json({
       success: false,

@@ -149,9 +149,6 @@ const creatingNotificationRecord = async (
          */
         const provider = await selectProvider(service, number, clientId);
         serviceGuard(provider, { service, content, clientId }, clientConfig);
-        if (service.toLowerCase() === "slack") {
-          service = "slackbot";
-        }
 
         content.provider = provider;
         const record = await dbConnect.Notification.create({
@@ -209,8 +206,13 @@ const publishingNotificationRequest = async (notificationRecord) => {
 
   if (!rabbitConnect) return;
 
-  return rabbitConnect.publishMessage(service, {
-    service,
+  let updatedService = service;
+  if (service.toLowerCase() === "slack") {
+    updatedService = "slackbot";
+  }
+
+  return rabbitConnect.publishMessage(updatedService, {
+    service: updatedService,
     destination,
     content,
     messageId,
