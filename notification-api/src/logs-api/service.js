@@ -1,6 +1,6 @@
-const { serializeLogs } = require('./serialization');
-const Sequelize = require('sequelize');
-
+const { serializeLogs } = require("./serialization");
+const Sequelize = require("sequelize");
+const { SERVICES, LOG_TYPE } = require("../../constants/index");
 const viewDeliveryStatus = async (messageId, clientId) => {
   let dbConnect = await global.connectionManager.getModels(clientId);
   const data = await dbConnect.Notification.findOne({
@@ -8,7 +8,7 @@ const viewDeliveryStatus = async (messageId, clientId) => {
   });
 
   if (!data) {
-    throw new Error('Message not found');
+    throw new Error("Message not found");
   }
 
   return {
@@ -19,6 +19,7 @@ const viewDeliveryStatus = async (messageId, clientId) => {
 
 const viewMessageLogs = async (
   idClient,
+  logType,
   service,
   status,
   page,
@@ -34,6 +35,7 @@ const viewMessageLogs = async (
   fromDate,
   toDate,
 ) => {
+  try {
     const offset = (page - 1) * limit;
     const where = {};
     let sortOrder = [];
@@ -47,13 +49,13 @@ const viewMessageLogs = async (
       }
     }
 
-    if (sort && order && (order === 'asc' || order === 'desc')) {
-      const keys = sort.split(',');
+    if (sort && order && (order === "asc" || order === "desc")) {
+      const keys = sort.split(",");
       for (let i = 0; i < keys.length; i++) {
         if (validColumns.includes(keys[i])) {
           sortOrder.push([keys[i], order]);
-        } else if (keys[i] === 'message') {
-          sortOrder.push(['connectorResponse', order.toUpperCase()]);
+        } else if (keys[i] === "message") {
+          sortOrder.push(["connectorResponse", order.toUpperCase()]);
         }
       }
     }
@@ -78,13 +80,13 @@ const viewMessageLogs = async (
     }
 
     const filters = [
-      { key: 'connectorResponse', value: message, pattern: (v) => `%${v}%` },
-      { key: 'destination', value: destination, pattern: (v) => `%${v}%` },
-      { key: 'content.cc', value: cc, pattern: (v) => `%${v}%` },
-      { key: 'content.bcc', value: bcc, pattern: (v) => `%${v}%` },
-      { key: 'content.fromEmail', value: fromEmail, pattern: (v) => `%${v}%` },
-      { key: 'service', value: service, pattern: (v) => `%${v}%` },
-      { key: 'status', value: status, pattern: (v) => `%${v}%` },
+      { key: "connectorResponse", value: message, pattern: (v) => `%${v}%` },
+      { key: "destination", value: destination, pattern: (v) => `%${v}%` },
+      { key: "content.cc", value: cc, pattern: (v) => `%${v}%` },
+      { key: "content.bcc", value: bcc, pattern: (v) => `%${v}%` },
+      { key: "content.fromEmail", value: fromEmail, pattern: (v) => `%${v}%` },
+      { key: "service", value: service, pattern: (v) => `%${v}%` },
+      { key: "status", value: status, pattern: (v) => `%${v}%` },
     ];
 
     filters.forEach(({ key, value, pattern }) => {
@@ -99,7 +101,7 @@ const viewMessageLogs = async (
       where,
       order:
         sortOrder.length === 0
-          ? [['createdAt', order.toUpperCase()]]
+          ? [["createdAt", order.toUpperCase()]]
           : sortOrder,
       offset,
       limit,
@@ -108,7 +110,56 @@ const viewMessageLogs = async (
     const totalPages = Math.ceil(count / limit);
 
     const data = serializeLogs(rows);
-    return { data, totalPages };
+    let finalData = [];
+
+    //===============Getting all replyed messages of slack=============
+
+    //check do we need to send slack replyed messages or not
+
+    if (logType === LOG_TYPE.SLACK_LOGS && data.length > 0) {
+      const referenceIds = data.map((row) => row.referenceId); //getting parent id of all messages on which replyed
+
+      const service = SERVICES.SLACK_SERVICE;
+
+      //find all replyed messages
+      const replyedMessages = await dbConnect.SlackReplyMessage.findAll({
+        where: {
+          parentReferenceId: referenceIds,
+          service,
+        },
+        attributes: ["parentReferenceId", "userReferenceName", "content"],
+      });
+
+      // to store userRepledMessages taking map
+      const userReplyedMessagesMap = {};
+
+      // iterating each messsages and add reactions username and messages replyed by users
+      replyedMessages.forEach((item) => {
+        const content = item.content;
+        const parentId = item.parentReferenceId;
+
+        if (!userReplyedMessagesMap[parentId]) {
+          userReplyedMessagesMap[parentId] = [];
+        }
+
+        userReplyedMessagesMap[parentId].push({
+          username: item.userReferenceName,
+          reactions: content.reaction,
+          message: content.message,
+        });
+      });
+
+      //  adding messages replyed by users
+      finalData = data.map((item) => ({
+        ...item,
+        useReplyedMessages: userReplyedMessagesMap[item.referenceId] || [],
+      }));
+    }
+
+    return { data: finalData.length > 0 ? finalData : data, totalPages };
+  } catch (err) {
+    throw err;
+  }
 };
 
 module.exports = { viewDeliveryStatus, viewMessageLogs };

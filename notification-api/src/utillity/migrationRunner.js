@@ -34,7 +34,6 @@ async function migrateAllDatabases() {
     // Load and migrate client databases
     const clients = await loadClientConfigs();
     for (const client of clients) {
-      console.log(client)
       const clientConfig = {
         dialect: "postgres",
         host: client?.DBCONFIG?.HOST,
@@ -56,7 +55,7 @@ async function migrateAllDatabases() {
   } catch (error) {
     logger.error("Migration process failed:", {
       message: error.message,
-      stack: error?.stack
+      stack: error?.stack,
     });
     process.exit(1);
   }
