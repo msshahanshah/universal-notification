@@ -27,10 +27,7 @@ async function startServer(clientConfigList) {
     app.use(express.json());
     app.use(require("cors")());
     app.use("/", slackRoute);
-    app.get("/webhook", (req, res) => {
-      console.log(process.env.CLIENT_ID);
-      res.send("Hello", process.env.CLIENT_ID);
-    });
+
     const server = app.listen(SERVER_PORT, () => {
       logger.info(`Slack Service is listening on port ${SERVER_PORT}`);
     });
