@@ -1,5 +1,5 @@
-const { serializeLogs } = require('./serialization');
-const Sequelize = require('sequelize');
+const { serializeLogs } = require("./serialization");
+const Sequelize = require("sequelize");
 
 const viewDeliveryStatus = async (messageId, clientId) => {
   let dbConnect = await global.connectionManager.getModels(clientId);
@@ -8,7 +8,7 @@ const viewDeliveryStatus = async (messageId, clientId) => {
   });
 
   if (!data) {
-    throw new Error('Message not found');
+    throw new Error("Message not found");
   }
 
   return {
@@ -47,13 +47,13 @@ const viewMessageLogs = async (
     }
   }
 
-  if (sort && order && (order === 'asc' || order === 'desc')) {
-    const keys = sort.split(',');
+  if (sort && order && (order === "asc" || order === "desc")) {
+    const keys = sort.split(",");
     for (let i = 0; i < keys.length; i++) {
       if (validColumns.includes(keys[i])) {
         sortOrder.push([keys[i], order]);
-      } else if (keys[i] === 'message') {
-        sortOrder.push(['connectorResponse', order.toUpperCase()]);
+      } else if (keys[i] === "message") {
+        sortOrder.push(["connectorResponse", order.toUpperCase()]);
       }
     }
   }
@@ -62,15 +62,14 @@ const viewMessageLogs = async (
     let startDay;
     if (!fromDate.includes("T")) {
       startDay = new Date(fromDate);
-      startDay.setUTCHours(18, 29, 0, 0);
+      startDay.setHours(0, 0, 0, 0);
     } else {
       startDay = new Date(fromDate);
     }
     where.updatedAt = {
-      [Sequelize.Op.gte]: startDay
-    }
+      [Sequelize.Op.gte]: startDay,
+    };
   }
-
 
   if (toDate) {
     let endDay;
@@ -88,13 +87,13 @@ const viewMessageLogs = async (
   }
 
   const filters = [
-    { key: 'connectorResponse', value: message, pattern: (v) => `%${v}%` },
-    { key: 'destination', value: destination, pattern: (v) => `%${v}%` },
-    { key: 'content.cc', value: cc, pattern: (v) => `%${v}%` },
-    { key: 'content.bcc', value: bcc, pattern: (v) => `%${v}%` },
-    { key: 'content.fromEmail', value: fromEmail, pattern: (v) => `%${v}%` },
-    { key: 'service', value: service, pattern: (v) => `%${v}%` },
-    { key: 'status', value: status, pattern: (v) => `%${v}%` },
+    { key: "connectorResponse", value: message, pattern: (v) => `%${v}%` },
+    { key: "destination", value: destination, pattern: (v) => `%${v}%` },
+    { key: "content.cc", value: cc, pattern: (v) => `%${v}%` },
+    { key: "content.bcc", value: bcc, pattern: (v) => `%${v}%` },
+    { key: "content.fromEmail", value: fromEmail, pattern: (v) => `%${v}%` },
+    { key: "service", value: service, pattern: (v) => `%${v}%` },
+    { key: "status", value: status, pattern: (v) => `%${v}%` },
   ];
 
   filters.forEach(({ key, value, pattern }) => {
@@ -108,9 +107,7 @@ const viewMessageLogs = async (
   const { count, rows } = await dbConnect.Notification.findAndCountAll({
     where,
     order:
-      sortOrder.length === 0
-        ? [['createdAt', order.toUpperCase()]]
-        : sortOrder,
+      sortOrder.length === 0 ? [["createdAt", order.toUpperCase()]] : sortOrder,
     offset,
     limit,
   });
