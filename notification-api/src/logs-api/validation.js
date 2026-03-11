@@ -50,7 +50,8 @@ const validateLogsSchema = Joi.object({
       'number.base': 'Value of attempts must be number',
       'number.integer': 'Value of attempts must be integer',
       'number.min': 'Attempts must be between 0 and 3',
-      'number.max': 'Attempts must be between 0 and 3'
+      'number.max': 'Attempts must be between 0 and 3',
+      'number.unsafe': 'Attempts must be a valid integer'
     }),
 
   cc: baseParams.messages({

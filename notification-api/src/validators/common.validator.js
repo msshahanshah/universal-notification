@@ -8,12 +8,14 @@ const commonValidation = {
     "number.base": "Page must be a number",
     "number.integer": "Page must be an integer",
     "number.min": "Page must be at least 1",
+    "number.unsafe": "Page must be a valid integer"
   }),
   limit: Joi.number().integer().min(1).max(100).optional().messages({
     "number.base": "Limit must be a number",
     "number.integer": "Limit must be an integer",
     "number.min": "Limit must be at least 1",
     "number.max": "Limit cannot exceed 100",
+    "number.unsafe": "Limit must be a valid integer"
   }),
   service: Joi.string().trim().min(1).required().valid("email", "slack", "sms").messages({
     "string.base": "Service must be a string",
