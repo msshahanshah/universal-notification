@@ -8,14 +8,16 @@ const commonValidation = {
     "number.base": "Page must be a number",
     "number.integer": "Page must be an integer",
     "number.min": "Page must be at least 1",
+    "number.unsafe": "Page must be a valid integer"
   }),
   limit: Joi.number().integer().min(1).max(100).optional().messages({
     "number.base": "Limit must be a number",
     "number.integer": "Limit must be an integer",
     "number.min": "Limit must be at least 1",
     "number.max": "Limit cannot exceed 100",
+    "number.unsafe": "Limit must be a valid integer"
   }),
-  service: Joi.string().required().valid("email", "slack", "sms").messages({
+  service: Joi.string().trim().min(1).required().valid("email", "slack", "sms").messages({
     "string.base": "Service must be a string",
     "any.only": "Service must be one of: email, slack, sms",
     "string.empty": "Service cannot be empty",
@@ -75,7 +77,7 @@ const validateAttachments = (values, helpers) => {
   if (values.length) {
     if (values.length > 10)
       return helpers.message(
-        "Attachments array can not have more then 10 length",
+        "Attachments can't exceed 10.",
       );
     //checking for array of filenames
     if (typeof values[0] === "string") {

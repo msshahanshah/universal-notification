@@ -46,7 +46,6 @@ async function connectAndConsume(client) {
   // get rabbit mq
   try {
     const rabbitClient = await rabbitManager.getClient(clientId);
-
     const sequelize = initializeSequelize(client.DBCONFIG, clientId);
 
     await sequelize.authenticate();

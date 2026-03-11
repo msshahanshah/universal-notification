@@ -39,7 +39,7 @@ const validateSchema = Joi.array()
       cc: emailValidation.cc,
       bcc: emailValidation.bcc,
       attachments: emailValidation.attachments,
-      uniqueKey: Joi.string().optional(),
+      uniqueKey: Joi.string().trim().optional(),
     }).unknown(false),
   );
 
