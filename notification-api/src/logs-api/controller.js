@@ -1,5 +1,6 @@
 const { viewDeliveryStatus, viewMessageLogs } = require("./service");
 const { LOG_TYPE } = require("../../constants/index.js");
+const logger = require("../logger.js");
 const deliveryStatus = async (req, res, next) => {
   try {
     const messageId = req.params.id;
@@ -17,9 +18,9 @@ const deliveryStatus = async (req, res, next) => {
   } catch (error) {
     logger.error({
       message: error.message,
-      stack: error?.stack
+      stack: error?.stack,
     });
-    if (error.parent?.code === '22P02') {
+    if (error.parent?.code === "22P02") {
       return res
         .status(400)
         .json({ message: "Message id is not valid", success: false });
@@ -47,12 +48,14 @@ const messageLogs = async (req, res) => {
       cc = null,
       bcc = null,
       fromEmail = null,
-      "start-time": startTime = null,
-      "end-time": endTime = null,
+      "from-date": fromDate = null,
+      "to-date": toDate = null,
     } = req.query;
 
+    const limitInt = parseInt(limit);
     const idClient = req.header("X-Client-Id");
     const logType = LOG_TYPE.COMMON_LOGS;
+
     const { data, totalPages } = await viewMessageLogs(
       idClient,
       logType,
@@ -84,7 +87,7 @@ const messageLogs = async (req, res) => {
   } catch (error) {
     logger.error({
       message: error.message,
-      stack: error?.stack
+      stack: error?.stack,
     });
     return res.status(error.statusCode || 500).send({
       message: error.message || "Internal Server Error",
