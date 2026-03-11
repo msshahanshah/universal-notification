@@ -72,33 +72,30 @@ const validateSchema = Joi.object({
         'contentVariables is allowed only when service is whatsapp',
     }),
   }),
-})
-.when(Joi.object({ service: Joi.valid('whatsapp') }).unknown(), {
+}).when(Joi.object({ service: Joi.valid('whatsapp') }).unknown(), {
   then: Joi.object()
-    .xor('message', 'templateId', 'attachments')
     .with('templateId', 'contentVariables')
+    .nand('templateId', 'message')
+    .nand('templateId', 'attachments')
     .nand('message', 'contentVariables')
     .messages({
       'object.missing':
-        "For WhatsApp service either 'message' OR ('templateId' and 'contentVariables') or 'attachements' must be provided",
-
-      'object.xor':
         "For WhatsApp service either 'message' OR ('templateId' and 'contentVariables') must be provided",
 
       'object.with':
         "'contentVariables' must be provided when 'templateId' is used",
 
       'object.nand':
-        'contentVariables cannot be used when sending a normal WhatsApp message',
+        "Templated WhatsApp messages cannot contain 'message' or 'attachments'. Or contentVariables must be present with templateId",
     }),
-}); 
+});
 
 const validateRequest = (req, res, next) => {
   try {
     if (!req.body) {
       throw {
         statusCode: 422,
-        message: "Invalid Content-Type or Request Body",
+        message: 'Invalid Content-Type or Request Body',
       };
     }
     const { error, value } = validateSchema.validate(req.body, baseOptions);
@@ -112,7 +109,7 @@ const validateRequest = (req, res, next) => {
   } catch (error) {
     return res.status(error.statusCode || 500).json({
       success: false,
-      message: error.message || "internal server error",
+      message: error.message || 'internal server error',
     });
   }
 };
