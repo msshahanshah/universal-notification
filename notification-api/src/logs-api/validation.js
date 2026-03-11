@@ -4,7 +4,7 @@ const {
   baseOptions,
 } = require('../validators/common.validator');
 
-const baseParams = Joi.string().optional().trim();
+const baseParams = Joi.string().trim().optional();
 
 
 const dateOnly = /^\d{4}-\d{2}-\d{2}$/;
@@ -69,7 +69,7 @@ const validateLogsSchema = Joi.object({
     'string.empty': `Value of fromEmail can't be empty`,
   }),
 
-  'from-date': Joi.string().pattern(datePattern).
+  'from-date': Joi.string().trim().pattern(datePattern).
     custom((value, helpers) => {
       if (!datePattern.test(value)) {
         return helpers.error('any.invalid');
@@ -88,7 +88,7 @@ const validateLogsSchema = Joi.object({
       'string.empty': `Value of from-date can't be empty`,
     }),
 
-  'to-date': Joi.string().pattern(datePattern).optional().
+  'to-date': Joi.string().trim().pattern(datePattern).optional().
     custom((value, helpers) => {
       if (!datePattern.test(value)) {
         return helpers.error('any.invalid');

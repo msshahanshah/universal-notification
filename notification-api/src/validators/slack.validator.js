@@ -3,6 +3,7 @@ const { slackChannelIdRegex } = require("../../helpers/regex.helper");
 
 const slackValidation = {
   destination: Joi.string()
+    .trim()
     .required()
     .custom((value, helpers) => {
       // Split by comma
