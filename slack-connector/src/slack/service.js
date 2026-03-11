@@ -2,7 +2,7 @@ const RedisHelper = require("../../helpers/redis.helper");
 const SlackHelper = require("../../helpers/slack.helper");
 const SlackConstant = require("../../constants/index");
 
-async function getSlackReplyMessage(payload) {
+async function slackReplyMessage(payload) {
   try {
     const { event, team_id: workspaceId } = payload;
     //getting clientId by workspaceId
@@ -219,4 +219,4 @@ async function getSlackReplyMessage(payload) {
   }
 }
 
-module.exports = { getSlackReplyMessage };
+module.exports = { slackReplyMessage };

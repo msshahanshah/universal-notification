@@ -9,7 +9,12 @@ const slackBotTokenMap = new Map();
 let clientConfig = null;
 
 async function storeClientConfig() {
-  clientConfig = await loadClientConfigs();
+  try {
+    clientConfig = await loadClientConfigs();
+  } catch (err) {
+    logger.error({ message: err.message, stack: err.stack });
+    throw err;
+  }
 }
 storeClientConfig();
 
@@ -36,6 +41,7 @@ async function getSlackClient(botToken) {
     logger.info("Slack WebClient initialized and cached.");
     return client;
   } catch (err) {
+    logger.error({ message: err.message, stack: err.stack });
     throw err;
   }
 }
@@ -48,6 +54,7 @@ async function getUsername(userId, client) {
     });
     return result.user.real_name;
   } catch (err) {
+    logger.error({ message: err.message, stack: err.stack });
     throw err;
   }
 }
@@ -58,11 +65,18 @@ function getWorkSpaceChannelIdKey(workspaceId, channelId) {
 }
 
 function getSlackBotToken(clientId) {
-  if (slackBotTokenMap.has(clientId)) {
-    return slackBotTokenMap.get(clientId);
+  try {
+    if (slackBotTokenMap.has(clientId)) {
+      return slackBotTokenMap.get(clientId);
+    }
+    const config = clientConfig.find((item) => item.ID == clientId);
+    const token = config?.SLACKBOT?.TOKEN;
+    slackBotTokenMap[clientId] = token;
+    return token;
+  } catch (err) {
+    logger.error({ message: err.message, stack: err.stack });
+    throw err;
   }
-  const config = clientConfig.find((item) => item.ID == clientId);
-  return config?.SLACKBOT?.TOKEN;
 }
 
 async function replaceUserIdWithName(message, client) {

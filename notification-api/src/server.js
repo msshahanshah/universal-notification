@@ -113,7 +113,7 @@ if (cluster.isMaster) {
 
         // cors setting
         masterApp.use(require("cors")());
-        const MASTER_SERVER_PORT = process.env.MASTER_SERVER_PORT || 8000;
+        const MASTER_SERVER_PORT = process.env.PORT || 8000;
         masterApp.use(
           "/api-docs",
           swaggerUi.serve,

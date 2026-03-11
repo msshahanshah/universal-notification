@@ -11,7 +11,6 @@ const logRouter = require("./logs-api/route");
 
 const authRouter = require("./auth/route");
 const statRouter = require("./stats/route");
-const slackRouter = require("./slack/route");
 
 const app = express();
 
@@ -23,7 +22,6 @@ app.use(notificationRouter);
 app.use(logRouter);
 app.use(authRouter);
 app.use(statRouter);
-app.use(slackRouter);
 
 /**
  * Route for creating and publishing a notification request.`

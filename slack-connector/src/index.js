@@ -21,7 +21,7 @@ async function startServer(clientConfigList) {
         clientItem.ID,
       );
     }
-    const SERVER_PORT = process.env.SERVER_PORT;
+    const SERVER_PORT = process.env.PORT || 3000;
     global.connectionManager = connectionManager;
     const app = express();
     app.use(express.json());
