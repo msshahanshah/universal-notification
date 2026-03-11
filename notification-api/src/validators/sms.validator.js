@@ -4,6 +4,7 @@ const phoneUtil = PhoneNumberUtil.getInstance();
 const { phonenNumberRegex } = require("../../helpers/regex.helper");
 const smsValidation = {
   destination: Joi.string()
+    .trim()
     .required()
     .custom((value, helpers) => {
       // Split by comma
@@ -20,7 +21,7 @@ const smsValidation = {
           );
       }
 
-      // If after cleanup nothing remains
+      // If after cleanup nothing remainsss
       if (numbers.length === 0) {
         return helpers.message("At least one phone number is required");
       }

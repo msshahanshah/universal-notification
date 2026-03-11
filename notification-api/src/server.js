@@ -11,7 +11,6 @@ const { loadClientConfigs } = require("./utillity/loadClientConfigs");
  * @type {import('http').Server|null}
  */
 let server = null;
-let masterServer = null;
 
 /**
  * Starts the server for a specific client.
@@ -114,8 +113,7 @@ if (cluster.isMaster) {
 
         // cors setting
         masterApp.use(require("cors")());
-
-        // api documentation
+        const MASTER_SERVER_PORT = process.env.PORT || 8000;
         masterApp.use(
           "/api-docs",
           swaggerUi.serve,
@@ -156,8 +154,8 @@ if (cluster.isMaster) {
           );
         });
 
-        masterServer = masterApp.listen(3000, () => {
-          logger.info("Master router listening on port 3000");
+        masterServer = masterApp.listen(MASTER_SERVER_PORT, () => {
+          logger.info(`Master router listening on port ${MASTER_SERVER_PORT}`);
         });
       } catch (error) {
         logger.error("Master router error:", {

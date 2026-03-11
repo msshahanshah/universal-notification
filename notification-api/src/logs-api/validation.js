@@ -1,109 +1,122 @@
-const Joi = require('joi');
+const Joi = require("joi");
 const {
   commonValidation,
   baseOptions,
-} = require('../validators/common.validator');
+} = require("../validators/common.validator");
 
-const baseParams = Joi.string().optional().trim();
-
+const baseParams = Joi.string().trim().optional();
 
 const dateOnly = /^\d{4}-\d{2}-\d{2}$/;
 const isoDateTime = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,3})?Z$/;
 
-const datePattern = new RegExp(`^(${dateOnly.source})|(${isoDateTime.source})$`);
+const datePattern = new RegExp(
+  `^(${dateOnly.source})|(${isoDateTime.source})$`,
+);
 
 const validateLogsSchema = Joi.object({
   service: baseParams.messages({
-    'string.base': 'Value of service must be a string',
-    'string.empty': 'Value of service cannot be empty',
+    "string.base": "Value of service must be a string",
+    "string.empty": "Value of service cannot be empty",
   }),
   status: baseParams.messages({
-    'string.base': 'Value of status must be a string.',
-    'string.empty': 'Value of status cannot be empty',
+    "string.base": "Value of status must be a string.",
+    "string.empty": "Value of status cannot be empty",
   }),
   page: commonValidation.page,
   limit: commonValidation.limit,
-  order: baseParams.valid('asc', 'desc').messages({
-    'string.base': 'Value of order must be string',
-    'any.only': 'Value or order must be one of following: asc, desc',
-    'string.empty': `Value of order can't be empty`,
+  order: baseParams.valid("asc", "desc").messages({
+    "string.base": "Value of order must be string",
+    "any.only": "Value or order must be one of following: asc, desc",
+    "string.empty": `Value of order can't be empty`,
   }),
   sort: baseParams.messages({
-    'string.base': 'Value of sort must be string',
-    'string.empty': `Value of sort can't be empty`,
+    "string.base": "Value of sort must be string",
+    "string.empty": `Value of sort can't be empty`,
   }),
   message: baseParams.messages({
-    'string.base': 'Value of message must be string',
-    'string.empty': `Value of message can't be empty`,
+    "string.base": "Value of message must be string",
+    "string.empty": `Value of message can't be empty`,
   }),
 
   destination: baseParams.messages({
-    'string.base': 'Value of destination must be string',
-    'string.empty': `Value of destination can't be empty`,
+    "string.base": "Value of destination must be string",
+    "string.empty": `Value of destination can't be empty`,
   }),
   attempts: Joi.number()
+    .custom((value, helpers) => {
+      const raw = helpers.original;
+      // Reject decimal representation like "1.0", "2.5"
+      if (typeof raw === "string" && !/^[0-9]+$/.test(raw)) {
+        return helpers.error("number.integer");
+      }
+      return value;
+    })
     .integer()
     .min(0)
     .max(3)
     .optional()
     .messages({
-      'number.base': 'Value of attempts must be number',
-      'number.integer': 'Value of attempts must be integer',
-      'number.min': 'Value of attempts must be >= 0',
-      'number.max': 'Value of attempts must be <= 3',
+      "number.base": "Value of attempts must be number",
+      "number.integer": "Value of attempts must be integer",
+      "number.min": "Attempts must be between 0 and 3",
+      "number.max": "Attempts must be between 0 and 3",
+      "number.unsafe": "Attempts must be a valid integer",
     }),
 
   cc: baseParams.messages({
-    'string.base': 'Value of cc must be string',
-    'string.empty': `Value of cc can't be empty`,
+    "string.base": "Value of cc must be string",
+    "string.empty": `Value of cc can't be empty`,
   }),
 
   bcc: baseParams.messages({
-    'string.base': 'Value of bcc must be string',
-    'string.empty': `Value of bcc can't be empty`,
+    "string.base": "Value of bcc must be string",
+    "string.empty": `Value of bcc can't be empty`,
   }),
 
   fromEmail: baseParams.messages({
-    'string.base': 'Value of fromEmail must be string',
-    'string.empty': `Value of fromEmail can't be empty`,
+    "string.base": "Value of fromEmail must be string",
+    "string.empty": `Value of fromEmail can't be empty`,
   }),
 
-  'from-date': Joi.string().pattern(datePattern).
-    custom((value, helpers) => {
+  "from-date": Joi.string()
+    .trim()
+    .pattern(datePattern)
+    .custom((value, helpers) => {
       if (!datePattern.test(value)) {
-        return helpers.error('any.invalid');
+        return helpers.error("any.invalid");
       }
 
       const date = new Date(value);
       if (isNaN(date.getTime())) {
-        return helpers.error('any.invalid');
+        return helpers.error("any.invalid");
       }
       return value;
-    }).messages({
-      'string.pattern.base':
-        'Value of from-date is not valid.',
-      'any.invalid':
-        'Value of from-date is incorrect.',
-      'string.empty': `Value of from-date can't be empty`,
+    })
+    .messages({
+      "string.pattern.base": "Value of from-date is not valid.",
+      "any.invalid": "Value of from-date is not valid.",
+      "string.empty": `Value of from-date can't be empty`,
     }),
 
-  'to-date': Joi.string().pattern(datePattern).optional().
-    custom((value, helpers) => {
+  "to-date": Joi.string()
+    .trim()
+    .pattern(datePattern)
+    .optional()
+    .custom((value, helpers) => {
       if (!datePattern.test(value)) {
-        return helpers.error('any.invalid');
+        return helpers.error("any.invalid");
       }
 
       const date = new Date(value);
       if (isNaN(date.getTime())) {
-        return helpers.error('any.invalid');
+        return helpers.error("any.invalid");
       }
       return value;
-    }).messages({
-      'string.pattern.base':
-        'Value of to-date is not valid.',
-      'any.invalid':
-        'Value of to-date is incorrect.',
-      'string.empty': `Value of to-date can't be empty`,
+    })
+    .messages({
+      "string.pattern.base": "Value of to-date is not valid.",
+      "any.invalid": "Value of to-date is not valid.",
+      "string.empty": `Value of to-date can't be empty`,
     }),
 });
 
@@ -111,6 +124,8 @@ const validateLogsQuery = (schema) => (req, res, next) => {
   const { error, value } = schema.validate(req.query, baseOptions);
 
   if (error) {
+    console.log(value);
+
     const err = error.details[0].message;
     return res.status(400).json({
       success: false,
