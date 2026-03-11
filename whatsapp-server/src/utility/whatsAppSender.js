@@ -89,8 +89,6 @@ class WhatsAppSender {
         data.contentVariables = JSON.stringify(contentVariables);
       }
 
-      console.log("Lambda data of in wp sender", data);
-
       let res = await client.messages.create(data);
       const newObj = {...res.toJSON(),referenceId: res.sid};
       return newObj;
@@ -113,8 +111,7 @@ class WhatsAppSender {
       logger.info(`SMS sent via whatsapp, provider: ${this.provider}`);
       return result;
     } catch (err) {
-      logger.error(`Error in sending whatsapp message via ${this.provider}`);
-      console.log(err);
+      logger.error(`Error in sending whatsapp message via ${this.provider}`, {error: err.message});
       throw err;
     }
   }

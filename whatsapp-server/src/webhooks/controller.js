@@ -12,6 +12,7 @@ const whatsAppController = async (req,res) => {
             success: true
         });
     } catch (err) {
+        logger.error('Status of whatsapp msg not updated successfully', {error: err.message});
         return res.status(500).json({
             message: err.message,
             success: false
