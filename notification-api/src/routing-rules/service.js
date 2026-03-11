@@ -26,4 +26,24 @@ const createRoutingRule = async (clientId, payload) => {
     return result;
 }
 
-module.exports = createRoutingRule;
+const removeRoutingRule = async (clientId, ruleId) => {
+    const dbConnect = await global.connectionManager.getModels(clientId);
+    
+    const routingRuleExist = await dbConnect.RoutingRule.findOne({
+        where: { id: ruleId }
+    });
+
+    if (!routingRuleExist) {
+        throw {
+            statusCode: 404,
+            message: "Routing rule not found"
+        }
+    }
+
+    await routingRuleExist.destroy();
+}
+
+module.exports = {
+    createRoutingRule,
+    removeRoutingRule
+};
