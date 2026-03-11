@@ -81,19 +81,6 @@ const whatsAppValidation = {
     'any.required': 'Template ID is required',
   }),
 
-  fromNumber: Joi.string()
-    .optional()
-    .custom((value, helpers) => {
-      const parsedNumber = phoneUtil.parse(value);
-      if (
-        !phonenNumberRegex.test(value) ||
-        !phoneUtil.isValidNumber(parsedNumber)
-      ) {
-        return helpers.message('Invalid phone number ');
-      }
-      return value;
-    }),
-
   message: Joi.string().trim().optional().messages({
     'string.base': 'Message must be a string',
     'string.empty': 'Message cannot be empty',

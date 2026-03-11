@@ -53,24 +53,45 @@ const validateSchema = Joi.object({
   cc: emailValidation.cc,
   bcc: emailValidation.bcc,
   attachments: attachments,
-  templateId: whatsAppValidation.templateId,
-  contentVariables: whatsAppValidation.contentVariables,
-  fromNumber: whatsAppValidation.fromNumber,
+  templateId: Joi.when('service', {
+    is: 'whatsapp',
+    then: whatsAppValidation.templateId,
+    otherwise: Joi.forbidden().messages({
+      'any.unknown': 'templateId is allowed only when service is whatsapp',
+      'any.forbidden': 'templateId is allowed only when service is whatsapp',
+    }),
+  }),
+
+  contentVariables: Joi.when('service', {
+    is: 'whatsapp',
+    then: whatsAppValidation.contentVariables,
+    otherwise: Joi.forbidden().messages({
+      'any.unknown':
+        'contentVariables is allowed only when service is whatsapp',
+      'any.forbidden':
+        'contentVariables is allowed only when service is whatsapp',
+    }),
+  }),
 })
-  .when(Joi.object({ service: Joi.valid('whatsapp') }).unknown(), {
-    then: Joi.object()
-      .xor('message', 'templateId')
-      .with('templateId', 'contentVariables')
-      .messages({
-        'object.missing':
-          "For WhatsApp service either 'message' OR ('templateId' and 'contentVariables') must be provided",
-        'object.xor':
-          "For WhatsApp service either 'message' OR ('templateId' and 'contentVariables') must be provided",
-        'object.with':
-          "'contentVariables' must be provided when 'templateId' is used",
-      }),
-  })
-  .unknown(false); // Middleware to validate the request
+.when(Joi.object({ service: Joi.valid('whatsapp') }).unknown(), {
+  then: Joi.object()
+    .xor('message', 'templateId', 'attachments')
+    .with('templateId', 'contentVariables')
+    .nand('message', 'contentVariables')
+    .messages({
+      'object.missing':
+        "For WhatsApp service either 'message' OR ('templateId' and 'contentVariables') or 'attachements' must be provided",
+
+      'object.xor':
+        "For WhatsApp service either 'message' OR ('templateId' and 'contentVariables') must be provided",
+
+      'object.with':
+        "'contentVariables' must be provided when 'templateId' is used",
+
+      'object.nand':
+        'contentVariables cannot be used when sending a normal WhatsApp message',
+    }),
+}); 
 
 const validateRequest = (req, res, next) => {
   const { error, value } = validateSchema.validate(req.body, baseOptions);
