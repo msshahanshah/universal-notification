@@ -6,6 +6,7 @@ const { loadClientConfigs } = require("../../utillity/loadClientConfigs");
 const {
   generatePreSignedUrl,
 } = require("../../../helpers/preSignedUrl.helper");
+const { validPublicURL } = require("../../../helpers/regex.helper");
 
 let configs = null;
 
@@ -26,7 +27,7 @@ async function notifyService(clientId, service, bulkMessages) {
     const attachments = msg.content?.attachments;
 
     // Generate Presigned Urls
-    if (attachments?.length && typeof attachments[0] === "string") {
+    if (attachments?.length && typeof attachments[0] === "string" && !validPublicURL(attachments[0])) {
       try {
         preSignedUrls = await generatePreSignedUrl(
           clientId,
@@ -112,9 +113,6 @@ async function creatingBulkNotificationRecord(clientId, service, messages) {
         const provider = await selectProvider(service, number, clientId);
 
         serviceGuard(provider, { service, content, clientId }, clientConfig);
-
-        // const normalizedService =
-        //   service.toLowerCase() === "slack" ? "slackbot" : service;
 
         records.push({
           messageId: uuidv4(),
@@ -210,6 +208,32 @@ const serviceEnforcers = {
   SMS: () => {},
 
   SLACK: () => {},
+
+  WHATSAPP: ({ provider, message, clientConfig }) => {
+    if (!provider) return;
+    const { service, content, clientId } = message;
+    const serviceConfig =
+      clientConfig[service.toUpperCase()][provider.toUpperCase()];
+    const hasFromWhatsNumber = Boolean(content?.fromNumber);
+
+    if (!serviceConfig.allowCustomFromNumber && hasFromWhatsNumber) {
+      throw {
+        statusCode: 400,
+        message: `fromNumber is not allowed in ${service} for client ${clientId}`,
+      };
+    }
+
+    if (serviceConfig.allowCustomFromNumber && !hasFromWhatsNumber) {
+      throw {
+        statusCode: 400,
+        message: `fromNumber can't be empty`,
+      };
+    }
+
+    if (!serviceConfig.allowCustomFromNumber) {
+      content.fromNumber = serviceConfig.TO_NUMBER;
+    }
+  },
 };
 
 function serviceGuard(provider, message, clientConfig) {
@@ -242,6 +266,10 @@ async function selectProvider(service, destination, clientId) {
     }
 
     if (service === "email") {
+      return defaultProvider?.toUpperCase();
+    }
+
+    if(service === 'whatsapp') {
       return defaultProvider?.toUpperCase();
     }
 

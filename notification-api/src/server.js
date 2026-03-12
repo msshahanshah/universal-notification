@@ -11,7 +11,6 @@ const { loadClientConfigs } = require("./utillity/loadClientConfigs");
  * @type {import('http').Server|null}
  */
 let server = null;
-let masterServer = null;
 
 /**
  * Starts the server for a specific client.
@@ -114,22 +113,24 @@ if (cluster.isMaster) {
 
         // cors setting
         masterApp.use(require("cors")());
-
-        // api documentation
-        masterApp.use(
-          "/api-docs",
-          swaggerUi.serve,
-          swaggerUi.setup(swaggerDoc),
-        );
-
-        // health check for master app
-        masterApp.use("/health", (req, res) => {
-          logger.debug("Health check endpoint hit");
-          res.status(200).send("OK");
+        const MASTER_SERVER_PORT = process.env.PORT || 8000;
+        masterApp.use("/api-docs", swaggerUi.serve, (req, res, next) => {
+          const protocol = req.headers["x-forwarded-proto"] || req.protocol || "http";
+          const host = req.headers["x-forwarded-host"] || req.headers.host;
+          const dynamicSwaggerDoc = {
+            ...swaggerDoc,
+            servers: [{ url: `${protocol}://${host}` }],
+          };
+          return swaggerUi.setup(dynamicSwaggerDoc)(req, res, next);
         });
 
         // routing for client's requests
         masterApp.use((req, res, next) => {
+          // skip health
+          if (req.path === "/health") {
+            return next();
+          }
+
           const clientId = req.headers["x-client-id"];
           const client = clients.find((c) => c.ID === clientId);
           if (!client) {
@@ -137,7 +138,9 @@ if (cluster.isMaster) {
               req.path === "/login"
                 ? "invalid username or password"
                 : "Authentication required";
-            logger.warn("Invalid or missing X-Client-Id header", { clientId });
+            logger.warn("Invalid or missing X-Client-Id header >>>>", {
+              clientId,
+            });
             return res.status(401).json({ success: false, message: message });
           }
 
@@ -155,9 +158,13 @@ if (cluster.isMaster) {
             },
           );
         });
-
-        masterServer = masterApp.listen(3000, () => {
-          logger.info("Master router listening on port 3000");
+        // health check for master app
+        masterApp.get("/health", (req, res) => {
+          logger.debug("Health check endpoint hit");
+          res.status(200).send("OK");
+        });
+        masterServer = masterApp.listen(MASTER_SERVER_PORT, () => {
+          logger.info(`Master router listening on port ${MASTER_SERVER_PORT}`);
         });
       } catch (error) {
         logger.error("Master router error:", {

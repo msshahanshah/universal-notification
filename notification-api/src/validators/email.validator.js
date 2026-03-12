@@ -56,20 +56,22 @@ const emailValidation = {
   destination: Joi.when("service", {
     is: "email",
     then: Joi.string()
+      .trim()
+      .min(1)
       .required()
       .custom((value, helpers) =>
         validateEmailList(value, helpers, "destination"),
       )
       .messages({
-        "string.empty": "In destination email is required.",
-        "any.required": "In destination email is required for email service.",
+        "string.empty": "Destination can't be empty for email.",
+        "any.required": "Destination is required for email.",
       }),
     otherwise: Joi.forbidden(),
   }),
   subject: Joi.when("service", {
     is: "email",
     then: Joi.string().trim().min(1).max(255).required().messages({
-      "string.empty": "Subject is required for email service.",
+      "string.empty": "Subject can't be empty for email.",
       "string.max": "Subject must not exceed 255 characters.",
     }),
     otherwise: Joi.forbidden(),
@@ -80,12 +82,13 @@ const emailValidation = {
       .trim()
       .min(1)
       .required()
-      .messages({ "string.empty": "Body can't be empty" }),
+      .messages({ "string.empty": "Body can't be empty for email." }),
     otherwise: Joi.forbidden(),
   }),
   fromEmail: Joi.when("service", {
     is: "email",
     then: Joi.string()
+      .trim()
       .optional()
       .allow("")
       .custom((value, helpers) =>
@@ -96,6 +99,8 @@ const emailValidation = {
   cc: Joi.when("service", {
     is: "email",
     then: Joi.string()
+      .trim()
+      .optional()
       .allow("")
       .custom((value, helpers) => validateEmailList(value, helpers, "cc"))
       .optional(),
@@ -104,6 +109,7 @@ const emailValidation = {
   bcc: Joi.when("service", {
     is: "email",
     then: Joi.string()
+      .trim()
       .allow("")
       .custom((value, helpers) => validateEmailList(value, helpers, "bcc"))
       .optional(),

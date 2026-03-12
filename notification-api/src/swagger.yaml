@@ -6,10 +6,8 @@ info:
   version: 1.0.0
 
 servers:
-  - url: https://{baseURL}
-    variables:
-      baseURL:
-        default: localhost:3000
+  - url: /
+    description: Base URL is automatically detected from the request
 components:
   securitySchemes:
     bearerAuth:
@@ -64,7 +62,7 @@ components:
         destination:
           type: string
           pattern: '/^\+[0-9]+$/'
-          example: "+919103324482,+919109224482"
+          example: '+919103324482,+919109224482'
           description: |
             - Comma-separated list of phone numbers:
             - Number must be a valid international phone number
@@ -92,7 +90,7 @@ components:
 
         destination:
           type: string
-          pattern: "/^[CGD][A-Z0-9]{8,10}$/"
+          pattern: '/^[CGD][A-Z0-9]{8,10}$/'
           minLength: 9
           maxLength: 11
           example: C08Q1E38E10R,G09A1B2C3D
@@ -161,7 +159,7 @@ components:
 
         cc:
           type: string
-          example: "test@gmail.com, test@gmail.com"
+          example: 'test@gmail.com, test@gmail.com'
           description: |
             - (Optional) Comma-separated CC email addresses.
             - Duplicate emails are allowed.
@@ -170,7 +168,7 @@ components:
 
         bcc:
           type: string
-          example: "test@gmail.com, test@gmail.com"
+          example: 'test@gmail.com, test@gmail.com'
           description: |
             - (Optional) Comma-separated BCC email addresses.
             - Duplicate emails are allowed.
@@ -240,7 +238,7 @@ components:
 
         cc:
           type: string
-          example: "test@gmail.com, test@gmail.com"
+          example: 'test@gmail.com, test@gmail.com'
           description: |
             - (Optional) Comma-separated CC email addresses.
             - Duplicate emails are allowed.
@@ -249,7 +247,7 @@ components:
 
         bcc:
           type: string
-          example: "test@gmail.com, test@gmail.com"
+          example: 'test@gmail.com, test@gmail.com'
           description: |
             - (Optional) Comma-separated BCC email addresses.
             - Duplicate emails are allowed.
@@ -258,7 +256,7 @@ components:
 
         attachments:
           type: array
-          example: ["file1.png", "file2.pdf"]
+          example: ['file1.png', 'file2.pdf']
           description: |
             - (Optional) must be array of filenames
             - Empty fileNames are not allowed
@@ -321,7 +319,7 @@ components:
 
         cc:
           type: string
-          example: "test@gmail.com, test@gmail.com"
+          example: 'test@gmail.com, test@gmail.com'
           description: |
             - (Optional) Comma-separated CC email addresses.
             - Duplicate emails are allowed.
@@ -330,7 +328,7 @@ components:
 
         bcc:
           type: string
-          example: "test@gmail.com, test@gmail.com"
+          example: 'test@gmail.com, test@gmail.com'
           description: |
             - (Optional) Comma-separated BCC email addresses.
             - Duplicate emails are allowed.
@@ -341,8 +339,8 @@ components:
           type: array
           example:
             [
-              { filename: "file_1.png", url: "https://aws_url_1.com" },
-              { filename: "file_2.png", url: "https://aws_url_2.com" },
+              { filename: 'file_1.png', url: 'https://aws_url_1.com' },
+              { filename: 'file_2.png', url: 'https://aws_url_2.com' },
             ]
           description: |
             - (Optional) must be array of objects with only fileName and url fields.
@@ -370,17 +368,17 @@ components:
           type: string
           description: |
             Common message used when individual service message/body is not provided.
-          example: "This is common message"
+          example: 'This is common message'
 
         sms:
           type: array
           description: List of SMS notifications
           maxItems: 5
           example:
-            - destination: "+919876543210"
-              message: "Hello Rahul, your order has been shipped."
-            - destination: "+919123456789"
-              message: "Hello Priya, your appointment is confirmed."
+            - destination: '+919876543210'
+              message: 'Hello Rahul, your order has been shipped.'
+            - destination: '+919123456789'
+              message: 'Hello Priya, your appointment is confirmed.'
           items:
             type: object
             required:
@@ -389,32 +387,57 @@ components:
               destination:
                 type: string
                 description: Recipient phone number in E.164 format
-                example: "+919876543210"
+                example: '+919876543210'
               message:
                 type: string
                 description: |
                   Optional SMS message.
                   Falls back to `commonMessage` if not provided.
-                example: "Hello, your order has been shipped."
+                example: 'Hello, your order has been shipped.'
+
+        slack:
+          type: array
+          description: List of Slack notifications
+          maxItems: 5
+          example:
+            - destination: 'CHANNEL_ID'
+              message: 'Hello Rahul, your order has been shipped.'
+            - destination: 'CHANNEL_ID'
+              message: 'Hello Priya, your appointment is confirmed.'
+          items:
+            type: object
+            required:
+              - destination
+            properties:
+              destination:
+                type: string
+                description: Valid CHannel Id
+                example: '******'
+              message:
+                type: string
+                description: |
+                  Optional Slack message.
+                  Falls back to `commonMessage` if not provided.
+                example: 'Hello, your order has been shipped.'
 
         email:
           type: array
           description: List of Email notifications
           maxItems: 5
           example:
-            - destination: "alice@example.com"
-              subject: "Order Confirmation"
-              body: "Hi Alice, your order #1001 has been confirmed."
-              fromEmail: "noreply@company.com"
-              uniqueKey: "email-1"
+            - destination: 'alice@example.com'
+              subject: 'Order Confirmation'
+              body: 'Hi Alice, your order #1001 has been confirmed.'
+              fromEmail: 'noreply@company.com'
+              uniqueKey: 'email-1'
               attachments:
-                - "invoice.pdf"
-                - "receipt.png"
-            - destination: "bob@example.com"
-              subject: "Shipment Update"
-              body: "Hi Bob, your order #1002 has been shipped."
-              fromEmail: "noreply@company.com"
-              uniqueKey: "email-2"
+                - 'invoice.pdf'
+                - 'receipt.png'
+            - destination: 'bob@example.com'
+              subject: 'Shipment Update'
+              body: 'Hi Bob, your order #1002 has been shipped.'
+              fromEmail: 'noreply@company.com'
+              uniqueKey: 'email-2'
           items:
             type: object
             required:
@@ -425,34 +448,116 @@ components:
                 type: string
                 format: email
                 description: Recipient email address
-                example: "user@example.com"
+                example: 'user@example.com'
               subject:
                 type: string
                 description: Email subject line
-                example: "Order Confirmation"
+                example: 'Order Confirmation'
               body:
                 type: string
                 description: |
                   Optional email body.
                   Falls back to `commonMessage` if not provided.
-                example: "Hi, your order has been confirmed."
+                example: 'Hi, your order has been confirmed.'
               uniqueKey:
                 type: string
                 description: |
                   Required if `attachments` are present.
                   Must be unique within the same request.
-                example: "email-1"
+                example: 'email-1'
               attachments:
                 type: array
                 description: List of attachment file names to upload
                 example:
-                  - "invoice.pdf"
-                  - "receipt.png"
-                  - "terms.docx"
+                  - 'invoice.pdf'
+                  - 'receipt.png'
+                  - 'terms.docx'
                 items:
                   type: string
                   description: Name of the file to be uploaded
-                  example: "invoice.pdf"
+                  example: 'invoice.pdf'
+
+        whatsapp:
+          type: array
+          description: List of WhatsApp notifications
+          maxItems: 5
+          example:
+            - destination: '+919929797900'
+              message: 'abcd'
+
+            - destination: '+919929797900'
+              attachments:
+                - 'any_public_url1'
+                - 'any_public_url2'
+
+            - destination: '+919929797900'
+              templateId: 'templateId'
+              contentVariables:
+                '1': 'value1'
+                '2': 'value2'
+                '3': 'value3'
+                '4': 'value4'
+
+            - destination: '+919929797900'
+              message: 'abcd'
+              attachments:
+                - 'abcd.pdf'
+
+          items:
+            type: object
+            required:
+              - destination
+            properties:
+              service:
+                type: string
+                example: whatsapp
+                description: Notification service type
+
+              destination:
+                type: string
+                description: Recipient WhatsApp number in E.164 format
+                example: '+919929797900'
+
+              message:
+                type: string
+                description: Optional WhatsApp text message
+
+              attachments:
+                type: array
+                description: List of public media URLs
+                items:
+                  type: string
+                  example: 'https://example.com/file.pdf'
+
+              templateId:
+                type: string
+                description: WhatsApp template identifier
+
+              contentVariables:
+                type: object
+                description: Template variable mapping
+                additionalProperties:
+                  type: string
+                example:
+                  '1': 'value1'
+                  '2': 'value2'
+                  '3': 'value3'
+                  '4': 'value4'
+
+    # NotifyV2Response:
+    #   type: object
+    #   properties:
+    #     data:
+    #       type: object
+    #       properties:
+    #         failed:
+    #           type: array
+    #           description: List of failed notifications
+    #           example: []
+    #         success:
+    #           type: array
+    #           items:
+    #             $ref: "#/components/schemas/V2ServiceSuccess"
 
     NotifyV2Response:
       type: object
@@ -464,10 +569,76 @@ components:
               type: array
               description: List of failed notifications
               example: []
+
             success:
               type: array
               items:
-                $ref: "#/components/schemas/V2ServiceSuccess"
+                $ref: '#/components/schemas/V2ServiceSuccess'
+
+          example:
+            failed: []
+            success:
+              - service: email
+                messageIds:
+                  - 'a1b2c3d4-e5f6-7890-abcd-ef1234567890'
+                  - 'b2c3d4e5-f6a7-8901-bcde-f12345678901'
+                preSignedUrls:
+                  - uniqueKey: 'email-1'
+                    urls:
+                      - fileName: 'invoice.pdf'
+                        s3:
+                          url: 'https://bucket.s3.ap-south-1.amazonaws.com/'
+                          fields:
+                            bucket: 'bucket'
+                            key: 'uploads/CLIENT/msg-uuid-1/invoice.pdf'
+                            X-Amz-Algorithm: 'AWS4-HMAC-SHA256'
+                            X-Amz-Signature: 'abc123'
+                      - fileName: 'receipt.png'
+                        s3:
+                          url: 'https://bucket.s3.ap-south-1.amazonaws.com/'
+                          fields:
+                            bucket: 'bucket'
+                            key: 'uploads/CLIENT/msg-uuid-1/receipt.png'
+                            X-Amz-Algorithm: 'AWS4-HMAC-SHA256'
+                            X-Amz-Signature: 'def456'
+
+                  - uniqueKey: 'email-2'
+                    urls:
+                      - fileName: 'terms.docx'
+                        s3:
+                          url: 'https://bucket.s3.ap-south-1.amazonaws.com/'
+                          fields:
+                            bucket: 'bucket'
+                            key: 'uploads/CLIENT/msg-uuid-2/terms.docx'
+                            X-Amz-Algorithm: 'AWS4-HMAC-SHA256'
+                            X-Amz-Signature: 'ghi789'
+
+              - service: whatsapp
+                messageIds:
+                  - 'a1b2c3d4-e5f6-7890-efgh-ef1234569999'
+                  - 'b2c3d4e5-f6a7-8901-bcde-f12345678901'
+                  - 'a3d4e5f6-f6a7-8901-bcde-f12345671234'
+                preSignedUrls:
+                  - uniqueKey: 'whatsapp-1'
+                    urls:
+                      - fileName: 'abcd.pdf'
+                        s3:
+                          url: 'https://bucket.s3.ap-south-1.amazonaws.com/'
+                          fields:
+                            bucket: 'bucket'
+                            key: 'uploads/CLIENT/msg-uuid-2/abcd.pdf'
+                            X-Amz-Algorithm: 'AWS4-HMAC-SHA256'
+                            X-Amz-Signature: 'ghi789'
+
+              - service: sms
+                messageIds:
+                  - 'a1b2c3d4-e5f6-7890-efgh-ef1234569999'
+                  - 'b2c3d4e5-f6a7-8901-bcde-f12345678901'
+
+              - service: slack
+                messageIds:
+                  - 'a1b2c3d4-e5f6-7890-efgh-ff8765439911'
+                  - 'b2c3d4e5-f6a7-8901-bcde-f12345678901'
 
     V2ServiceFailure:
       type: object
@@ -481,99 +652,164 @@ components:
           example: 400
         message:
           type: string
-          example: "Bulk insert failed"
+          example: 'Bulk insert failed'
 
     V2ServiceSuccess:
       type: object
       properties:
         service:
           type: string
-          enum: [email, sms]
+          enum: [email, sms, whatsapp]
           example: email
         messageIds:
           type: array
           example:
-            - "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
-            - "b2c3d4e5-f6a7-8901-bcde-f12345678901"
+            - 'a1b2c3d4-e5f6-7890-abcd-ef1234567890'
+            - 'b2c3d4e5-f6a7-8901-bcde-f12345678901'
           items:
             type: string
             format: uuid
-            example: "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+            example: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890'
         preSignedUrls:
           type: array
           example:
-            - uniqueKey: "email-1"
+            - uniqueKey: 'email-1'
               urls:
-                - fileName: "invoice.pdf"
+                - fileName: 'invoice.pdf'
                   s3:
-                    url: "https://bucket.s3.ap-south-1.amazonaws.com/"
+                    url: 'https://bucket.s3.ap-south-1.amazonaws.com/'
                     fields:
-                      bucket: "bucket"
-                      key: "uploads/CLIENT/msg-uuid-1/invoice.pdf"
-                      X-Amz-Algorithm: "AWS4-HMAC-SHA256"
-                      X-Amz-Signature: "abc123"
-                - fileName: "receipt.png"
+                      bucket: 'bucket'
+                      key: 'uploads/CLIENT/msg-uuid-1/invoice.pdf'
+                      X-Amz-Algorithm: 'AWS4-HMAC-SHA256'
+                      X-Amz-Signature: 'abc123'
+                - fileName: 'receipt.png'
                   s3:
-                    url: "https://bucket.s3.ap-south-1.amazonaws.com/"
+                    url: 'https://bucket.s3.ap-south-1.amazonaws.com/'
                     fields:
-                      bucket: "bucket"
-                      key: "uploads/CLIENT/msg-uuid-1/receipt.png"
-                      X-Amz-Algorithm: "AWS4-HMAC-SHA256"
-                      X-Amz-Signature: "def456"
-            - uniqueKey: "email-2"
+                      bucket: 'bucket'
+                      key: 'uploads/CLIENT/msg-uuid-1/receipt.png'
+                      X-Amz-Algorithm: 'AWS4-HMAC-SHA256'
+                      X-Amz-Signature: 'def456'
+            - uniqueKey: 'email-2'
               urls:
-                - fileName: "terms.docx"
+                - fileName: 'terms.docx'
                   s3:
-                    url: "https://bucket.s3.ap-south-1.amazonaws.com/"
+                    url: 'https://bucket.s3.ap-south-1.amazonaws.com/'
                     fields:
-                      bucket: "bucket"
-                      key: "uploads/CLIENT/msg-uuid-2/terms.docx"
-                      X-Amz-Algorithm: "AWS4-HMAC-SHA256"
-                      X-Amz-Signature: "ghi789"
+                      bucket: 'bucket'
+                      key: 'uploads/CLIENT/msg-uuid-2/terms.docx'
+                      X-Amz-Algorithm: 'AWS4-HMAC-SHA256'
+                      X-Amz-Signature: 'ghi789'
           items:
-            $ref: "#/components/schemas/V2PreSignedUrlGroup"
+            $ref: '#/components/schemas/V2PreSignedUrlGroup'
+
+        type: object
+        properties:
+          service:
+            type: string
+            enum: [email, sms, whatsapp]
+            example: email
+
+          messageIds:
+            type: array
+            example:
+              - 'a1b2c3d4-e5f6-7890-abcd-ef1234567890'
+              - 'b2c3d4e5-f6a7-8901-bcde-f12345678901'
+            items:
+              type: string
+              format: uuid
+              example: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890'
+
+          preSignedUrls:
+            type: array
+            example:
+              - uniqueKey: 'email-1'
+                urls:
+                  - fileName: 'invoice.pdf'
+                    s3:
+                      url: 'https://bucket.s3.ap-south-1.amazonaws.com/'
+                      fields:
+                        bucket: 'bucket'
+                        key: 'uploads/CLIENT/msg-uuid-1/invoice.pdf'
+                        X-Amz-Algorithm: 'AWS4-HMAC-SHA256'
+                        X-Amz-Signature: 'abc123'
+
+                  - fileName: 'receipt.png'
+                    s3:
+                      url: 'https://bucket.s3.ap-south-1.amazonaws.com/'
+                      fields:
+                        bucket: 'bucket'
+                        key: 'uploads/CLIENT/msg-uuid-1/receipt.png'
+                        X-Amz-Algorithm: 'AWS4-HMAC-SHA256'
+                        X-Amz-Signature: 'def456'
+
+              - uniqueKey: 'email-2'
+                urls:
+                  - fileName: 'terms.docx'
+                    s3:
+                      url: 'https://bucket.s3.ap-south-1.amazonaws.com/'
+                      fields:
+                        bucket: 'bucket'
+                        key: 'uploads/CLIENT/msg-uuid-2/terms.docx'
+                        X-Amz-Algorithm: 'AWS4-HMAC-SHA256'
+                        X-Amz-Signature: 'ghi789'
+
+              - uniqueKey: 'whatsapp-1'
+                urls:
+                  - fileName: 'abcd.pdf'
+                    s3:
+                      url: 'https://bucket.s3.ap-south-1.amazonaws.com/'
+                      fields:
+                        bucket: 'bucket'
+                        key: 'uploads/CLIENT/msg-uuid-3/abcd.pdf'
+                        X-Amz-Algorithm: 'AWS4-HMAC-SHA256'
+                        X-Amz-Signature: 'xyz123'
+
+            items:
+              $ref: '#/components/schemas/V2PreSignedUrlGroup'
 
     V2PreSignedUrlGroup:
       type: object
       properties:
         uniqueKey:
           type: string
-          example: "email-1"
+          example: 'email-1'
         urls:
           type: array
           example:
-            - fileName: "invoice.pdf"
+            - fileName: 'invoice.pdf'
               s3:
-                url: "https://bucket.s3.ap-south-1.amazonaws.com/"
+                url: 'https://bucket.s3.ap-south-1.amazonaws.com/'
                 fields:
-                  bucket: "bucket"
-                  key: "uploads/CLIENT/msg-uuid/invoice.pdf"
-                  X-Amz-Algorithm: "AWS4-HMAC-SHA256"
-                  X-Amz-Signature: "abc123"
-            - fileName: "receipt.png"
+                  bucket: 'bucket'
+                  key: 'uploads/CLIENT/msg-uuid/invoice.pdf'
+                  X-Amz-Algorithm: 'AWS4-HMAC-SHA256'
+                  X-Amz-Signature: 'abc123'
+            - fileName: 'receipt.png'
               s3:
-                url: "https://bucket.s3.ap-south-1.amazonaws.com/"
+                url: 'https://bucket.s3.ap-south-1.amazonaws.com/'
                 fields:
-                  bucket: "bucket"
-                  key: "uploads/CLIENT/msg-uuid/receipt.png"
-                  X-Amz-Algorithm: "AWS4-HMAC-SHA256"
-                  X-Amz-Signature: "def456"
+                  bucket: 'bucket'
+                  key: 'uploads/CLIENT/msg-uuid/receipt.png'
+                  X-Amz-Algorithm: 'AWS4-HMAC-SHA256'
+                  X-Amz-Signature: 'def456'
           items:
-            $ref: "#/components/schemas/V2PreSignedUrl"
+            $ref: '#/components/schemas/V2PreSignedUrl'
 
     V2PreSignedUrl:
       type: object
       properties:
         fileName:
           type: string
-          example: "invoice.pdf"
+          example: 'invoice.pdf'
         s3:
           type: object
           properties:
             url:
               type: string
               format: uri
-              example: "https://bucket.s3.ap-south-1.amazonaws.com/"
+              example: 'https://bucket.s3.ap-south-1.amazonaws.com/'
             fields:
               type: object
               additionalProperties:
@@ -587,25 +823,25 @@ components:
           example: true
         message:
           type: string
-          example: "Waiting for file upload on URL (expiry 5 mins). Message Id: 24af1e92-cfa3-4c25-9d13-79841734f1ee"
+          example: 'Waiting for file upload on URL (expiry 5 mins). Message Id: 24af1e92-cfa3-4c25-9d13-79841734f1ee'
         preSignedUrls:
           type: array
           example:
             [
               {
-                fileName: "file1.pdf",
+                fileName: 'file1.pdf',
                 s3:
                   {
-                    url: "https://bucket.s3.ap-south-1.amazonaws.com/",
+                    url: 'https://bucket.s3.ap-south-1.amazonaws.com/',
                     fields:
                       {
-                        bucket: "bucket",
-                        X-Amz-Algorithm: "AWS4-HMAC-SHA256",
-                        X-Amz-Credential: "AKIAZXXXX/20260000/ap-south-1/s3/aws4_request",
-                        X-Amz-Date: "20260205T114229Z",
-                        key: "uploads/TEMP/24af1e92-79841734f1ee?1/file1.pdf",
-                        Policy: "eyJleHBpcmF0aW9uIjoiMjAyNi0wMi0wNVQxMToxxxxxx",
-                        X-Amz-Signature: "eecxxxxxx",
+                        bucket: 'bucket',
+                        X-Amz-Algorithm: 'AWS4-HMAC-SHA256',
+                        X-Amz-Credential: 'AKIAZXXXX/20260000/ap-south-1/s3/aws4_request',
+                        X-Amz-Date: '20260205T114229Z',
+                        key: 'uploads/TEMP/24af1e92-79841734f1ee?1/file1.pdf',
+                        Policy: 'eyJleHBpcmF0aW9uIjoiMjAyNi0wMi0wNVQxMToxxxxxx',
+                        X-Amz-Signature: 'eecxxxxxx',
                       },
                   },
               },
@@ -628,7 +864,7 @@ components:
           example: false
         message:
           type: string
-          example: "error details"
+          example: 'error details'
 
     RoutingRuleRequest:
       type: object
@@ -703,14 +939,8 @@ paths:
     get:
       summary: Health check
       tags: [System]
-      parameters:
-        - name: X-Client-Id
-          in: header
-          required: true
-          schema:
-            type: string
       responses:
-        "200":
+        '200':
           description: ok
 
   /login:
@@ -728,9 +958,9 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/LoginRequest"
+              $ref: '#/components/schemas/LoginRequest'
       responses:
-        "200":
+        '200':
           description: Login successful
           content:
             application/json:
@@ -766,9 +996,9 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/RefreshRequest"
+              $ref: '#/components/schemas/RefreshRequest'
       responses:
-        "200":
+        '200':
           description: Refresh successful
           content:
             application/json:
@@ -790,6 +1020,8 @@ paths:
     post:
       summary: Logout
       tags: [Auth]
+      security:
+        - bearerAuth: []
       parameters:
         - name: X-Client-Id
           in: header
@@ -798,7 +1030,7 @@ paths:
             type: string
 
       responses:
-        "200":
+        '200':
           content:
             application/json:
               schema:
@@ -829,7 +1061,7 @@ paths:
           schema:
             type: string
       responses:
-        "200":
+        '200':
           description: Delivery status returned
           content:
             application/json:
@@ -847,33 +1079,33 @@ paths:
                       deliveryStatus:
                         type: string
                         example: pending
-        "400":
+        '400':
           description: Bad Request
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponse"
-        "401":
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
           description: Unauthorized
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponse"
-        "403":
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
           description: Forbidden
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponse"
-        "404":
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
           description: Not Found - Message ID does not exist
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponse"
+                $ref: '#/components/schemas/ErrorResponse'
               example:
                 success: false
-                message: "Message ID not found"
+                message: 'Message ID not found'
 
   /notify:
     post:
@@ -893,9 +1125,9 @@ paths:
           application/json:
             schema:
               oneOf:
-                - $ref: "#/components/schemas/NotifySms"
-                - $ref: "#/components/schemas/NotifySlack"
-                - $ref: "#/components/schemas/NotifyEmail"
+                - $ref: '#/components/schemas/NotifySms'
+                - $ref: '#/components/schemas/NotifySlack'
+                - $ref: '#/components/schemas/NotifyEmail'
 
               discriminator:
                 propertyName: service
@@ -905,30 +1137,30 @@ paths:
                 summary: SMS Notification
                 value:
                   service: sms
-                  message: "Hello Rahul, how are you"
-                  destination: "+919929797900"
+                  message: 'Hello Rahul, how are you'
+                  destination: '+919929797900'
 
               slack:
                 summary: Slack Notification
                 value:
                   service: slack
-                  message: "Good Morning, Guys"
-                  destination: "C08Q1239E10R"
+                  message: 'Good Morning, Guys'
+                  destination: 'C08Q1239E10R'
 
               email:
                 summary: Email Notification
                 value:
                   service: email
-                  destination: "user@example.com"
-                  subject: "Recent Mail"
-                  body: "Email body content"
-                  fromEmail: "sender@example.com"
-                  cc (Optional): "itest@gmail.com , itest@gmail.com"
-                  bcc (Optional): "itest@gmail.com , itest@gmail.com"
+                  destination: 'user@example.com'
+                  subject: 'Recent Mail'
+                  body: 'Email body content'
+                  fromEmail: 'sender@example.com'
+                  cc (Optional): 'itest@gmail.com , itest@gmail.com'
+                  bcc (Optional): 'itest@gmail.com , itest@gmail.com'
                   attachments (Optional): Array of objects or Array of files name
 
       responses:
-        "202":
+        '202':
           description: Accepted
           content:
             application/json:
@@ -943,30 +1175,32 @@ paths:
                     example: Notification request accepted and queued.
                   messageId:
                     type: string
-                    example: "7ec67efd-21e1-4189-aa8e-25686a6f8845"
-        "400":
+                    example: '7ec67efd-21e1-4189-aa8e-25686a6f8845'
+        '400':
           description: Bad Request / Validation Error
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponse"
-        "401":
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
           description: Unauthorized
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponse"
-        "403":
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
           description: Forbidden
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponse"
+                $ref: '#/components/schemas/ErrorResponse'
 
   /v2/notify:
     post:
       tags:
         - Notification
+      security:
+        - bearerAuth: []
       summary: Send multi-service notifications (V2)
       description: |
         Sends notifications for multiple services (SMS, Email, Slack, etc) in a single request.
@@ -996,45 +1230,45 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/NotifyV2Request"
+              $ref: '#/components/schemas/NotifyV2Request'
 
       responses:
-        "200":
+        '200':
           description: Notification processed successfully
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/NotifyV2Response"
+                $ref: '#/components/schemas/NotifyV2Response'
 
-        "400":
+        '400':
           description: Validation error
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponse"
+                $ref: '#/components/schemas/ErrorResponse'
 
-        "401":
+        '401':
           description: Unauthorized
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponse"
+                $ref: '#/components/schemas/ErrorResponse'
 
-        "403":
+        '403':
           description: Forbidden
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponse"
+                $ref: '#/components/schemas/ErrorResponse'
 
-        "413":
+        '413':
           description: Payload Too Large (exceeds 100 KB limit)
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponse"
+                $ref: '#/components/schemas/ErrorResponse'
 
-        "417":
+        '417':
           description: |
             Expectation Failed — partial success. Some services were processed
             successfully while others failed. The response body contains both
@@ -1042,25 +1276,25 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/NotifyV2Response"
+                $ref: '#/components/schemas/NotifyV2Response'
               example:
                 data:
                   failed:
                     - service: sms
                       statusCode: 400
-                      message: "Bulk insert failed"
+                      message: 'Bulk insert failed'
                   success:
                     - service: email
                       messages:
-                        - messageId: "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
-                          uniqueKey: "email-1"
+                        - messageId: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890'
+                          uniqueKey: 'email-1'
 
-        "500":
+        '500':
           description: Internal server error
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponse"
+                $ref: '#/components/schemas/ErrorResponse'
 
   /logs:
     get:
@@ -1096,7 +1330,7 @@ paths:
             enum: [slack, email, sms]
 
       responses:
-        "200":
+        '200':
           description: Logs fetched successfully
           content:
             application/json:
@@ -1129,6 +1363,8 @@ paths:
                         messageDate:
                           type: string
                           format: date-time
+                        referenceId:
+                          type: string
                   pagination:
                     type: object
                     properties:
@@ -1138,25 +1374,140 @@ paths:
                         type: number
                       totalPages:
                         type: number
-        "400":
+        '400':
           description: Bad Request - Invalid query parameters
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponse"
-        "401":
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
           description: Unauthorized
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponse"
-        "403":
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
           description: Forbidden
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponse"
+                $ref: '#/components/schemas/ErrorResponse'
 
+  /slack-logs:
+    get:
+      summary: Get  Notification as well as Slack reply messages logs
+      tags: [Logs]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: X-Client-Id
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [pending, processing, failed, sent]
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 0
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 0
+        - name: service
+          in: query
+          schema:
+            type: string
+            enum: [slack]
+
+      responses:
+        '200':
+          description: Logs fetched successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Data fetched successfully
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: number
+                        messageId:
+                          type: string
+                        service:
+                          type: string
+                        destination:
+                          type: string
+                        status:
+                          type: string
+                        attempts:
+                          type: number
+                        messageDate:
+                          type: string
+                          format: date-time
+                        referenceId:
+                          type: string
+                        userReplyedMessages:
+                          type: object
+                          properties:
+                            username:
+                              type: string
+                              example: 'john_doe'
+
+                            message:
+                              type: string
+                              example: 'Thanks for the reply!'
+
+                            reactions:
+                              type: array
+                              items:
+                                type: string
+                              example:
+                                - '+1'
+                                - 'white_check_mark'
+
+                  pagination:
+                    type: object
+                    properties:
+                      page:
+                        type: number
+                      limit:
+                        type: number
+                      totalPages:
+                        type: number
+        '400':
+          description: Bad Request - Invalid query parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
   /balance:
     get:
       summary: Get real-time balance
@@ -1186,7 +1537,7 @@ paths:
           description: Provider used to send message (MSG91, Twilio, etc.)
 
       responses:
-        "200":
+        '200':
           description: Balance fetched successfully
           content:
             application/json:
@@ -1211,33 +1562,33 @@ paths:
                       currency:
                         type: string
 
-        "400":
+        '400':
           description: Service and provider are missing
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponse"
+                $ref: '#/components/schemas/ErrorResponse'
 
-        "401":
+        '401':
           description: Unauthorized
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponse"
+                $ref: '#/components/schemas/ErrorResponse'
 
-        "403":
+        '403':
           description: Forbidden
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponse"
+                $ref: '#/components/schemas/ErrorResponse'
 
-        "500":
+        '500':
           description: Internal Server Error
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponse"
+                $ref: '#/components/schemas/ErrorResponse'
 
   /refresh-balance:
     post:
@@ -1268,7 +1619,7 @@ paths:
           description: Provider used to send message (MSG91, Twilio, etc.)
 
       responses:
-        "200":
+        '200':
           description: Balance fetched successfully
           content:
             application/json:
@@ -1293,28 +1644,28 @@ paths:
                       currency:
                         type: string
 
-        "400":
+        '400':
           description: Service and provider are missing
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponse"
+                $ref: '#/components/schemas/ErrorResponse'
 
-        "401":
+        '401':
           description: Unauthorized
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponse"
+                $ref: '#/components/schemas/ErrorResponse'
 
-        "403":
+        '403':
           description: Forbidden
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponse"
+                $ref: '#/components/schemas/ErrorResponse'
 
-        "500":
+        '500':
           description: Internal Server Error
           content:
             application/json:

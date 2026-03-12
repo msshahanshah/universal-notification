@@ -31,6 +31,10 @@ module.exports = {
         allowNull: false,
         unique: true,
       },
+      referenceId: {
+        type: Sequelize.STRING,
+        allowNull: true,
+      },
       service: {
         type: Sequelize.STRING,
         allowNull: false,
@@ -70,6 +74,10 @@ module.exports = {
         allowNull: false,
         type: Sequelize.DATE,
         defaultValue: Sequelize.NOW,
+      },
+      deletedAt: {
+        type: Sequelize.DATE,
+        allowNull: true,
       },
     });
 
