@@ -128,6 +128,10 @@ if (cluster.isMaster) {
 
         // routing for client's requests
         masterApp.use((req, res, next) => {
+          // skip health
+          if (req.path === "/health") {
+            return next();
+          }
           const clientId = req.headers["x-client-id"];
           const client = clients.find((c) => c.ID === clientId);
           if (!client) {
