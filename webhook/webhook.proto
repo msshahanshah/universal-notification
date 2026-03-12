@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+package notification;
+
+service WebhookService {
+    rpc UpdateWebhookConfig (WebhookConfigRequest) returns (WebhookConfigResponse);
+}
+
+message WebhookConfigRequest {
+    string clientId = 1;
+}
+
+message WebhookConfigResponse {
+    string message = 1;
+    map<string, bool> service_trigger = 2;
+}
