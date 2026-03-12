@@ -120,20 +120,16 @@ if (cluster.isMaster) {
           swaggerUi.setup(swaggerDoc),
         );
 
-        // health check for master app
-        masterApp.get("/health", (req, res) => {
-          logger.debug("Health check endpoint hit");
-          res.status(200).send("OK");
-        });
-
         // routing for client's requests
         masterApp.use((req, res, next) => {
           // skip health
+          logger.debug("request path: ", req.path);
           if (req.path === "/health") {
             logger.debug("skipping health >>>>");
             return next();
           }
           logger.debug("health api skipped >>>");
+
           const clientId = req.headers["x-client-id"];
           const client = clients.find((c) => c.ID === clientId);
           if (!client) {
@@ -161,7 +157,11 @@ if (cluster.isMaster) {
             },
           );
         });
-
+        // health check for master app
+        masterApp.get("/health", (req, res) => {
+          logger.debug("Health check endpoint hit");
+          res.status(200).send("OK");
+        });
         masterServer = masterApp.listen(MASTER_SERVER_PORT, () => {
           logger.info(`Master router listening on port ${MASTER_SERVER_PORT}`);
         });
