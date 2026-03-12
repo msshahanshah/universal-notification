@@ -4,13 +4,13 @@ const createRoutingRule = async (clientId, payload) => {
     const dbConnect = await global.connectionManager.getModels(clientId);
 
     const routingRuleExist = await dbConnect.RoutingRule.findOne({
-        where: { service: serviceName, match_value: matchValue }
+        where: { service: service.toUpperCase(), match_value: matchValue }
     });
 
     if (routingRuleExist) {
         throw {
             statusCode: 409,
-            message: "Routing rule is already exists."
+            message: "Routing rule already exists."
         }
     }
     const routingRule = await dbConnect.RoutingRule.create({
@@ -90,8 +90,13 @@ const updateRoutingRule = async (clientId, ruleId, payload) => {
         }
     }
 
+    const { Op } = dbConnect.Sequelize;
     const routingRule = await dbConnect.RoutingRule.findOne({
-        where: { service: service.toUpperCase(), match_value: matchValue }
+        where: { 
+            service: service.toUpperCase(), 
+            match_value: matchValue,
+            id: { [Op.ne]: ruleId }
+        }
     });
 
     if (routingRule) {
