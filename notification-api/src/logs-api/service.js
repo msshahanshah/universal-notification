@@ -43,12 +43,22 @@ const viewMessageLogs = async (
     let dbConnect = await global.connectionManager.getModels(idClient);
     const validColumns = Object.keys(dbConnect.Notification.rawAttributes);
 
-    if(fromDate && toDate) {
-      if(new Date(toDate) < new Date(fromDate)) {
-        throw { statusCode: 400, message: `from-date can't be greater than to-date`};
+    if (fromDate || toDate) {
+      if (!fromDate || !toDate) {
+        throw {
+          statusCode: 400,
+          message:
+            "for date based filter both from-date and to-date are required",
+        };
+      }
+
+      if (new Date(toDate) < new Date(fromDate)) {
+        throw {
+          statusCode: 400,
+          message: "from-date can't be greater than to-date",
+        };
       }
     }
-
     if (sort && order && (order === "asc" || order === "desc")) {
       const keys = sort.split(",");
       for (let i = 0; i < keys.length; i++) {
@@ -59,19 +69,28 @@ const viewMessageLogs = async (
         }
       }
     }
-   
-    if (fromDate){
-      const startDay = new Date(fromDate);
-      startDay.setHours(0,0,0,0) 
-      where.updatedAt = {
-        [Sequelize.Op.gte] : startDay
+
+    if (fromDate) {
+      let startDay;
+      if (!fromDate.includes("T")) {
+        startDay = new Date(fromDate);
+        startDay.setHours(0, 0, 0, 0);
+      } else {
+        startDay = new Date(fromDate);
       }
+      where.updatedAt = {
+        [Sequelize.Op.gte]: startDay,
+      };
     }
-    
 
     if (toDate) {
-      const endDay = new Date(toDate);
-      endDay.setHours(0,0,0,0);
+      let endDay;
+      if (!toDate.includes("T")) {
+        endDay = new Date(toDate);
+        endDay.setUTCHours(18, 29, 0, 0);
+      } else {
+        endDay = new Date(toDate);
+      }
       where.updatedAt[Sequelize.Op.lt] = endDay;
     }
 

@@ -120,14 +120,13 @@ if (cluster.isMaster) {
           swaggerUi.setup(swaggerDoc),
         );
 
-        // health check for master app
-        masterApp.use("/health", (req, res) => {
-          logger.debug("Health check endpoint hit");
-          res.status(200).send("OK");
-        });
-
         // routing for client's requests
         masterApp.use((req, res, next) => {
+          // skip health
+          if (req.path === "/health") {
+            return next();
+          }
+
           const clientId = req.headers["x-client-id"];
           const client = clients.find((c) => c.ID === clientId);
           if (!client) {
@@ -135,7 +134,9 @@ if (cluster.isMaster) {
               req.path === "/login"
                 ? "invalid username or password"
                 : "Authentication required";
-            logger.warn("Invalid or missing X-Client-Id header", { clientId });
+            logger.warn("Invalid or missing X-Client-Id header >>>>", {
+              clientId,
+            });
             return res.status(401).json({ success: false, message: message });
           }
 
@@ -153,7 +154,11 @@ if (cluster.isMaster) {
             },
           );
         });
-
+        // health check for master app
+        masterApp.get("/health", (req, res) => {
+          logger.debug("Health check endpoint hit");
+          res.status(200).send("OK");
+        });
         masterServer = masterApp.listen(MASTER_SERVER_PORT, () => {
           logger.info(`Master router listening on port ${MASTER_SERVER_PORT}`);
         });
