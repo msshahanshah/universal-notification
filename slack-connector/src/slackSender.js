@@ -126,6 +126,7 @@ async function sendSlackMessage(
       }
     }
   } catch (error) {
+    logger.error(error);
     logger.error(`Error sending message to Slack via API \n`, {
       messageId,
       channel,
