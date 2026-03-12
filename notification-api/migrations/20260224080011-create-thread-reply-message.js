@@ -16,7 +16,7 @@ module.exports = {
    */
   async up(queryInterface, Sequelize, schemaName) {
     const tableName = {
-      tableName: "notifications",
+      tableName: "thread_reply_messages",
       schema: schemaName,
     };
     await queryInterface.createTable(tableName, {
@@ -26,65 +26,54 @@ module.exports = {
         allowNull: false,
         autoIncrement: true,
       },
-      messageId: {
-        type: Sequelize.UUID,
+
+      parent_thread_id: {
+        type: Sequelize.STRING,
+        allowNull: false,
+      },
+
+      child_thread_id: {
+        type: Sequelize.STRING,
         allowNull: false,
         unique: true,
       },
-      referenceId: {
+      user_id: {
         type: Sequelize.STRING,
+        allowNull: false,
+      },
+
+      message: {
+        type: Sequelize.STRING,
+        allowNull: false,
+      },
+
+      deleted_at: {
+        type: Sequelize.DATE,
         allowNull: true,
       },
-      service: {
-        type: Sequelize.STRING,
-        allowNull: false,
-      },
-      destination: {
-        type: Sequelize.STRING,
-        allowNull: false,
-      },
-      content: {
-        type: Sequelize.JSONB,
-        allowNull: false,
-      },
-      status: {
-        type: Sequelize.STRING,
-        allowNull: false,
-        defaultValue: "pending",
-      },
-      attempts: {
-        type: Sequelize.INTEGER,
-        allowNull: false,
-        defaultValue: 0,
-      },
-      connectorResponse: {
-        type: Sequelize.TEXT,
-        allowNull: true,
-      },
-      templateId: {
-        type: Sequelize.STRING,
-        allowNull: true,
-      },
-      createdAt: {
+      created_at: {
         allowNull: false,
         type: Sequelize.DATE,
         defaultValue: Sequelize.NOW,
       },
-      updatedAt: {
+      updated_at: {
         allowNull: false,
         type: Sequelize.DATE,
         defaultValue: Sequelize.NOW,
-      },
-      deletedAt: {
-        type: Sequelize.DATE,
-        allowNull: true,
       },
     });
 
     // Add indexes for better query performance
-    await queryInterface.addIndex(tableName, ["messageId"], { unique: true });
-    await queryInterface.addIndex(tableName, ["status"]);
-    await queryInterface.addIndex(tableName, ["service", "status"]);
+
+    await queryInterface.addIndex(tableName, ["child_thread_id", "deleted_at"]);
+    await queryInterface.addIndex(
+      tableName,
+      ["parent_thread_id", "child_thread_id", "deleted_at"],
+      {
+        unique: true,
+        name: "parent_child_deleted_at_unique_cidx",
+      },
+    );
   },
 
   /**
@@ -92,6 +81,6 @@ module.exports = {
    * @param {Sequelize} Sequelize
    */
   async down(queryInterface, Sequelize) {
-    await queryInterface.dropTable("notifications");
+    await queryInterface.dropTable("thread_reply_messages");
   },
 };

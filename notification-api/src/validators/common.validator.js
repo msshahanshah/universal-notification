@@ -1,6 +1,10 @@
-const Joi = require("joi");
+const Joi = require('joi');
 const baseOptions = { abortEarly: false, stripUnknown: false };
-const { fileNameRegex, urlRegex } = require("../../helpers/regex.helper");
+const {
+  fileNameRegex,
+  urlRegex,
+  validPublicURL,
+} = require('../../helpers/regex.helper');
 
 // --------------------COMMON  VALIDATION----------------------------
 const commonValidation = {
@@ -46,7 +50,7 @@ const commonValidation = {
     .trim()
     .min(1)
     .required()
-    .valid("email", "slack", "sms")
+    .valid("email", "slack", "sms", "whatsapp")
     .messages({
       "string.base": "Service must be a string",
       "any.only": "Service must be one of: email, slack, sms",
@@ -54,15 +58,15 @@ const commonValidation = {
     }),
   message: Joi.string()
     .trim()
-    .when("service", {
-      is: "email",
+    .when('service', {
+      is: 'email',
       then: Joi.forbidden().messages({
-        "any.unknown": "Message is not allowed for email service",
+        'any.unknown': 'Message is not allowed for email service',
       }),
       otherwise: Joi.required().messages({
-        "string.base": "Message must be a string",
-        "string.empty": "Message cannot be empty",
-        "any.required": "Message is required for this service",
+        'string.base': 'Message must be a string',
+        'string.empty': 'Message cannot be empty',
+        'any.required': 'Message is required for this service',
       }),
     }),
 };
@@ -75,7 +79,7 @@ function changeDuplicateFileName(fileName, map) {
   if (map.has(fileName)) {
     let cnt = map.get(fileName);
 
-    let idx = fileName.lastIndexOf(".");
+    let idx = fileName.lastIndexOf('.');
     if (idx == -1) idx = fileName.length;
 
     const newFileName =
@@ -90,14 +94,14 @@ function changeDuplicateFileName(fileName, map) {
 }
 
 function validateFileName(fileName) {
-  if (!fileName?.length) return "FileName cannot be empty";
-  if (!fileNameRegex.test(fileName)) return "FileName is not valid";
+  if (!fileName?.length) return 'FileName cannot be empty';
+  if (!fileNameRegex.test(fileName)) return 'FileName is not valid';
   return null;
 }
 
 function validateUrl(url) {
-  if (!url?.length) return "Url cannot be empty";
-  if (!urlRegex.test(url)) return "Url is not valid";
+  if (!url?.length) return 'Url cannot be empty';
+  if (!urlRegex.test(url)) return 'Url is not valid';
   return null;
 }
 
@@ -108,11 +112,11 @@ const validateAttachments = (values, helpers) => {
     if (values.length > 10)
       return helpers.message("Attachments can't exceed 10.");
     //checking for array of filenames
-    if (typeof values[0] === "string") {
+    if (typeof values[0] === 'string') {
       for (let idx = 0; idx < values.length; idx++) {
         const item = values[idx];
 
-        if (typeof item === "string") {
+        if (typeof item === 'string') {
           const clearedFileName = item.trim();
           const message = validateFileName(clearedFileName);
           if (message) return helpers.message(message);
@@ -120,24 +124,24 @@ const validateAttachments = (values, helpers) => {
           //changin the name of duplicate files
           values[idx] = changeDuplicateFileName(clearedFileName, map);
         } else {
-          return helpers.message("Attachments must be array of filenames");
+          return helpers.message('Attachments must be array of filenames');
         }
       }
-    } else if (typeof values[0] === "object") {
-      const allowedKeys = ["fileName", "url"]; // only this keys is allowed in attachemnts
+    } else if (typeof values[0] === 'object') {
+      const allowedKeys = ['fileName', 'url']; // only this keys is allowed in attachemnts
       for (let idx = 0; idx < values.length; idx++) {
         const item = values[idx];
 
-        if (typeof item == "object") {
+        if (typeof item == 'object') {
           const keys = Object.keys(item);
 
           if (
             !(keys.length === allowedKeys.length) ||
-            !("fileName" in item) ||
-            !("url" in item)
+            !('fileName' in item) ||
+            !('url' in item)
           ) {
             return helpers.message(
-              "Attachments must contain only fileName and url",
+              'Attachments must contain only fileName and url',
             );
           }
           const { fileName, url } = item;
@@ -161,13 +165,13 @@ const validateAttachments = (values, helpers) => {
           values[idx].fileName = changeDuplicateFileName(clearedFileName, map);
         } else {
           return helpers.message(
-            "Attachments must be array of objects with (fileName and url) fields",
+            'Attachments must be array of objects with (fileName and url) fields',
           );
         }
       }
     } else {
       return helpers.message(
-        "Attachments must be array of filenames or array of objects with (fileName and url) fields",
+        'Attachments must be array of filenames or array of objects with (fileName and url) fields',
       );
     }
   }
@@ -175,4 +179,59 @@ const validateAttachments = (values, helpers) => {
   return values;
 };
 
-module.exports = { commonValidation, baseOptions, validateAttachments };
+const validateWhatsAppAttachements = (values, helpers) => {
+  if (values.length) {
+    if (values.length > 10)
+      return helpers.message(
+        'Attachments array can not have more than 10 length',
+      );
+
+    //checking for array of filenames
+    if (Array.isArray(values) && typeof values[0] === 'string') {
+      const firstIsUrl = validPublicURL(values[0]);
+      const firstIsFile = validateFileName(values[0]) === null ? true : false;
+
+      if (!firstIsUrl && !firstIsFile) {
+        return helpers.message(
+          'Attachments must be a valid public URL or a valid file name',
+        );
+      }
+
+      for (const item of values) {
+        if (firstIsUrl && !validPublicURL(item)) {
+          return helpers.message('All attachments must be public URLs');
+        }
+
+        if (firstIsFile && validateFileName(item) !== null) {
+          return helpers.message('All attachments must be file names');
+        }
+      }
+
+      if (firstIsFile) {
+          const map = new Map();
+        for (let idx = 0; idx < values.length; idx++) {
+          const item = values[idx];
+          const clearedFileName = item.trim();
+          const message = validateFileName(clearedFileName);
+          if (message) return helpers.message(message);
+
+          //changin the name of duplicate files
+          values[idx] = changeDuplicateFileName(clearedFileName, map);
+        }
+      }
+    } else {
+      return helpers.message(
+        'Attachments must be array of filenames or array of valid urls.',
+      );
+    }
+  }
+
+  return values;
+};
+
+module.exports = {
+  commonValidation,
+  baseOptions,
+  validateAttachments,
+  validateWhatsAppAttachements,
+};
