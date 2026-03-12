@@ -130,6 +130,7 @@ if (cluster.isMaster) {
         masterApp.use((req, res, next) => {
           // skip health
           if (req.path === "/health") {
+            logger.debug("skipping health >>>>");
             return next();
           }
           logger.debug("health api skipped >>>");
