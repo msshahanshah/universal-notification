@@ -6,10 +6,8 @@ info:
   version: 1.0.0
 
 servers:
-  - url: https://{baseURL}
-    variables:
-      baseURL:
-        default: localhost:3000
+  - url: /
+    description: Base URL is automatically detected from the request
 components:
   securitySchemes:
     bearerAuth:
@@ -873,12 +871,6 @@ paths:
     get:
       summary: Health check
       tags: [System]
-      parameters:
-        - name: X-Client-Id
-          in: header
-          required: true
-          schema:
-            type: string
       responses:
         '200':
           description: ok
@@ -960,6 +952,8 @@ paths:
     post:
       summary: Logout
       tags: [Auth]
+      security:
+        - bearerAuth: []
       parameters:
         - name: X-Client-Id
           in: header
@@ -1137,6 +1131,8 @@ paths:
     post:
       tags:
         - Notification
+      security:
+        - bearerAuth: []
       summary: Send multi-service notifications (V2)
       description: |
         Sends notifications for multiple services (SMS, Email, Slack, etc) in a single request.
