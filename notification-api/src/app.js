@@ -11,13 +11,35 @@ const logRouter = require("./logs-api/route");
 
 const authRouter = require("./auth/route");
 const statRouter = require("./stats/route");
-
+const webhookRoute = require("./webhook/router");
+const cors = require("cors");
 const app = express();
 
 // Global Middlewares
 // default payload size limit is 100 KB
 app.use(express.json());
 
+/**
+ * Health check route.
+ * @route GET /health
+ * @group Health - Operations related to the health of the API
+ * @returns {object} 200 - An indicator that the API is healthy.
+ * @returns {Error}  default - Unexpected error
+ */
+app.get("/health", (req, res) => {
+  logger.debug("Health check endpoint hit", {
+    clientId: process.env.CLIENT_ID,
+  });
+  res.status(200).send("OK");
+});
+
+// for webhooks api origin is allowed
+app.use(
+  cors({
+    origin: ["http://localhost:3000"],
+  }),
+  webhookRoute,
+);
 app.use(notificationRouter);
 app.use(logRouter);
 app.use(authRouter);

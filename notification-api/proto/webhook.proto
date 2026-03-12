@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+package webhook;
+
+service WebhookService {
+  rpc AddWebhook (WebhookRequest) returns (WebhookResponse);
+  rpc UpdateWebhook (WebhookRequest) returns (WebhookResponse);
+  rpc DeleteWebhook (WebhookRequest) returns (WebhookResponse);
+}
+
+message WebhookRequest {
+  string payload = 1;
+}
+
+message WebhookResponse {
+  string payload = 1;
+  
+}
