@@ -7,6 +7,7 @@ const emailValidation = require('../validators/email.validator');
 const slackValidation = require('../validators/slack.validator');
 const smsValidation = require('../validators/sms.validator');
 const whatsAppValidation = require('../validators/whatsapp.validator');
+
 require('dotenv').config({
   path: require('path').resolve(__dirname, '../../../.env'),
 }); // Define the validation schema
