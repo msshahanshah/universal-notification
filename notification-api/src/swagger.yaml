@@ -630,6 +630,74 @@ components:
           type: string
           example: "error details"
 
+    RoutingRuleRequest:
+      type: object
+      required:
+        - service
+        - provider
+        - matchKey
+        - matchValue
+      properties:
+        service:
+          type: string
+          enum: [email, slack, sms, whatsapp]
+          example: email
+        provider:
+          type: string
+          example: AWS_SES
+        matchKey:
+          type: string
+          example: DOMAIN
+        matchValue:
+          type: string
+          example: gmail.com
+          description: |
+            Validation based on service:
+            - email: Valid email address or domain name.
+            - sms/whatsapp: Valid country calling code (e.g., 91).
+            - slack: Valid Slack channel, group, or DM ID (e.g., C0123ABC456).
+
+    RoutingRuleResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+        service:
+          type: string
+          example: EMAIL
+        provider:
+          type: string
+          example: AWS_SES
+        match_key:
+          type: string
+          example: DOMAIN
+        match_value:
+          type: string
+          example: gmail.com
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    RoutingRuleListResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        rows:
+          type: array
+          items:
+            $ref: '#/components/schemas/RoutingRuleResponse'
+        total:
+          type: integer
+        currentPage:
+          type: integer
+        totalPages:
+          type: integer
+
 paths:
   /health:
     get:
@@ -1252,3 +1320,149 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
+
+  /routing-rules:
+    get:
+      summary: List and search routing rules
+      tags: [Routing Rules]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: X-Client-Id
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 10
+        - name: service
+          in: query
+          schema:
+            type: string
+            enum: [email, slack, sms, whatsapp]
+        - name: provider
+          in: query
+          schema:
+            type: string
+        - name: matchKey
+          in: query
+          schema:
+            type: string
+        - name: matchValue
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of routing rules
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RoutingRuleListResponse"
+
+    post:
+      summary: Create a routing rule
+      tags: [Routing Rules]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: X-Client-Id
+          in: header
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RoutingRuleRequest"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                  data:
+                    $ref: "#/components/schemas/RoutingRuleResponse"
+
+  /routing-rules/{ruleId}:
+    put:
+      summary: Update a routing rule
+      tags: [Routing Rules]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: X-Client-Id
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: ruleId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RoutingRuleRequest"
+      responses:
+        "200":
+          description: Updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                  data:
+                    $ref: "#/components/schemas/RoutingRuleResponse"
+
+    delete:
+      summary: Delete a routing rule
+      tags: [Routing Rules]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: X-Client-Id
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: ruleId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
