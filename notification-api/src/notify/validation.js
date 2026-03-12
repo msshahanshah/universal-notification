@@ -74,13 +74,14 @@ const validateSchema = Joi.object({
   }),
 }).when(Joi.object({ service: Joi.valid('whatsapp') }).unknown(), {
   then: Joi.object()
+    .or('message', 'templateId', 'attachments')
     .with('templateId', 'contentVariables')
     .nand('templateId', 'message')
     .nand('templateId', 'attachments')
     .nand('message', 'contentVariables')
     .messages({
       'object.missing':
-        "For WhatsApp service either 'message' OR ('templateId' and 'contentVariables') must be provided",
+        "For WhatsApp service provide either 'message', 'attachments', or ('templateId' with 'contentVariables')",
 
       'object.with':
         "'contentVariables' must be provided when 'templateId' is used",

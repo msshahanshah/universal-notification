@@ -50,7 +50,7 @@ const commonValidation = {
     .trim()
     .min(1)
     .required()
-    .valid("email", "slack", "sms")
+    .valid("email", "slack", "sms", "whatsapp")
     .messages({
       "string.base": "Service must be a string",
       "any.only": "Service must be one of: email, slack, sms",
