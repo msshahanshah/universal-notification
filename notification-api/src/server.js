@@ -132,6 +132,7 @@ if (cluster.isMaster) {
           if (req.path === "/health") {
             return next();
           }
+          logger.debug("health api skipped >>>");
           const clientId = req.headers["x-client-id"];
           const client = clients.find((c) => c.ID === clientId);
           if (!client) {
@@ -139,7 +140,9 @@ if (cluster.isMaster) {
               req.path === "/login"
                 ? "invalid username or password"
                 : "Authentication required";
-            logger.warn("Invalid or missing X-Client-Id header", { clientId });
+            logger.warn("Invalid or missing X-Client-Id header >>>>", {
+              clientId,
+            });
             return res.status(401).json({ success: false, message: message });
           }
 
