@@ -123,12 +123,9 @@ if (cluster.isMaster) {
         // routing for client's requests
         masterApp.use((req, res, next) => {
           // skip health
-          logger.debug("request path: ", req.path);
           if (req.path === "/health") {
-            logger.debug("skipping health >>>>");
             return next();
           }
-          logger.debug("health api skipped >>>");
 
           const clientId = req.headers["x-client-id"];
           const client = clients.find((c) => c.ID === clientId);
