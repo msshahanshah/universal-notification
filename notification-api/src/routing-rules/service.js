@@ -27,7 +27,6 @@ const createRoutingRule = async (clientId, payload) => {
 
 const removeRoutingRule = async (clientId, ruleId) => {
     const dbConnect = await global.connectionManager.getModels(clientId);
-
     const routingRuleExist = await dbConnect.RoutingRule.findOne({
         where: { id: ruleId }
     });

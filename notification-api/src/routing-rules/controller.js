@@ -44,7 +44,6 @@ const removeRouting = async (req, res, next) => {
         const clientId = req.headers["x-client-id"];
 
         await removeRoutingRule(clientId, parsedRuleId);
-
         return res.status(200).json({
             success: true,
             message: "Routing rule deleted successfully"
@@ -104,3 +103,4 @@ const updateRouting = async (req, res, next) => {
 }
 
 module.exports = { createRouting, removeRouting, viewRouting, updateRouting };
+module.exports = { createRouting, removeRouting };
