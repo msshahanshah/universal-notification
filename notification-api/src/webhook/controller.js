@@ -35,11 +35,7 @@ async function deleteWebhook(req, res) {
   try {
     const clientId = req.headers["x-client-id"];
     const webhookId = req.params.webhookId;
-    const result = await webhookService.deleteWebhook(
-      req.body,
-      webhookId,
-      clientId,
-    );
+    const result = await webhookService.deleteWebhook(webhookId, clientId);
     res.status(201).json(result);
   } catch (error) {
     error.message = error?.message || "Internal server error";

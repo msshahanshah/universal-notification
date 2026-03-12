@@ -125,17 +125,17 @@ const creatingNotificationRecord = async (
     logger.error("Invalid or missing ENABLED_SERVERICES in client config", {
       clientId,
       enabledServices,
-    })
+    });
     throw {
-      statusCode: 422,
-      message: `invalid or missing ENABLED_SERVERICES. Contact Admin`,
+      statusCode: 400,
+      message: `invalid or missing ENABLED_SERVERICES in client config for ${clientId}`,
     };
   }
 
   if (!enabledServices.includes(service)) {
     throw {
-      statusCode: 403,
-      message: `${service} is not enable.`,
+      statusCode: 400,
+      message: `${service} is not enable for client ${clientId}`,
     };
   }
 
@@ -149,9 +149,6 @@ const creatingNotificationRecord = async (
          */
         const provider = await selectProvider(service, number, clientId);
         serviceGuard(provider, { service, content, clientId }, clientConfig);
-        if (service.toLowerCase() === "slack") {
-          service = "slackbot";
-        }
 
         content.provider = provider;
         const record = await dbConnect.Notification.create({
@@ -163,7 +160,7 @@ const creatingNotificationRecord = async (
           attempts: 0,
           templateId,
         });
-        
+
         return { success: true, number, ...record.dataValues };
       }),
     );
@@ -209,8 +206,13 @@ const publishingNotificationRequest = async (notificationRecord) => {
 
   if (!rabbitConnect) return;
 
-  return rabbitConnect.publishMessage(service, {
-    service,
+  let updatedService = service;
+  if (service.toLowerCase() === "slack") {
+    updatedService = "slackbot";
+  }
+
+  return rabbitConnect.publishMessage(updatedService, {
+    service: updatedService,
     destination,
     content,
     messageId,
@@ -238,7 +240,7 @@ const getNotificationData = async (messageId, clientID) => {
     throw {
       statusCode: 404,
       message: `message not found.`,
-    }
+    };
   }
 
   const data = {

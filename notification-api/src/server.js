@@ -11,7 +11,6 @@ const { loadClientConfigs } = require("./utillity/loadClientConfigs");
  * @type {import('http').Server|null}
  */
 let server = null;
-let masterServer = null;
 
 /**
  * Starts the server for a specific client.
@@ -111,25 +110,39 @@ if (cluster.isMaster) {
         const swaggerUi = require("swagger-ui-express");
         const swaggerDoc = YAML.load(path.join(__dirname, "swagger.yaml"));
         const masterApp = express();
+
+        // cors setting
         masterApp.use(require("cors")());
+        const MASTER_SERVER_PORT = process.env.PORT || 8000;
         masterApp.use(
           "/api-docs",
           swaggerUi.serve,
           swaggerUi.setup(swaggerDoc),
         );
+
+        // health check for master app
+        masterApp.use("/health", (req, res) => {
+          logger.debug("Health check endpoint hit");
+          res.status(200).send("OK");
+        });
+
+        // routing for client's requests
         masterApp.use((req, res, next) => {
           const clientId = req.headers["x-client-id"];
           const client = clients.find((c) => c.ID === clientId);
           if (!client) {
+            const message =
+              req.path === "/login"
+                ? "invalid username or password"
+                : "Authentication required";
             logger.warn("Invalid or missing X-Client-Id header", { clientId });
-            return res
-              .status(401)
-              .json({ success: false, message: "Invalid headers" });
+            return res.status(401).json({ success: false, message: message });
           }
 
           logger.info(
             `Routing request for client ${clientId} to port ${client.SERVER_PORT}`,
           );
+
           proxy.web(
             req,
             res,
@@ -141,8 +154,8 @@ if (cluster.isMaster) {
           );
         });
 
-        masterServer = masterApp.listen(3000, () => {
-          logger.info("Master router listening on port 3000");
+        masterServer = masterApp.listen(MASTER_SERVER_PORT, () => {
+          logger.info(`Master router listening on port ${MASTER_SERVER_PORT}`);
         });
       } catch (error) {
         logger.error("Master router error:", {

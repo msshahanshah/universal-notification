@@ -1,6 +1,5 @@
 const { AUTH_TOKEN } = require("../constants/index");
 const redisClient = require("../src/utillity/redisClient");
-
 const access_token_expire = process.env.ACCESS_TOKEN_TIME || "15M";
 const refresh_token_expire = process.env.REFRESH_TOKEN_TIME || "7D";
 

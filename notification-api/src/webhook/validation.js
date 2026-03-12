@@ -2,25 +2,38 @@ const Joi = require("joi");
 const { baseOptions } = require("../validators/common.validator");
 const { SecretManager } = require("@universal-notifier/secret-manager");
 
+const clientServiceMap = new Map();
 async function checkWebhookServicesAreEnabledForClient(
   servicesTrigger,
   clientId,
 ) {
-  const clients = await SecretManager.getSecrets();
-  const clientConfig = clients.filter((config) => config.ID == clientId);
-  const clientEnabledServices = clientConfig[0]?.ENABLED_SERVERICES;
-  const clientEnabledServicesSet = new Set(clientEnabledServices);
-  const webhookServices = Object.keys(servicesTrigger);
+  try {
+    let clientEnabledServicesSet = [];
+    if (clientServiceMap.has(clientId)) {
+      clientEnabledServicesSet = clientServiceMap[clientId];
+    } else {
+      const clients = await SecretManager.getSecrets();
+      const clientConfig = clients.filter((config) => config.ID == clientId);
+      const clientEnabledServices = clientConfig[0]?.ENABLED_SERVERICES;
 
-  for (let serviceName of webhookServices) {
-    // check if client has this service or not
+      clientServiceMap.set(clientId, clientEnabledServices);
 
-    if (!clientEnabledServicesSet.has(serviceName)) {
-      throw {
-        statusCode: 403,
-        message: `${serviceName} service is not allowed for client ${clientId}`,
-      };
+      clientEnabledServicesSet = new Set(clientEnabledServices);
+      const webhookServices = Object.keys(servicesTrigger);
+
+      for (let serviceName of webhookServices) {
+        // check if client has this service or not
+
+        if (!clientEnabledServicesSet.has(serviceName)) {
+          throw {
+            statusCode: 403,
+            message: `${serviceName} service is not allowed `,
+          };
+        }
+      }
     }
+  } catch (err) {
+    throw err;
   }
 }
 
@@ -64,7 +77,6 @@ const createWebhookSchema = Joi.object({
   webhookUrl: baseWebhookSchema.webhookUrl.required(),
   apiKey: baseWebhookSchema.apiKey.required(),
   servicesTrigger: baseWebhookSchema.servicesTrigger.required(),
-  isActive: baseWebhookSchema.isActive.required(),
 })
   .unknown(false)
   .messages({

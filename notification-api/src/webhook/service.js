@@ -1,7 +1,7 @@
 const webhookGRPCClient = require("../gRPC/webhook.client");
 const grpc = require("@grpc/grpc-js");
 const grpcHelper = require("../../helpers/grpc.helper");
-
+const WebhookHelper = require("../../helpers/webhook.helper");
 async function addWebhook(payload, clientId) {
   try {
     const metadata = new grpc.Metadata();
@@ -15,42 +15,54 @@ async function addWebhook(payload, clientId) {
     );
 
     // if from webhook service response comes success then update enable service for webhook
-    const dbConnect = await global.connectionManager.getModels(clientId);
+    // const dbConnect = await global.connectionManager.getModels(clientId);
 
-    for (let serviceName of Object.keys(services)) {
-      //get service name
-      const existingService = await dbConnect.services.findOne({
-        where: { name: serviceName },
-      });
-      if (!existingService) {
-        throw {
-          statusCode: 404,
-          message: `Service ${serviceName} does not present`,
-        };
-      }
+    // for (let serviceName of Object.keys(services)) {
+    //   //get service name
+    //   const existingService = await dbConnect.services.findOne({
+    //     where: { name: serviceName },
+    //   });
+    //   if (!existingService) {
+    //     throw {
+    //       statusCode: 404,
+    //       message: `Service ${serviceName} does not present`,
+    //     };
+    //   }
 
-      //checking client service exist in client_service_settings table to update setting for webhook status
-      const existingClientService = await dbConnect.ClientServiceSetting.find({
-        where: {
-          serviceId: existingService.id,
-          clientId,
-        },
-      });
-      if (!existingClientService) {
-        throw {
-          statusCode: 404,
-          message: `Service ${serviceName} for client ${clientId} does not present `,
-        };
-      }
+    //   //checking client service exist in client_service_settings table to update setting for webhook status
+    //   const existingClientService = await dbConnect.ClientServiceSetting.find({
+    //     where: {
+    //       serviceId: existingService.id,
+    //       clientId,
+    //     },
+    //   });
+    //   if (!existingClientService) {
+    //     throw {
+    //       statusCode: 404,
+    //       message: `Service ${serviceName} for client ${clientId} does not present `,
+    //     };
+    //   }
 
-      //now update client_service_settings table to enable webhook for this service
-      const status = services[serviceName];
+    //   //now update client_service_settings table to enable webhook for this service
+    //   const status = services[serviceName];
 
-      await existingClientService.update({
-        isStatusWebhookEnabled: status,
-      });
-      return;
-    }
+    //   await existingClientService.update({
+    //     isStatusWebhookEnabled: status,
+    //   });
+    //   return;
+    // }
+
+    // Now we need to publish service to store in redis for each service
+
+    Object.entries(services).forEach(([serviceName, status]) => {
+      const publishMessagePayload = {
+        clientId,
+        serviceName,
+        isWebhookAllowed: status,
+      };
+
+      WebhookHelper.publishMessageInRabbitMQ(publishMessagePayload);
+    });
 
     return { success: true, message: "Webhook added successfully" };
   } catch (error) {
@@ -78,37 +90,50 @@ async function updateWebhook(payload, webhookId, clientId) {
     // if response comes success then update enabled services in db
 
     const dbConnect = await global.connectionManager.getModels(clientId);
-    for (let serviceName of Object.keys(services)) {
-      //get service name
-      const existingService = await dbConnect.services.findOne({
-        where: { name: serviceName },
-      });
-      if (!existingService) {
-        throw {
-          statusCode: 404,
-          message: `Service ${serviceName} does not present`,
-        };
-      }
-      //checking client service exist in client_service_settings table to update setting for webhook status
-      const existingClientService = await dbConnect.ClientServiceSetting.find({
-        where: {
-          serviceId: existingService.id,
-          clientId,
-        },
-      });
-      if (!existingClientService) {
-        throw {
-          statusCode: 404,
-          message: `Service ${serviceName} for client ${clientId} does not present `,
-        };
-      }
-      //now update client_service_settings table to enable webhook for this service
-      const status = services[serviceName];
-      await existingClientService.update({
-        isStatusWebhookEnabled: status,
-      });
-      return;
-    }
+    // for (let serviceName of Object.keys(services)) {
+    //   //get service name
+    //   const existingService = await dbConnect.services.findOne({
+    //     where: { name: serviceName },
+    //   });
+    //   if (!existingService) {
+    //     throw {
+    //       statusCode: 404,
+    //       message: `Service ${serviceName} does not present`,
+    //     };
+    //   }
+    //   //checking client service exist in client_service_settings table to update setting for webhook status
+    //   const existingClientService = await dbConnect.ClientServiceSetting.find({
+    //     where: {
+    //       serviceId: existingService.id,
+    //       clientId,
+    //     },
+    //   });
+    //   if (!existingClientService) {
+    //     throw {
+    //       statusCode: 404,
+    //       message: `Service ${serviceName} for client ${clientId} does not present `,
+    //     };
+    //   }
+    //   //now update client_service_settings table to enable webhook for this service
+    //   const status = services[serviceName];
+    //   await existingClientService.update({
+    //     isStatusWebhookEnabled: status,
+    //   });
+    //   return;
+    // }
+
+    // Now we need to publish service to store in redis for each service
+
+    // Now we need to publish service to store in redis for each service
+    Object.entries(services).forEach(([serviceName, status]) => {
+      const publishMessagePayload = {
+        clientId,
+        serviceName,
+        isWebhookAllowed: status,
+      };
+
+      WebhookHelper.publishMessageInRabbitMQ(publishMessagePayload);
+    });
 
     return { success: true, message: "Webhook updated successfully" };
   } catch (error) {
@@ -123,48 +148,63 @@ async function deleteWebhook(webhookId, clientId) {
 
     // add webhookId in payload to send webhook service
 
-    payload.webhookId = webhookId;
-
     //send delete request by calling deleteWebhook function in  webhook service
-
-    await grpcHelper.deleteWebhook(webhookGRPCClient, payload, metadata);
+    const payload = {
+      webhookId,
+    };
+    const { services } = await grpcHelper.deleteWebhook(
+      webhookGRPCClient,
+      payload,
+      metadata,
+    );
 
     const dbConnect = await global.connectionManager.getModels(clientId);
 
     // if response comes success then add enabled services in db
-    for (let serviceName of Object.keys(services)) {
-      //get service name
-      const existingService = await dbConnect.services.findOne({
-        where: { name: serviceName },
-      });
-      if (!existingService) {
-        throw {
-          statusCode: 404,
-          message: `Service ${serviceName} does not present`,
-        };
-      }
+    
+    // for (let serviceName of Object.keys(services)) {
+    //   //get service name
+    //   const existingService = await dbConnect.services.findOne({
+    //     where: { name: serviceName },
+    //   });
+    //   if (!existingService) {
+    //     throw {
+    //       statusCode: 404,
+    //       message: `Service ${serviceName} does not present`,
+    //     };
+    //   }
 
-      //checking client service exist in client_service_settings table to update setting for webhook status
-      const existingClientService = await dbConnect.ClientServiceSetting.find({
-        where: {
-          serviceId: existingService.id,
-          clientId,
-        },
-      });
-      if (!existingClientService) {
-        throw {
-          statusCode: 404,
-          message: `Service ${serviceName} for client ${clientId} does not present `,
-        };
-      }
-      //now update client_service_settings table to enable webhook for this service
-      const status = services[serviceName];
-      await existingClientService.update({
-        isStatusWebhookEnabled: status,
-      });
-      return;
-    }
+    //   //checking client service exist in client_service_settings table to update setting for webhook status
+    //   const existingClientService = await dbConnect.ClientServiceSetting.find({
+    //     where: {
+    //       serviceId: existingService.id,
+    //       clientId,
+    //     },
+    //   });
+    //   if (!existingClientService) {
+    //     throw {
+    //       statusCode: 404,
+    //       message: `Service ${serviceName} for client ${clientId} does not present `,
+    //     };
+    //   }
+    //   //now update client_service_settings table to enable webhook for this service
+    //   const status = services[serviceName];
+    //   await existingClientService.update({
+    //     isStatusWebhookEnabled: status,
+    //   });
+    //   return;
+    // }
 
+    // Now we need to publish service to store in redis for each service
+    Object.entries(services).forEach(([serviceName, status]) => {
+      const publishMessagePayload = {
+        clientId,
+        serviceName,
+        isWebhookAllowed: status,
+      };
+
+      WebhookHelper.publishMessageInRabbitMQ(publishMessagePayload);
+    });
     return { success: true, message: "Webhook deleted successfully" };
   } catch (error) {
     throw error;
