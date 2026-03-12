@@ -114,16 +114,16 @@ if (cluster.isMaster) {
         // cors setting
         masterApp.use(require("cors")());
         const MASTER_SERVER_PORT = process.env.PORT || 8000;
-        masterApp.use(
+        masterApp.get(
           "/api-docs",
           swaggerUi.serve,
           swaggerUi.setup(swaggerDoc),
         );
 
         // health check for master app
-        masterApp.use("/health", (req, res) => {
+        masterApp.get("/health", (req, res) => {
           logger.debug("Health check endpoint hit");
-          res.status(200).send("OK");
+          return res.status(200).send("OK");
         });
 
         // routing for client's requests
