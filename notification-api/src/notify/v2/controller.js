@@ -62,8 +62,9 @@ const notify = async (req, res) => {
       // insert success response
       data[successRecord.service] = {
         success: true,
-        messageIds: successRecord.messageIds,
         message: "Notification request accepted and queued.",
+        messageIds: successRecord.messageIds,
+        preSignedUrls: successRecord.preSignedUrls,
       };
 
       // update isSuccess flag
