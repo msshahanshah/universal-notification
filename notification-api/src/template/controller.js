@@ -30,7 +30,7 @@ const viewTemplates = async (req, res, next) => {
 
         return res.status(200).json({
             success: true,
-            messsage: "Templates fetch successfully",
+            message: "Templates fetch successfully",
             data: result.templates,
             pagination: {
                 total: result.total,
