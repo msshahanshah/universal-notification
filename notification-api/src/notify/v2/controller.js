@@ -6,6 +6,10 @@ const notify = async (req, res) => {
 
   const clientId = req.headers["x-client-id"];
   const body = req.body;
+  const data = {}; // response data
+  let isSuccess = false;
+  let isFailed = false;
+
   for (const [service, messages] of Object.entries(body)) {
     const bulkMessages = [];
     for (const msg of messages) {
@@ -56,19 +60,30 @@ const notify = async (req, res) => {
       }
 
       // insert success response
-      success.push(successRecord);
+      data[successRecord.service] = {
+        success: true,
+        messageIds: successRecord.messageIds,
+        message: "Notification request accepted and queued.",
+      };
+
+      // update isSuccess flag
+      isSuccess = true;
     } catch (error) {
       logger.error("ERROR: In creating notify record: v2", error);
-      failed.push(error);
+      data[error.service] = {
+        success: false,
+        statusCode: error?.statusCode,
+        message: error?.message,
+      };
+      // update isfailed flag
+      isFailed = true;
     }
   }
 
-  // send response
-  const statusCode =
-    failed.length && success.length ? 207 : success.length ? 200 : 400;
-
+  // prepare statusCode
+  const statusCode = isFailed && isSuccess ? 207 : isSuccess ? 200 : 400;
   return res.status(statusCode).json({
-    data: { failed, success },
+    data,
   });
 };
 
