@@ -14,6 +14,7 @@ const viewDeliveryStatus = async (messageId, clientId) => {
   return {
     messageId: data.messageId,
     status: data.status,
+    deliveryResponse: data?.connectorResponse,
   };
 };
 
