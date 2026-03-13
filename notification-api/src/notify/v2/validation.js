@@ -178,6 +178,7 @@ const validateRequest = async (req, res, next) => {
           data: {
             [service]: {
               success: false,
+              statusCode: 400,
               message: error.details[0].message,
             },
           },
@@ -189,22 +190,15 @@ const validateRequest = async (req, res, next) => {
     req.body = sanitizeBody;
     next();
   } catch (error) {
-    let errorResponse = {
-      success: false,
-      service: error?.service,
-      message: error.message || "internal server error",
-    };
-    if (error.statusCode) {
-      errorResponse = {
-        data: {
-          [error?.service || "service"]: {
-            success: false,
-            message: error.message,
-          },
+    return res.status(error.statusCode || 500).json({
+      data: {
+        [error?.service || "internal"]: {
+          success: false,
+          statusCode: error.statusCode,
+          message: error.message,
         },
-      };
-    }
-    return res.status(error.statusCode || 500).json(errorResponse);
+      },
+    });
   }
 };
 
