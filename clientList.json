@@ -2,7 +2,7 @@
   {
     "ID": "GKMIT",
     "SERVER_PORT": 3001,
-    "ENABLED_SERVERICES": ["slack", "email", "sms"],
+    "ENABLED_SERVERICES": ["slack", "email", "sms", "whatsapp"],
     "SLACKBOT": {
       "TOKEN": "xoxb-",
       "RABBITMQ": {
@@ -35,6 +35,21 @@
         "EXCHANGE_TYPE": "direct",
         "QUEUE_NAME": "sms_queue",
         "ROUTING_KEY": "sms"
+      }
+    },
+    "WHATSAPP": {
+      "TWILIO": {
+        "default": true,
+        "allowCustomFromNumber": false,
+        "ACCOUNT_SID": "ACe6XXXXXXXXXXXXXX",
+        "AUTH_TOKEN": "fe60f38XXXXXXXXX",
+        "FROM_NUMBER": "14155000000"
+      },
+      "RABBITMQ": {
+        "EXCHANGE_NAME": "GKMIT",
+        "EXCHANGE_TYPE": "direct",
+        "QUEUE_NAME": "GKMIT.whatsapp_queue",
+        "ROUTING_KEY": "whatsapp"
       }
     },
     "DBCONFIG": {
@@ -93,6 +108,21 @@
         "EXCHANGE_TYPE": "direct",
         "QUEUE_NAME": "sms_queue",
         "ROUTING_KEY": "sms"
+      }
+    },
+    "WHATSAPP": {
+      "TWILIO": {
+        "default": true,
+        "allowCustomFromNumber": false,
+        "ACCOUNT_SID": "ACe6XXXXXXXXXXXXXX",
+        "AUTH_TOKEN": "fe60f38XXXXXXXXX",
+        "FROM_NUMBER": "14155000000"
+      },
+      "RABBITMQ": {
+        "EXCHANGE_NAME": "ACCEL",
+        "EXCHANGE_TYPE": "direct",
+        "QUEUE_NAME": "ACCEL.whatsapp_queue",
+        "ROUTING_KEY": "whatsapp"
       }
     },
     "DBCONFIG": {

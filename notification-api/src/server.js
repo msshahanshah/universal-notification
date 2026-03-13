@@ -114,11 +114,15 @@ if (cluster.isMaster) {
         // cors setting
         masterApp.use(require("cors")());
         const MASTER_SERVER_PORT = process.env.PORT || 8000;
-        masterApp.use(
-          "/api-docs",
-          swaggerUi.serve,
-          swaggerUi.setup(swaggerDoc),
-        );
+        masterApp.use("/api-docs", swaggerUi.serve, (req, res, next) => {
+          const protocol = req.headers["x-forwarded-proto"] || req.protocol || "http";
+          const host = req.headers["x-forwarded-host"] || req.headers.host;
+          const dynamicSwaggerDoc = {
+            ...swaggerDoc,
+            servers: [{ url: `${protocol}://${host}` }],
+          };
+          return swaggerUi.setup(dynamicSwaggerDoc)(req, res, next);
+        });
 
         // routing for client's requests
         masterApp.use((req, res, next) => {
