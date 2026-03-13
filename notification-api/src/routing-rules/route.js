@@ -1,5 +1,5 @@
 const express = require("express");
-const routingRuleRouter = express();
+const routingRuleRouter = express.Router();
 const auth = require("../middleware/auth.middleware");
 const accessControl = require("../middleware/access-control.middleware");
 const { createRouting, removeRouting, viewRouting, updateRouting } = require("./controller");

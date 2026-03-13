@@ -103,4 +103,3 @@ const updateRouting = async (req, res, next) => {
 }
 
 module.exports = { createRouting, removeRouting, viewRouting, updateRouting };
-module.exports = { createRouting, removeRouting };
