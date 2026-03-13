@@ -1,40 +1,40 @@
-const Joi = require('joi');
-const { loadClientConfigs } = require('../../utillity/loadClientConfigs');
+const Joi = require("joi");
+const { loadClientConfigs } = require("../../utillity/loadClientConfigs");
 const {
   baseOptions,
   commonValidation,
-} = require('../../validators/common.validator');
-const emailValidation = require('../../validators/email.validator');
-const slackValidation = require('../../validators/slack.validator');
-const smsValidation = require('../../validators/sms.validator');
-const whatsAppValidation = require('../../validators/whatsapp.validator');
-const logger = require('../../logger');
+} = require("../../validators/common.validator");
+const emailValidation = require("../../validators/email.validator");
+const slackValidation = require("../../validators/slack.validator");
+const smsValidation = require("../../validators/sms.validator");
+const whatsAppValidation = require("../../validators/whatsapp.validator");
+const logger = require("../../logger");
 
 const destinationSchema = Joi.alternatives()
-  .conditional('service', {
+  .conditional("service", {
     switch: [
-      { is: 'slack', then: slackValidation.destination.required() },
-      { is: 'email', then: emailValidation.destination.required() },
-      { is: 'sms', then: smsValidation.destination.required() },
-      { is: 'whatsapp', then: whatsAppValidation.destination.required() },
+      { is: "slack", then: slackValidation.destination.required() },
+      { is: "email", then: emailValidation.destination.required() },
+      { is: "sms", then: smsValidation.destination.required() },
+      { is: "whatsapp", then: whatsAppValidation.destination.required() },
     ],
     otherwise: Joi.forbidden().messages({
-      'any.unknown': 'Invalid service type',
+      "any.unknown": "Invalid service type",
     }),
   })
   .required()
-  .messages({ 'string.empty': 'Destination is required' });
+  .messages({ "string.empty": "Destination is required" });
 
-const attachmentValidation = Joi.alternatives().conditional('service', {
+const attachmentValidation = Joi.alternatives().conditional("service", {
   switch: [
-    { is: 'email', then: emailValidation.attachments },
-    { is: 'whatsapp', then: whatsAppValidation.attachments },
+    { is: "email", then: emailValidation.attachments },
+    { is: "whatsapp", then: whatsAppValidation.attachments },
   ],
   otherwise: Joi.forbidden(),
 });
 
-const messageValidation = Joi.alternatives().conditional('service', {
-  switch: [{ is: 'whatsapp', then: whatsAppValidation.message }],
+const messageValidation = Joi.alternatives().conditional("service", {
+  switch: [{ is: "whatsapp", then: whatsAppValidation.message }],
   otherwise: commonValidation.message,
 });
 
@@ -50,52 +50,52 @@ const messageObject = Joi.object({
   attachments: attachmentValidation,
   uniqueKey: Joi.string().trim().optional(),
 
-  templateId: Joi.when('service', {
-    is: 'whatsapp',
+  templateId: Joi.when("service", {
+    is: "whatsapp",
     then: whatsAppValidation.templateId,
     otherwise: Joi.forbidden().messages({
-      'any.forbidden': 'templateId is allowed only when service is whatsapp',
+      "any.forbidden": "templateId is allowed only when service is whatsapp",
     }),
   }),
 
-  contentVariables: Joi.when('service', {
-    is: 'whatsapp',
+  contentVariables: Joi.when("service", {
+    is: "whatsapp",
     then: whatsAppValidation.contentVariables,
     otherwise: Joi.forbidden().messages({
-      'any.forbidden':
-        'contentVariables is allowed only when service is whatsapp',
+      "any.forbidden":
+        "contentVariables is allowed only when service is whatsapp",
     }),
   }),
 })
   .unknown(false)
-  .when(Joi.object({ service: Joi.valid('whatsapp') }).unknown(), {
+  .when(Joi.object({ service: Joi.valid("whatsapp") }).unknown(), {
     then: Joi.object()
-      .or('message', 'attachments', 'templateId')
-      .with('templateId', 'contentVariables')
-      .nand('templateId', 'message')
-      .nand('templateId', 'attachments')
-      .nand('message', 'contentVariables')
+      .or("message", "attachments", "templateId")
+      .with("templateId", "contentVariables")
+      .nand("templateId", "message")
+      .nand("templateId", "attachments")
+      .nand("message", "contentVariables")
       .messages({
-        'object.missing':
+        "object.missing":
           "For WhatsApp service provide either 'message', 'attachments', or ('templateId' with 'contentVariables')",
 
-        'object.with':
+        "object.with":
           "'contentVariables' must be provided when 'templateId' is used",
 
-        'object.nand':
+        "object.nand":
           "Templated WhatsApp messages cannot contain 'message' or 'attachments'.",
       }),
   });
 
 const validateSchema = Joi.array().max(5).items(messageObject).messages({
-  'array.max': 'messages should not exceed 5',
+  "array.max": "messages should not exceed 5",
 });
 
 let configs = null;
 const validateRequest = async (req, res, next) => {
   try {
     let { commonMessage, ...sanitizeBody } = req.body;
-    const clientId = req.headers['x-client-id'];
+    const clientId = req.headers["x-client-id"];
     const services = Object.keys(sanitizeBody);
     configs = configs ? configs : await loadClientConfigs();
 
@@ -114,6 +114,7 @@ const validateRequest = async (req, res, next) => {
     services.forEach((service) => {
       if (!enabledServices.includes(service)) {
         throw {
+          service,
           statusCode: 400,
           message: `${service} is not enabled for client ${clientId}`,
         };
@@ -127,15 +128,15 @@ const validateRequest = async (req, res, next) => {
       const uniqueKeySet = new Set();
 
       const enrichedBody = body.map((item) => {
-        if (!item.message && service !== 'email') {
+        if (!item.message && service !== "email") {
           item.message = commonMessage;
         }
 
-        if (!item.body && service == 'email') {
+        if (!item.body && service == "email") {
           item.body = commonMessage;
         }
 
-        if (item.attachments && typeof item.attachments[0] === 'string') {
+        if (item.attachments && typeof item.attachments[0] === "string") {
           messageWithFileAttachmentCount += 1;
         }
 
@@ -156,6 +157,7 @@ const validateRequest = async (req, res, next) => {
         uniqueKeySet.size < messageWithFileAttachmentCount
       ) {
         throw {
+          service,
           statusCode: 400,
           message: `distinct uniqueKey is required to sent message with attachment. Please provide uniqueKey for ${service}`,
         };
@@ -163,6 +165,7 @@ const validateRequest = async (req, res, next) => {
 
       if (error) {
         throw {
+          service,
           statusCode: 400,
           message: error.message || error.details[0].message,
         };
@@ -170,10 +173,15 @@ const validateRequest = async (req, res, next) => {
 
       sanitizeBody[service] = value;
       if (error) {
-        logger.error('ERROR: validation failed notify: v2', error);
+        logger.error("ERROR: validation failed notify: v2", error);
         return res.status(400).json({
-          success: false,
-          message: error.details[0].message,
+          data: {
+            [service]: {
+              success: false,
+              statusCode: 400,
+              message: error.details[0].message,
+            },
+          },
         });
       }
     }
@@ -183,8 +191,13 @@ const validateRequest = async (req, res, next) => {
     next();
   } catch (error) {
     return res.status(error.statusCode || 500).json({
-      success: false,
-      message: error.message || 'internal server error',
+      data: {
+        [error?.service || "internal"]: {
+          success: false,
+          statusCode: error.statusCode,
+          message: error.message,
+        },
+      },
     });
   }
 };
