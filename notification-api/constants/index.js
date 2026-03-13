@@ -12,4 +12,11 @@ module.exports = {
   SERVICES: {
     SLACK_SERVICE: "slack",
   },
+
+  SERVICE_PROVIDERS: {
+    SMS: ["twilio"],
+    EMAIL: ["aws", "mailgun", "sendgrid", "gmail"],
+    SLACK: ["slackbot"],
+    WHATSAPP: ["twilio"],
+  },
 };
