@@ -6,6 +6,7 @@ module.exports = {
       tableName: "routing_rules",
       schema: schemaName,
     };
+
     await queryInterface.createTable(tableName, {
       id: {
         allowNull: false,
@@ -13,14 +14,9 @@ module.exports = {
         primaryKey: true,
         type: Sequelize.INTEGER
       },
-      code: {
-        allowNull: false,
-        unique: true,
-        type: Sequelize.STRING(5)
-      },
       service: {
         allowNull: false,
-        type: Sequelize.ENUM("SMS", "EMAIL", "SLACK")
+        type: Sequelize.ENUM("SMS", "EMAIL", "SLACK", "WHATSAPP")
       },
       provider: {
         allowNull: false,
@@ -50,8 +46,21 @@ module.exports = {
         defaultValue: null,
       },
     });
+
+    // Composite unique constraint
+    await queryInterface.addConstraint(tableName, {
+      fields: ['service', 'match_value','deleted_at'],
+      type: 'unique',
+      name: 'unique_service_match_value'
+    });
   },
-  async down(queryInterface, Sequelize) {
-    await queryInterface.dropTable('routing_rules');
+
+  async down(queryInterface, Sequelize, schemaName) {
+    const tableName = {
+      tableName: "routing_rules",
+      schema: schemaName,
+    };
+
+    await queryInterface.dropTable(tableName);
   }
 };
