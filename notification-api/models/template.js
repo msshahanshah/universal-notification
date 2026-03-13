@@ -17,14 +17,13 @@ module.exports = (sequelize, schemaName) => {
       },
 
       templateId: {
-        type: DataTypes.STRING,
+        type: DataTypes.STRING(50),
         allowNull: false,
-        unique: true,
         field: "template_id",
       },
 
       name: {
-        type: DataTypes.STRING,
+        type: DataTypes.STRING(20),
         allowNull: false,
       },
 
@@ -34,7 +33,7 @@ module.exports = (sequelize, schemaName) => {
       },
 
       messageContent: {
-        type: DataTypes.STRING,
+        type: DataTypes.STRING(255),
         allowNull: false,
         field: "message_content",
       },
@@ -76,8 +75,13 @@ module.exports = (sequelize, schemaName) => {
       indexes: [
         {
           unique: true,
-          fields: ['service', 'name']
-        }
+          fields: ['service', 'name', 'deletedAt']
+        },
+        {
+          unique: true,
+          fields: ['templateId', 'deletedAt']
+        },
+
       ]
     }
   );

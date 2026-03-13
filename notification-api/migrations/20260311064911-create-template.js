@@ -16,7 +16,6 @@ module.exports = {
       template_id: {
         type: Sequelize.STRING(50),
         allowNull: false,
-        unique: true
       },
       name: {
         type: Sequelize.STRING(20),
@@ -53,9 +52,15 @@ module.exports = {
     });
 
     await queryInterface.addConstraint(tableName, {
-      fields: ["service", "name"],
+      fields: ["service", "name", "deleted_at"],
       type: "unique",
       name: "unique_service_name_templates"
+    });
+
+    await queryInterface.addConstraint(tableName, {
+      fields: ["template_id",  "deleted_at"],
+      type: "unique",
+      name: "unique_templateId"
     });
   },
 
