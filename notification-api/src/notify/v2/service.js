@@ -27,7 +27,11 @@ async function notifyService(clientId, service, bulkMessages) {
     const attachments = msg.content?.attachments;
 
     // Generate Presigned Urls
-    if (attachments?.length && typeof attachments[0] === "string" && !validPublicURL(attachments[0])) {
+    if (
+      attachments?.length &&
+      typeof attachments[0] === "string" &&
+      !validPublicURL(attachments[0])
+    ) {
       try {
         preSignedUrls = await generatePreSignedUrl(
           clientId,
@@ -205,7 +209,9 @@ const serviceEnforcers = {
     }
   },
 
-  SMS: () => {},
+  SMS: () => {
+    throw new Error("ef");
+  },
 
   SLACK: () => {},
 
@@ -269,7 +275,7 @@ async function selectProvider(service, destination, clientId) {
       return defaultProvider?.toUpperCase();
     }
 
-    if(service === 'whatsapp') {
+    if (service === "whatsapp") {
       return defaultProvider?.toUpperCase();
     }
 
