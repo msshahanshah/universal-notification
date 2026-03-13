@@ -11,6 +11,10 @@ module.exports = {
 
   SERVICES: {
     SLACK_SERVICE: "slack",
+    EMAIL: "email",
+    SMS: "sms",
+    SLACK: "slack",
+    WHATSAPP: "whatsapp",
   },
 
   SERVICE_PROVIDERS: {
@@ -18,5 +22,12 @@ module.exports = {
     EMAIL: ["aws", "mailgun", "sendgrid", "gmail"],
     SLACK: ["slackbot"],
     WHATSAPP: ["twilio"],
+  },
+
+  SERVICE_MATCH_KEYS: {
+    SMS: ["countryCode"],
+    EMAIL: ["domain", "email"],
+    SLACK: ["channelId"],
+    WHATSAPP: ["countryCode"],
   },
 };
