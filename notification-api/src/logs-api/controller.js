@@ -8,12 +8,17 @@ const deliveryStatus = async (req, res, next) => {
 
     const result = await viewDeliveryStatus(messageId, clientId);
 
+    const data = {
+      messageId: result.messageId,
+      deliveryStatus: result.status,
+    };
+
+    if (result.status === "failed") {
+      data["deliveryResponse"] = result?.deliveryResponse;
+    }
     res.status(200).json({
       success: true,
-      data: {
-        messageId: result.messageId,
-        deliveryStatus: result.status,
-      },
+      data,
     });
   } catch (error) {
     logger.error({
