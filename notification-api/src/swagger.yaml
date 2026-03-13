@@ -469,6 +469,80 @@ components:
               items:
                 $ref: "#/components/schemas/V2ServiceSuccess"
 
+    TemplateRequest:
+      type: object
+      required:
+        - service
+        - name
+        - messageContent
+      properties:
+        service:
+          type: string
+          enum: [slack, sms, email, whatsapp]
+          example: email
+        templateId:
+          type: string
+          example: "7ec67efd-21e1-4189-aa8e-25686a6f8845"
+          description: Required for sms and whatsapp if provided manually.
+        name:
+          type: string
+          example: "Welcome_Template"
+          minLength: 3
+          maxLength: 20
+        messageContent:
+          type: string
+          example: "Hello {{name}}, welcome to our service!"
+        variables:
+          type: array
+          items:
+            type: object
+            required:
+              - name
+            properties:
+              name:
+                type: string
+                example: "name"
+              constraints:
+                type: object
+                properties:
+                  maxlength:
+                    oneOf:
+                      - type: string
+                      - type: number
+                  dataType:
+                    type: string
+                  required:
+                    type: boolean
+
+    TemplateResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        templateId:
+          type: string
+          example: "7ec67efd-21e1-4119-aa8e-25686a6f8845"
+        service:
+          type: string
+          example: "email"
+        name:
+          type: string
+          example: "welcome_template"
+        messageContent:
+          type: string
+          example: "https://bucket-name.s3.region.amazonaws.com/templates/client-id/template-id.html"
+        requiredFields:
+          type: array
+          items:
+            type: object
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
     V2ServiceFailure:
       type: object
       properties:
@@ -1252,3 +1326,191 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
+
+  /templates:
+    post:
+      summary: Create a new template
+      tags: [Template]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: X-Client-Id
+          in: header
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TemplateRequest"
+      responses:
+        "200":
+          description: Template created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Template created successfully
+                  data:
+                    $ref: "#/components/schemas/TemplateResponse"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "409":
+          description: Conflict - Template name or templateId already exists
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+    get:
+      summary: View all templates
+      tags: [Template]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: X-Client-Id
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: service
+          in: query
+          schema:
+            type: string
+            enum: [email, slack, sms, whatsapp]
+        - name: name
+          in: query
+          schema:
+            type: string
+        - name: templateId
+          in: query
+          schema:
+            type: string
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 10
+      responses:
+        "200":
+          description: Templates fetched successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  messsage:
+                    type: string
+                    example: Templates fetch successfully
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/TemplateResponse"
+                  pagination:
+                    type: object
+                    properties:
+                      total:
+                        type: integer
+                      currentPage:
+                        type: integer
+                      totalPages:
+                        type: integer
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+
+  /templates/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+        description: The internal database ID of the template
+    
+    put:
+      summary: Update a template
+      tags: [Template]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: X-Client-Id
+          in: header
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TemplateRequest"
+      responses:
+        "200":
+          description: Template updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Template updated successfully
+                  data:
+                    $ref: "#/components/schemas/TemplateResponse"
+        "400":
+          description: Validation error
+        "404":
+          description: Template not found
+
+    delete:
+      summary: Delete a template
+      tags: [Template]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: X-Client-Id
+          in: header
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Template deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Template deleted successfully
+        "404":
+          description: Template not found
