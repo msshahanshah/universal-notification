@@ -1,0 +1,27 @@
+{
+  "name": "whatsapp-server",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "nodemon src/index.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "devDependencies": {
+    "nodemon": "^3.1.14"
+  },
+  "dependencies": {
+    "@universal-notifier/secret-manager": "github:gkmit-dikshant/aws-secret-manager-package#development",
+    "dotenv": "^17.3.1",
+    "express": "^5.2.1",
+    "lru-cache": "^11.2.6",
+    "pg": "^8.18.0",
+    "sequelize": "^6.37.7",
+    "twilio": "^5.12.2",
+    "winston": "^3.19.0"
+  }
+}

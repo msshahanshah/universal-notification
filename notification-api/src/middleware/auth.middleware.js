@@ -1,4 +1,3 @@
-const jwt = require("jsonwebtoken");
 const { verifyToken } = require("../../helpers/jwt.helper");
 const globalDatabaseManager = require("../utillity/mainDatabase");
 

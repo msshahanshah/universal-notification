@@ -1,5 +1,3 @@
-const { fromEmail } = require('../validators/email.validator');
-
 const serializeLogs = (rows) => {
   return rows.map((log) => {
     let ccEmail = log.content.cc?.length ? log.content.cc[0] : null;
@@ -15,8 +13,9 @@ const serializeLogs = (rows) => {
       status: log.status,
       attempts: log.attempts,
       messageDate: log.updatedAt,
-      message: log.status === 'failed' ? log.connectorResponse : '',
+      message: log.status === "failed" ? log.connectorResponse : "",
       attempts: log.attempts,
+      referenceId: log.referenceId,
     };
     if (fromEmail) response.fromEmail = fromEmail;
     if (ccEmail) response.cc = ccEmail;

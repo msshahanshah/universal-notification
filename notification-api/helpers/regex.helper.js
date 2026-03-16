@@ -1,9 +1,15 @@
 const fileNameRegex = new RegExp(/^(?![ .])(?!.*[ .]$)[A-Za-z0-9._\-\s]+$/u);
 const urlRegex = new RegExp(
-  "^https?:\\/\\/(?:[a-z0-9.-]+\\.)?s3(?:[.-][a-z0-9-]+)?\\.amazonaws\\.com(?:\\/[\\S]*?)?\\?.*(?:X-Amz-Signature=|X-Amz-Credential=|AWSAccessKeyId=)",
-  "i",
+  '^https?:\\/\\/(?:[a-z0-9.-]+\\.)?s3(?:[.-][a-z0-9-]+)?\\.amazonaws\\.com(?:\\/[\\S]*?)?\\?.*(?:X-Amz-Signature=|X-Amz-Credential=|AWSAccessKeyId=)',
+  'i',
 );
 const slackChannelIdRegex = new RegExp(/^[CGD][A-Z0-9]{8,10}$/);
+
+const validPublicURL = (str) => {
+  var pattern =
+    /^(https?:\/\/)([\w-]+\.)+[\w-]+(\/[\w\-._~:/?#[\]@!$&'()*+,;=%]*)?$/i;
+  return !!pattern.test(str);
+};
 
 const phonenNumberRegex = new RegExp(/^\+[0-9]+$/);
 module.exports = {
@@ -11,4 +17,5 @@ module.exports = {
   urlRegex,
   slackChannelIdRegex,
   phonenNumberRegex,
+  validPublicURL,
 };
