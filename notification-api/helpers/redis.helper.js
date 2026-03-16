@@ -3,6 +3,7 @@ const redisClient = require("../src/utillity/redisClient");
 
 const access_token_expire = process.env.ACCESS_TOKEN_TIME || "15M";
 const refresh_token_expire = process.env.REFRESH_TOKEN_TIME || "7D";
+const template_expire = process.env.TEMPLATE_TIME || "1D";
 
 function parseExpiryToSeconds(expiry) {
   const value = parseInt(expiry.slice(0, -1), 10);
@@ -28,7 +29,7 @@ class RedisHelper {
       const expiryString =
         type === AUTH_TOKEN.ACCESS_TOKEN
           ? access_token_expire
-          : refresh_token_expire;
+          : type === "template" ? template_expire : refresh_token_expire;
 
       const expiryInSeconds = parseExpiryToSeconds(expiryString);
 

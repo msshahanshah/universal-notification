@@ -39,6 +39,19 @@ const getTemplatePreSigned = async (fileKey) => {
     return url;
 }
 
+const getTemplateText = async (fileKey) => {
+    const params = {
+        Bucket: process.env.AWS_TEMPLATE_BUCKET_NAME,
+        Key: fileKey
+    };
+
+    const command = new GetObjectCommand(params);
+    const response = await s3.send(command);
+
+    const fileText = await response.Body.transformToString();
+    return fileText;
+}
+
 const removeTemplateFromS3 = async (fileKey) => {
     const params = {
         Bucket: process.env.AWS_TEMPLATE_BUCKET_NAME,
@@ -49,4 +62,9 @@ const removeTemplateFromS3 = async (fileKey) => {
     await s3.send(command);
 }
 
-module.exports = { uploadTemplateToS3, getTemplatePreSigned, removeTemplateFromS3};
+module.exports = {
+    uploadTemplateToS3,
+    getTemplatePreSigned,
+    removeTemplateFromS3,
+    getTemplateText
+};

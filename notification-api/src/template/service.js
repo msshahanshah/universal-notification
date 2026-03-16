@@ -1,6 +1,7 @@
 const { v4: uuidv4 } = require("uuid");
 const { uploadTemplateToS3, getTemplatePreSigned, removeTemplateFromS3 } = require("../../helpers/s3-template");
 const validateTemplate = require("../../helpers/htmlValidation");
+const RedisHelper = require("../../helpers/redis.helper")
 
 const verifyVariables = (messageContent, variables) => {
     const matches = [...messageContent.matchAll(/{{(.*?)}}/g)];
@@ -29,7 +30,7 @@ const buildHTML = (messageContent) => {
 
 
 const registerTemplate = async (clientId, payload) => {
-    let { service, templateId = null, name, messageContent, variables } = payload;
+    let { service, templateId = null, name, messageContent, variables = [] } = payload;
 
     let dbConnect = await global.connectionManager.getModels(clientId);
 
@@ -69,6 +70,7 @@ const registerTemplate = async (clientId, payload) => {
             message: `Template name ${name} for ${service} already exists`
         }
     }
+
 
     let templateKey;
     if (service === "email") {
@@ -158,6 +160,8 @@ const removeTemplate = async (clientId, id) => {
         removeTemplateFromS3(templateExist.messageContent);
     }
 
+    await RedisHelper.deleteKey(`${templateExist.service}:${templateExist.templateId}`);
+
     await templateExist.destroy();
 }
 
@@ -223,12 +227,20 @@ const modifyService = async (clientId, id, payload) => {
     let templateKey;
     if (service === "email") {
         const htmlFile = buildHTML(messageContent);
-        
+
         if (templateExist.service === "email") {
             await removeTemplateFromS3(templateExist.messageContent);
         }
         const fileKey = `templates/${clientId}/${finalTemplateId}.html`;
         templateKey = await uploadTemplateToS3(fileKey, htmlFile);
+    }
+
+    const oldCacheKey = `${templateExist.service}:${templateExist.templateId}`;
+    await RedisHelper.deleteKey(oldCacheKey);
+
+    if (templateId || service) {
+        const newCacheKey = `${service || templateExist.service}:${templateId || templateExist.templateId}`;
+        await RedisHelper.deleteKey(newCacheKey);
     }
 
     const updatedTemplate = await templateExist.update({
@@ -242,6 +254,7 @@ const modifyService = async (clientId, id, payload) => {
     const result = updatedTemplate.get({ plain: true });
     delete result.deletedAt;
     result.messageContent = messageContent
+
 
     return result;
 }

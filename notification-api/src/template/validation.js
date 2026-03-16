@@ -35,13 +35,12 @@ const registerTemplateSchema = Joi.object({
     }),
 
     variables: Joi.array().items(
-        Joi.object({    
+        Joi.object({
             name: Joi.string().required(),
             constraints: Joi.object({
                 maxlength: Joi.alternatives().try(Joi.string(), Joi.number()).optional(),
-                dataType: Joi.string().optional(),
-                required: Joi.boolean().optional(),
-            }).optional(),
+                dataType: Joi.string().optional()
+            }).optional()
         })
     ).optional(),
 });
