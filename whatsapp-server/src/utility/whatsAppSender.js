@@ -1,5 +1,5 @@
-const twilio = require('twilio');
-const logger = require('../logger');
+const twilio = require("twilio");
+const logger = require("../logger");
 
 class WhatsAppSender {
   constructor(clientId, clientConfig) {
@@ -20,22 +20,22 @@ class WhatsAppSender {
     }
   }
 
-  async initialize(provider = 'default') {
+  async initialize(provider = "default") {
     let providerKey = provider;
 
-    if (provider === 'default') {
+    if (provider === "default") {
       providerKey = this.defaultProvider;
     }
 
     const initializer = this.providerInitializer[providerKey];
 
-    if (typeof initializer === 'function') {
+    if (typeof initializer === "function") {
       await initializer.call(this);
       return;
     }
 
     console.error(
-      'Invalid whatsapp configuration:',
+      "Invalid whatsapp configuration:",
       JSON.stringify(this.clientConfig, null, 2),
     );
     throw new Error(`Unsupported whatsapp provider: ${provider}`);
@@ -52,13 +52,13 @@ class WhatsAppSender {
         attachment,
         message,
         destination,
-        contentVariables
+        contentVariables,
       },
       messageId,
     ) => {
-      logger.info('Sending WhatsApp via Twilio...');
+      logger.info("Sending WhatsApp via Twilio...");
 
-      if (typeof attachment === 'object') {
+      if (typeof attachment === "object") {
         attachment = attachment.url;
       }
 
@@ -67,11 +67,21 @@ class WhatsAppSender {
       }
 
       const clientId = process.env.clientList;
+      const webHookCallbackUrl = process.env.WEBHOOK_CALLBACK_URL;
+
+      if (!webHookCallbackUrl) {
+        logger.error("ERROR: Webhook callback url in env variables.");
+      }
+
       const data = {
         from: `whatsapp:${fromNumber}`,
         to: `whatsapp:${destination}`,
-        statusCallback: `${process.env.WEBHOOK_CALLBACK_URL}/webhook/whatsapp?id=${clientId}`,
       };
+
+      if (webHookCallbackUrl) {
+        data["statusCallback"] =
+          `${process.env.WEBHOOK_CALLBACK_URL}/webhook/whatsapp?id=${clientId}`;
+      }
 
       if (message) {
         data.body = message;
@@ -90,28 +100,44 @@ class WhatsAppSender {
       }
 
       let res = await client.messages.create(data);
-      const newObj = {...res.toJSON(),referenceId: res.sid};
+      const newObj = { ...res.toJSON(), referenceId: res.sid };
       return newObj;
     };
 
-    this.provider = 'TWILIO';
+    this.provider = "TWILIO";
   }
 
   async sendWhatsAppMessage(
-    { fromNumber, templateId, attachment, message, destination, contentVariables },
+    {
+      fromNumber,
+      templateId,
+      attachment,
+      message,
+      destination,
+      contentVariables,
+    },
     messageId,
   ) {
     if (!this.sender)
-      throw new Error('WhatsApp message sender not initialized');
+      throw new Error("WhatsApp message sender not initialized");
     try {
       const result = await this.sender(
-        { fromNumber, templateId, attachment, message, destination, contentVariables },
+        {
+          fromNumber,
+          templateId,
+          attachment,
+          message,
+          destination,
+          contentVariables,
+        },
         messageId,
       );
       logger.info(`SMS sent via whatsapp, provider: ${this.provider}`);
       return result;
     } catch (err) {
-      logger.error(`Error in sending whatsapp message via ${this.provider}`, {error: err.message});
+      logger.error(`Error in sending whatsapp message via ${this.provider}`, {
+        error: err.message,
+      });
       throw err;
     }
   }
