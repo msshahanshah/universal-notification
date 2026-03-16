@@ -53,7 +53,7 @@ async function connectAndConsume(clientConfigList) {
               clientItem.ID,
               provider,
             );
-            await fn.sendSms({ to: msgData.to, message: msgData.message });
+            return await fn.sendSms({ to: msgData.to, message: msgData.message });
           },
           db,
           maxProcessAttemptCount: 3,

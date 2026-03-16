@@ -37,7 +37,7 @@ class SmsSender {
     }
 
     const providerConfig = this.clientConfig?.[selectedProvider];
-    
+
     if (!providerConfig) {
       throw new Error(`Configuration not found for provider ${this.provider}`);
     }
