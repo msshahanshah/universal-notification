@@ -36,7 +36,9 @@ class ConnectionManager {
 
     if (!whatsAppConfig) {
       const clientList = await loadClientConfigs();
-      whatsAppConfig = clientList.find((client) => client.ID === clientId)?.WHATSAPP;
+      whatsAppConfig = clientList.find(
+        (client) => client.ID === clientId,
+      )?.WHATSAPP;
       if (!whatsAppConfig) {
         throw new Error(
           `WhatsApp configuration not found for client ID: ${clientId}`,
@@ -44,8 +46,7 @@ class ConnectionManager {
       }
     }
     logger.debug(`[${clientId}] WhatsApp config:`, {
-      provider: whatsAppConfig.TWILIOx
-        ? "TWILIO" : "Other",
+      provider: whatsAppConfig.TWILIO ? "TWILIO" : "Other",
     });
     logger.info(`[${clientId}] Testing whatsApp service connection...`);
     let whatsAppSender = new WhatsAppSender(clientId, whatsAppConfig);

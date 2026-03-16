@@ -9,6 +9,7 @@ const { SecretManager } = require("@universal-notifier/secret-manager");
 async function loadClientConfigs() {
   try {
     const clients = await SecretManager.getSecrets();
+
     // Default configurations from .env
     const defaultConfig = {
       DBCONFIG: {
@@ -60,7 +61,7 @@ async function loadClientConfigs() {
   } catch (error) {
     logger.error("Failed to load client configurations:", {
       message: error.message,
-      stack: error?.stack
+      stack: error?.stack,
     });
     throw error;
   }
