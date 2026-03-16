@@ -33,15 +33,10 @@ const attachmentValidation = Joi.alternatives().conditional("service", {
   otherwise: Joi.forbidden(),
 });
 
-const messageValidation = Joi.alternatives().conditional("service", {
-  switch: [{ is: "whatsapp", then: whatsAppValidation.message }],
-  otherwise: commonValidation.message,
-});
-
 const messageObject = Joi.object({
   service: commonValidation.service,
   destination: destinationSchema,
-  message: messageValidation,
+  message: commonValidation.message,
   subject: emailValidation.subject,
   body: emailValidation.body,
   fromEmail: emailValidation.fromEmail,
@@ -87,8 +82,9 @@ const messageObject = Joi.object({
       }),
   });
 
-const validateSchema = Joi.array().max(5).items(messageObject).messages({
-  "array.max": "messages should not exceed 5",
+const validateSchema = Joi.array().min(1).max(5).items(messageObject).messages({
+  "array.max": "messages should not exceed 5.",
+  "array.min": "atleast one message should be present for each services.",
 });
 
 let configs = null;
@@ -167,7 +163,7 @@ const validateRequest = async (req, res, next) => {
         throw {
           service,
           statusCode: 400,
-          message: error.message || error.details[0].message,
+          message: error.details[0]?.message || error.message,
         };
       }
 
