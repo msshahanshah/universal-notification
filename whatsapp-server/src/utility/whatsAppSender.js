@@ -34,7 +34,7 @@ class WhatsAppSender {
       return;
     }
 
-    console.error(
+    logger.error(
       "Invalid whatsapp configuration:",
       JSON.stringify(this.clientConfig, null, 2),
     );
@@ -115,9 +115,11 @@ class WhatsAppSender {
       message,
       destination,
       contentVariables,
+      provider,
     },
     messageId,
   ) {
+    await this.initialize(provider);
     if (!this.sender)
       throw new Error("WhatsApp message sender not initialized");
     try {
