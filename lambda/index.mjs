@@ -2,6 +2,7 @@ import {
   S3Client,
   ListObjectsV2Command,
   GetObjectCommand,
+  HeadObjectCommand
 } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
@@ -72,13 +73,16 @@ export const handler = async (event) => {
      */
     const mediaUrls = await Promise.all(
       fileKeys.map(async (fileKey) => {
+
         const command = new GetObjectCommand({
           Bucket: bucket,
           Key: fileKey,
+          ResponseContentDisposition: "inline",
+          ResponseContentType: guessMimeFromFilename(fileKey) || "application/octet-stream", // added in lambda...
         });
 
         const url = await getSignedUrl(s3, command, {
-          expiresIn: 60 * 60, // 1 hour
+          expiresIn: 60 * 60 * 5, // 1 hour
         });
 
         return {
@@ -99,7 +103,7 @@ export const handler = async (event) => {
     /**
      * Notify backend
      */
-    const BACKEND_URL = process.env.BACKEND_URL;
+    const BACKEND_URL = ` https://burnoosed-indiscerptibly-arlo.ngrok-free.dev`;
     
     const response = await fetch(`${BACKEND_URL}/notify-with-attachment`, {
       method: "POST",
@@ -149,3 +153,32 @@ const getFilesForPrefix = async (bucket, prefix) => {
 
   return files;
 };
+
+function guessMimeFromFilename(key) {
+  const name = key.split("/").pop() || "";
+  const ext = name.split(".").pop().toLowerCase();
+  const map = {
+    // Documents
+    pdf: "application/pdf",
+    txt: "text/plain",
+  
+    // Word
+    doc: "application/msword",
+    docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  
+    // Excel
+    xls: "application/vnd.ms-excel",
+    xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  
+    // PowerPoint
+    ppt: "application/vnd.ms-powerpoint",
+    pptx: "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+  
+    // Images
+    jpg: "image/jpeg",
+    jpeg: "image/jpeg",
+    png: "image/png",
+    gif: "image/gif"
+  };
+  return map[ext];
+} 
