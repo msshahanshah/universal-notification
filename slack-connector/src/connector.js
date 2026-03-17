@@ -46,20 +46,21 @@ async function connectAndConsume(client) {
   // get rabbit mq
   try {
     const rabbitClient = await rabbitManager.getClient(clientId);
-
     const sequelize = initializeSequelize(client.DBCONFIG, clientId);
 
     await sequelize.authenticate();
     logger.info(`[${clientId}] Database connection successful. \n`);
 
     // Define models (assuming models are defined similarly to the original code)
-    const database = require("../models")(sequelize, Sequelize, clientId); // Initialize models for this client's Sequelize instance
+    const database = require("../models")(sequelize, clientId); // Initialize models for this client's Sequelize instance
 
     // consume rabbitmq
 
     await rabbitClient.consume({
       service: "slackbot",
       sender: async (payload, messageId) => {
+        const { content, destination, provider } = payload;
+        const msgData = { to: destination, message: content.message };
         if (process.env.NODE_ENV === "testing") {
           const message = await database.Notification.findOne({
             where: { messageId: messageId },
@@ -78,8 +79,11 @@ async function connectAndConsume(client) {
         }
         await sendSlackMessage(
           client.SLACKBOT.TOKEN,
-          payload.to,
-          payload.message,
+          msgData.to,
+          msgData.message,
+          messageId,
+          clientId,
+         
         );
       },
       db: database,

@@ -1,8 +1,6 @@
 import {
   S3Client,
   ListObjectsV2Command,
-  HeadObjectCommand,
-  PutObjectCommand,
   GetObjectCommand,
 } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
@@ -36,9 +34,11 @@ export const handler = async (event) => {
     return;
   }
 
+  console.log(parts)
   const clientId = parts[1];
-  const rawMessageId = parts[2];
-  const [messageId, expectedCountStr] = rawMessageId.split("?");
+  const messageId = parts[2];
+  const expectedCountStr = parts[3];
+  // const [messageId, expectedCountStr] = rawMessageId.split("?");
 
   const expectedFileCount = Number(expectedCountStr);
 
@@ -51,7 +51,7 @@ export const handler = async (event) => {
   console.log("Message ID:", messageId);
   console.log("Expected files:", expectedFileCount);
 
-  const prefix = `uploads/${clientId}/${rawMessageId}/`;
+  const prefix = `uploads/${clientId}/${messageId}/`;
 
   try {
     /**
@@ -100,7 +100,7 @@ export const handler = async (event) => {
      * Notify backend
      */
     const BACKEND_URL = process.env.BACKEND_URL;
-
+    
     const response = await fetch(`${BACKEND_URL}/notify-with-attachment`, {
       method: "POST",
       headers: {

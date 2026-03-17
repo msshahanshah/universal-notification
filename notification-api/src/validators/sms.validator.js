@@ -4,6 +4,7 @@ const phoneUtil = PhoneNumberUtil.getInstance();
 const { phonenNumberRegex } = require("../../helpers/regex.helper");
 const smsValidation = {
   destination: Joi.string()
+    .trim()
     .required()
     .custom((value, helpers) => {
       // Split by comma
@@ -16,11 +17,11 @@ const smsValidation = {
       for (let number of numbers) {
         if (number.length == 0)
           return helpers.message(
-            `In destination empty commas are not allowed `,
+            `An invalid destination is not allowed. An empty or invalid destination value was detected`,
           );
       }
 
-      // If after cleanup nothing remains
+      // If after cleanup nothing remainsss
       if (numbers.length === 0) {
         return helpers.message("At least one phone number is required");
       }

@@ -17,7 +17,7 @@ const getBalance = async (req, res) => {
         const { service, provider } = req.query;
 
         if (!service || !provider) {
-            throw { message: "service and provider are missing", statusCode: 400 };
+            throw { message: "service or provider is missing", statusCode: 400 };
         }
 
         const metadata = new grpc.Metadata();

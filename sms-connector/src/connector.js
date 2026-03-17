@@ -30,6 +30,12 @@ async function connectAndConsume(clientConfigList) {
         await rabbitClient.consume({
           service: "sms",
           sender: async (payload, messageId) => {
+            const { content, destination, provider } = payload;
+            const msgData = {
+              to: destination,
+              message: content.message,
+              provider: provider,
+            };
             if (process.env.NODE_ENV === "testing") {
               const message = await db.Notification.findOne({
                 where: { messageId },
@@ -43,13 +49,11 @@ async function connectAndConsume(clientConfigList) {
                 { where: { messageId } },
               );
             }
-            const { to, message, provider } = payload;
             const fn = await connectionManager.getSMSSender(
               clientItem.ID,
               provider,
             );
-
-            await fn.sendSms({ to, message });
+            await fn.sendSms({ to: msgData.to, message: msgData.message });
           },
           db,
           maxProcessAttemptCount: 3,

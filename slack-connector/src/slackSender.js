@@ -1,6 +1,7 @@
 // ./slack-connector/src/slackSender.js
 const { WebClient } = require("@slack/web-api");
 const logger = require("./logger");
+const RedisHelper = require("../helpers/redis.helper");
 // Map to cache Slack clients per bot token
 const slackClients = new Map();
 
@@ -28,7 +29,13 @@ function getSlackClient(botToken) {
   return client;
 }
 
-async function sendSlackMessage(authToken, channel, message, messageId) {
+async function sendSlackMessage(
+  authToken,
+  channel,
+  message,
+  messageId,
+  clientId,
+) {
   const client = getSlackClient(authToken); // Get initialized client
 
   logger.debug(
@@ -80,17 +87,28 @@ async function sendSlackMessage(authToken, channel, message, messageId) {
       const result = await client.chat.postMessage({
         channel: channel, // Slack channel ID or name (ID preferred)
         text: message,
+
         // blocks: [] // Optional: Use Slack Block Kit for richer messages
       });
       // Check success from Slack API response
+
       if (result.ok) {
-        logger.info(
-          `Message sent successfully to Slack channel: ${channel} , messageId:${messageId}\n`,
-          {
-            messageId,
-            slackMessageTs: result.ts,
-          },
+        logger.info(`Message sent successfully to Slack channel: ${channel}`, {
+          messageId,
+          slackMessageTs: result.ts,
+        });
+
+        // storing thread id in notification table
+        const dbConnect = await global.connectionManager.getModels(clientId);
+
+        await dbConnect.Notification.update(
+          { referenceId: result.ts },
+          { where: { messageId: messageId } },
         );
+
+        // //Store team id(workspaceid) in redis mapping to clientid
+        await RedisHelper.setKey(result?.message?.team, clientId);
+
         return { success: true, response: result }; // Return success and the full response
       } else {
         // This path might not be hit often if errors throw exceptions, but handle defensively
@@ -108,6 +126,7 @@ async function sendSlackMessage(authToken, channel, message, messageId) {
       }
     }
   } catch (error) {
+    logger.error(error);
     logger.error(`Error sending message to Slack via API \n`, {
       messageId,
       channel,

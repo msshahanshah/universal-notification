@@ -16,6 +16,7 @@ on:
           - notification-api
           - slack-connector
           - sms-connector
+          - whatsapp-server
       environment:
         description: "Environment to deploy to"
         required: true
