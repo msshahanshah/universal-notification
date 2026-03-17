@@ -1,5 +1,5 @@
 const logger = require("../logger");
-const { SecretManager } = require("@universal-notifier/secret-manager");
+const { SecretManager } = require("universal_notification_support_lib");
 
 /**
  * Loads client configurations from clientList.json and merges with defaults from .env.
