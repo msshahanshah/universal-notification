@@ -1,15 +1,15 @@
-const mongoose = require("mongoose");
+const mongoose = require('mongoose');
 
 const webhookConfigSchema = new mongoose.Schema(
   {
-    clientId: { type: String, required: true, unique: true },
+    clientId: {
+      type: String,
+      required: true,
+      // unique: true
+    },
     webhookUrl: { type: String, required: true },
     encryptedKey: { type: String, required: true },
     serviceTrigger: {
-      type: Object,
-      required: true,
-    },
-    settings: {
       type: Object,
       required: true,
     },
@@ -29,5 +29,5 @@ const webhookConfigSchema = new mongoose.Schema(
   { timestamps: true },
 );
 
-webhookConfigSchema.index({ clientId: 1 }, { unique: true });
-module.exports = mongoose.model("WebhookConfig", webhookConfigSchema);
+// webhookConfigSchema.index({ clientId: 1 }, { unique: true })
+module.exports = mongoose.model('WebhookConfig', webhookConfigSchema);
