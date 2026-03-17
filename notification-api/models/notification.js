@@ -81,6 +81,13 @@ module.exports = (sequelize, schemaName) => {
         type: DataTypes.STRING,
         allowNull: true,
       },
+      
+      // Variables values respect to templateID
+      variableValues: {
+        type: DataTypes.JSON,
+        allowNull: true,
+        defaultValue: [],
+      },
       deletedAt: {
         type: DataTypes.DATE,
         allowNull: true,
