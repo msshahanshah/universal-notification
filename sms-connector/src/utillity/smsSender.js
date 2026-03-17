@@ -52,10 +52,10 @@ class SmsSender {
     this.stat = instance.getBalance.bind(instance);
   }
 
-  async sendSms({ to, message }) {
+  async sendSms({ to, message, templateId }) {
     if (!this.sender) throw new Error("SMS sender not initialized");
     try {
-      const result = await this.sender({ to, message });
+      const result = await this.sender({ to, message, templateId });
       console.log(
         `SMS sent via ${this.provider}:`,
         result?.data || result?.sid || result,

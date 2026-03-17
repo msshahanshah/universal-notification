@@ -31,6 +31,7 @@ async function connectAndConsume(clientConfigList) {
           service: "sms",
           sender: async (payload, messageId) => {
             const { content, destination, provider } = payload;
+            
             const msgData = {
               to: destination,
               message: content.message,
@@ -53,7 +54,7 @@ async function connectAndConsume(clientConfigList) {
               clientItem.ID,
               provider,
             );
-            return await fn.sendSms({ to: msgData.to, message: msgData.message });
+            return await fn.sendSms({ to: msgData.to, message: msgData.message, templateId: payload.templateId });
           },
           db,
           maxProcessAttemptCount: 3,
