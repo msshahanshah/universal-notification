@@ -1,5 +1,5 @@
-const logger = require('./logger');
-const connectionManager = require('./utility/connectionManager');
+const logger = require("./logger");
+const connectionManager = require("./utility/connectionManager");
 
 async function connectAndConsume(clientConfigList) {
   try {
@@ -26,7 +26,7 @@ async function connectAndConsume(clientConfigList) {
 
         // Start consuming with package consumer
         await rabbitClient.consume({
-          service: 'whatsapp',
+          service: "whatsapp",
           sender: async (payload, messageId) => {
             const { destination, content, provider, templateId, variableValues } = payload;
             const {
@@ -42,9 +42,10 @@ async function connectAndConsume(clientConfigList) {
               message,
               destination,
               contentVariables: variableValues,
+              provider,
             };
 
-            if (process.env.NODE_ENV === 'testing') {
+            if (process.env.NODE_ENV === "testing") {
               const msg = await db.Notification.findOne({
                 where: { messageId },
               });
@@ -53,7 +54,7 @@ async function connectAndConsume(clientConfigList) {
                 return;
               }
               await db.Notification.update(
-                { status: 'sent' },
+                { status: "sent" },
                 { where: { messageId } },
               );
 
@@ -72,6 +73,7 @@ async function connectAndConsume(clientConfigList) {
                     message,
                     destination,
                     contentVariables: variableValues,
+                    provider,
                   },
                   messageId,
                 );
@@ -88,10 +90,10 @@ async function connectAndConsume(clientConfigList) {
     // Make connectionManager available globally for rabbitMQClient
     global.connectionManager = connectionManager;
 
-    logger.info('All connections initialized successfully.');
+    logger.info("All connections initialized successfully.");
   } catch (error) {
     logger.error(
-      'Failed to connect or consume from RabbitMQ / DB check failed:',
+      "Failed to connect or consume from RabbitMQ / DB check failed:",
       { error: error.message, stack: error.stack },
     );
     throw error; // Re-throw to let caller handle retry logic
@@ -105,10 +107,10 @@ async function closeConnections(clientId) {
       logger.info(`Closed all connections for client ${clientId}`);
     } else {
       await connectionManager.close();
-      logger.info('Closed all connections');
+      logger.info("Closed all connections");
     }
   } catch (error) {
-    logger.error('Failed to close connections:', { error: error.message });
+    logger.error("Failed to close connections:", { error: error.message });
   }
 }
 module.exports = {

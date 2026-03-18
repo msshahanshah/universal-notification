@@ -116,6 +116,9 @@ const validateRequest = async (req, res, next) => {
       ?.ENABLED_SERVERICES;
 
     if (!enabledServices || !Array.isArray(enabledServices)) {
+      logger.error(
+        `invalid or missing ENABLED_SERVERICES in client config for ${clientId}`,
+      );
       throw {
         statusCode: 500,
         message: `invalid or missing ENABLED_SERVERICES in client config for ${clientId}`,
@@ -125,6 +128,9 @@ const validateRequest = async (req, res, next) => {
     // check for enabling service
     services.forEach((service) => {
       if (!enabledServices.includes(service)) {
+        logger.error(
+          `ERROR: ${service} is not enabled for ${clientId}. All enabled services for ${clientId} are ${JSON.stringify(enabledServices)}`,
+        );
         throw {
           service,
           statusCode: 400,

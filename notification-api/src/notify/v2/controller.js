@@ -1,9 +1,7 @@
 const logger = require("../../logger");
 const { notifyService: notifyV2Service } = require("./service");
-const notify = async (req, res) => {
-  const failed = [];
-  const success = [];
 
+const notify = async (req, res) => {
   const clientId = req.headers["x-client-id"];
   const body = req.body;
   const data = {}; // response data
@@ -28,7 +26,7 @@ const notify = async (req, res) => {
       } = msg;
 
       const content = textMessage
-        ? { message: textMessage, uniqueKey }
+        ? { message: textMessage, uniqueKey, attachments }
         : { subject, body, fromEmail, cc, bcc, attachments, uniqueKey};
 
       // insert into bulk

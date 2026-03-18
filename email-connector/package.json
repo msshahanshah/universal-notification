@@ -1,6 +1,6 @@
 {
   "name": "email-connector",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "Email connector for the notification service",
   "main": "src/index.js",
   "scripts": {
@@ -12,7 +12,7 @@
     "@aws-sdk/client-s3": "^3.515.0",
     "@aws-sdk/client-ses": "^3.515.0",
     "@sendgrid/mail": "^8.1.5",
-    "@universal-notifier/secret-manager": "github:gkmit-dikshant/aws-secret-manager-package#development",
+    "universal_notification_support_lib": "github:msshahanshah/universal_notification_support_lib#development",
     "amqplib": "^0.10.8",
     "aws-sdk": "^2.1693.0",
     "dotenv": "^16.4.1",

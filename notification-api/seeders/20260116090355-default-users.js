@@ -1,7 +1,7 @@
 "use strict";
 const defaultPassword = require("../helpers/defaultPassword.helper");
 // const { loadClientSecret } = require("../src/utillity/awsSecretManager");
-const { SecretManager } = require("@universal-notifier/secret-manager");
+const { SecretManager } = require("universal_notification_support_lib");
 
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {

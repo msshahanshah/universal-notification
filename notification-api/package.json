@@ -1,6 +1,6 @@
 {
   "name": "notification-api",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "",
   "main": "src/server.js",
   "scripts": {
@@ -20,7 +20,7 @@
     "@aws-sdk/s3-request-presigner": "^3.1009.0",
     "@grpc/grpc-js": "^1.14.3",
     "@grpc/proto-loader": "^0.8.0",
-    "@universal-notifier/secret-manager": "github:gkmit-dikshant/aws-secret-manager-package#development",
+    "universal_notification_support_lib": "github:msshahanshah/universal_notification_support_lib#development",
     "amqplib": "^0.10.7",
     "axios": "^1.13.2",
     "bcrypt": "^6.0.0",

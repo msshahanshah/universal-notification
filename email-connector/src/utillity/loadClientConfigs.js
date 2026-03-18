@@ -1,5 +1,5 @@
 const logger = require("../logger");
-const { SecretManager } = require("@universal-notifier/secret-manager");
+const { SecretManager } = require("universal_notification_support_lib");
 /**
  * Loads client configurations from clientList.json and merges with defaults.
  * @returns {Promise<Array<Object>>} - Array of client configurations.
@@ -53,7 +53,7 @@ async function loadClientConfigs() {
   } catch (error) {
     logger.error("Failed to load client configurations:", {
       message: error.message,
-      stack: error?.stack
+      stack: error?.stack,
     });
     throw error;
   }
