@@ -23,8 +23,8 @@ const start = async () => {
   try {
     await connectMongoose();
     startGrpcServer();
-    await fastify.listen({ port: 3000 });
-    console.log('Server running on port 3000');
+    await fastify.listen({ port: 5200 });
+    console.log('Server running on port 5200');
   } catch (err) {
     fastify.log.error(err);
     process.exit(1);

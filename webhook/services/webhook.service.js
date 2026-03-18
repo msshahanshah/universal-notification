@@ -1,52 +1,43 @@
-require("dotenv").config();
+require('dotenv').config();
 
-const axios = require("axios");
-const WebhookConfig = require("../models/webhook");
-const { extractServiceFromServicesTrigger } = require("../helpers/webhook.helper");
-const { decrypt } = require("../utils/cryptoUtil");
+const WebhookConfig = require('../models/webhook');
+const WebhookCronScheduler = require('../models/webhookCronSchedulerModel');
+const {
+} = require('../helpers/webhook.helper');
+const logger = require('../utils/logger');
 
-// TODO: use this consume function with rabbitmq
 const consumeNotification = async (payload) => {
-  // expects payload from notification service
-  // trigger webhook api with payload
-  const configs = await WebhookConfig.findOne({
-    clientId: payload.clientId,
-  });
-
-  if (!configs) {
-    throw new Error(
-      `Webhook config not found for clientId: ${payload.clientId}`,
-    );
-  }
-
-  // const serviceMatched = extractServiceFromServicesTrigger(configs, payload);
-
-  // if (!serviceMatched) {
-  //   throw new Error(
-  //     `Service ${payload.service}_${payload.status} not enabled for clientId: ${payload.clientId}`,
-  //   );
-  // }
-
-  const salt = configs.clientId + process.env.MASTER_ENCRYPTION_KEY;
-  const decryptedApiKey = decrypt(configs.encryptedKey, salt);
-
   try {
-    const response = await axios.post(configs.webhookUrl, payload, {
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${decryptedApiKey}`,
-      },
-      timeout: 5000, // always set timeout
+    const { service, status, clientId, messageId } = payload;
+    const query = {
+      clientId: clientId,
+      [`serviceTrigger.${service}`]: status,
+    };
+
+    const webhooks = await WebhookConfig.find(query).lean();
+
+    const docs = webhooks.map((doc) => {
+      return {
+        clientId: clientId,
+        webhookUrl: doc.webhookUrl,
+        serviceTrigger: doc.serviceTrigger,
+        status: 'pending',
+        retryAttempts: 0,
+        webhookPayload: {
+          messageId: messageId,
+          service,
+          status,
+          clientId,
+        },
+      };
     });
-    console.log("response.data", response.data);
 
-    return response.data;
+    logger.info(`Docs fetched from webhook configs`);
+    await WebhookCronScheduler.insertMany(docs);
+    logger.info(`Docs inserted in mongo cron scheduler collection`);
   } catch (err) {
-    console.error("Webhook call failed:", err.message);
-
-    throw new Error(
-      `Error: ${err}; Webhook delivery failed for clientId: ${payload.clientId}`,
-    );
+    logger.error(`Error in consuming webhook request ${err}`);
+    throw err;
   }
 };
 

@@ -15,35 +15,21 @@ async function webhookRoutes(fastify, options) {
         status,
         service,
       });
-      // const rabbitClient = await rabbitManager.getClient(clientId);
-      //       await rabbitClient.consume({
-      //         service,
-      //         sender: async (payload, messageId) => {
-      //           console.log("||||||||||||||")
-      //           // if (process.env.NODE_ENV === "testing") {
-      //           //   const message = await database.Notification.findOne({
-      //           //     where: { messageId: messageId },
-      //           //   });
-
-      //           //   if (!message) {
-      //           //     logger.error("Message not found for messageId : " + messageId);
-      //           //     return;
-      //           //   }
-      //           //   await database.Notification.update(
-      //           //     { status: "sent" },
-      //           //     { where: { messageId: messageId } },
-      //           //   );
-      //           // }
-      //           await consumeNotification({
-      //             client_id,
-      //             status,
-      //             service,
-      //           });
-      //         },
-      //         // db: database,
-      //         db: mongooseInstance,
-      //         maxProcessAttemptCount: 3,
-      //       });
+      const rabbitClient = await rabbitManager.getClient(clientId);
+            await rabbitClient.consume({
+              service,
+              sender: async (payload, messageId) => {
+                console.log("||||||||||||||")
+                await consumeNotification({
+                  client_id,
+                  status,
+                  service,
+                });
+              },
+              // db: database,
+              db: mongooseInstance,
+              maxProcessAttemptCount: 3,
+            });
 
       return reply.send({
         success: true,

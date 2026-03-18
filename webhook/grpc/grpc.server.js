@@ -20,59 +20,26 @@ const addWebhook = async (call, callback) => {
       });
     }
 
-    const payload = JSON.parse(call.request.payload);
+    let payload = JSON.parse(call.request.payload);
 
-    // Expected req body ---
-
-    // [
-    //   {
-    //     clientId: payload.clientId,
-    //     webhookUrl: payload.webhookUrl,
-    //     key: payload.key,
-    //     retryEnabled: payload.retryEnabled || false,
-    //     isActive: payload.isActive || false,
-    //     serviceTrigger: {
-    //       sms: ['success', 'failed'],
-    //       email: ['failed'],
-    //     },
-    //     retryCount: process.env.MAX_RETRY_ATTEMPTS,
-    //   },
-    //   {
-    //     clientId: payload.clientId,
-    //     webhookUrl: payload.webhookUrl,
-    //     key: payload.key,
-    //     retryEnabled: payload.retryEnabled || false,
-    //     isActive: payload.isActive || false,
-    //     serviceTrigger: {
-    //       email: ['failed'],
-    //     },
-    //     retryCount: process.env.MAX_RETRY_ATTEMPTS,
-    //   },
-    // ]
-
-    if (!Array.isArray(payload) || payload.length === 0) {
-      return callback({
-        code: grpc.status.INVALID_ARGUMENT,
-        message: 'Payload must be a non-empty array',
-      });
-    }
-
-    const serviceSet = new Set();
+    payload = Array.isArray(payload) ? payload : [payload];
+    const serviceObj = {};
 
     const object = payload.map((doc) => {
-      const { clientId, webhookUrl, key, serviceTrigger } = doc;
+      const { clientId, webhookUrl, apiKey, serviceTrigger } = doc;
       const { retryEnabled, isActive } = doc;
-      if (!clientId || !webhookUrl || !key || !serviceTrigger) {
+      if (!clientId || !webhookUrl || !apiKey || !serviceTrigger) {
         return 'not valid';
       }
       for (let objKey in doc.serviceTrigger) {
-        serviceSet.add(objKey);
+        if (doc.serviceTrigger[objKey].length !== 0) serviceObj[objKey] = 1;
+        else serviceObj[objKey] = 0;
       }
 
       return {
         clientId: clientId,
         webhookUrl: webhookUrl,
-        encryptedKey: encrypt(key, 'key'),
+        encryptedKey: encrypt(apiKey, 'key'),
         retryEnabled: retryEnabled || false,
         isActive: isActive || false,
         serviceTrigger: serviceTrigger,
@@ -93,9 +60,13 @@ const addWebhook = async (call, callback) => {
 
     const services = {};
 
-    serviceSet.forEach((key) => {
-      services[key] = true;
-    });
+    for (let keys in serviceObj) {
+      if (serviceObj[keys] === 1) {
+        services[keys] = true;
+      } else {
+        services[keys] = false;
+      }
+    }
 
     callback(null, {
       payload: JSON.stringify({
@@ -126,7 +97,6 @@ const updateWebhook = async (call, callback) => {
     }
 
     const payload = JSON.parse(call.request.payload);
-    console.log('Payload', payload);
 
     const {
       webhookUrl,
@@ -308,13 +278,66 @@ const deleteWebhook = async (call, callback) => {
       clientId,
     });
 
-    console.log('Result', result);
-
     callback(null, {
       payload: JSON.stringify({
         success: true,
         message: 'Webhook deleted successfully',
         services,
+      }),
+    });
+  } catch (error) {
+    logger.error(`Error: ${error}`);
+    callback({
+      code: grpc.status.INTERNAL,
+      message: 'Internal server error',
+    });
+  }
+};
+
+const allWebhook = async (call, callback) => {
+  try {
+    const callerKey = call.metadata.get('x-internal-key')[0];
+
+    if (callerKey !== process.env.INTERNAL_GRPC_KEY) {
+      return callback({
+        code: grpc.status.PERMISSION_DENIED,
+        message: 'Unauthorized caller',
+      });
+    }
+
+    const payload = JSON.parse(call.request.payload);
+    const { clientId } = payload;
+
+    if (!clientId) {
+      logger.info(`Client id is required`);
+      return callback({
+        code: grpc.status.INVALID_ARGUMENT,
+        message: 'Client id is required',
+      });
+    }
+
+    // payload expected ---
+    // {
+    //     "clientId": "...",
+    // }
+
+    // List webhook logic
+
+    const allWebhooks = await WebhookConfig.find({
+      clientId,
+    }).lean();
+
+    if (allWebhooks.length === 0) {
+      logger.info(
+        `No webhook document found for client - ${clientId} with id - ${webhookId}`,
+      );
+    }
+
+    callback(null, {
+      payload: JSON.stringify({
+        success: true,
+        message: 'Webhook fetched successfully',
+        data: allWebhooks,
       }),
     });
   } catch (error) {
@@ -339,6 +362,7 @@ const startGrpcServer = () => {
       AddWebhookConfig: addWebhook,
       UpdateWebhookConfig: updateWebhook,
       DeleteWebhookConfig: deleteWebhook,
+      AllWebhookConfig: allWebhook
     });
 
     const GRPC_HOST = process.env.GRPC_HOST;
