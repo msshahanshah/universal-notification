@@ -21,6 +21,7 @@ async function notifyService(clientId, service, bulkMessages) {
     bulkMessages,
   );
 
+
   for (let i in notificationRecords) {
     let preSignedUrls = [];
     const msg = notificationRecords[i];
@@ -111,13 +112,12 @@ async function creatingBulkNotificationRecord(clientId, service, messages) {
 
   try {
     for (const msg of messages) {
-      const { destination, content, templateId } = msg;
+      const { destination, content, templateId, variableValues } = msg;
 
       for (const number of destination) {
         const provider = await selectProvider(service, number, clientId);
 
         serviceGuard(provider, { service, content, clientId }, clientConfig);
-
         records.push({
           messageId: uuidv4(),
           service,
@@ -126,6 +126,7 @@ async function creatingBulkNotificationRecord(clientId, service, messages) {
           status: "pending",
           attempts: 0,
           templateId,
+          variableValues
         });
       }
     }
@@ -209,11 +210,9 @@ const serviceEnforcers = {
     }
   },
 
-  SMS: () => {
-    throw new Error("ef");
-  },
+  SMS: () => { },
 
-  SLACK: () => {},
+  SLACK: () => { },
 
   WHATSAPP: ({ provider, message, clientConfig }) => {
     if (!provider) return;
@@ -300,6 +299,8 @@ async function publishingNotificationRequest(notificationRecord) {
     clientId,
     fileId = undefined,
     attachments,
+    templateId,
+    variableValues
   } = notificationRecord;
 
   const rabbitConnect = await rabbitManager.getClient(clientId);
@@ -320,6 +321,8 @@ async function publishingNotificationRequest(notificationRecord) {
     provider: content?.provider,
     fileId,
     attachments,
+    templateId,
+    variableValues
   });
 }
 

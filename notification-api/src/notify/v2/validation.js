@@ -36,51 +36,67 @@ const attachmentValidation = Joi.alternatives().conditional("service", {
 const messageObject = Joi.object({
   service: commonValidation.service,
   destination: destinationSchema,
-  message: commonValidation.message,
+
+  message: Joi.when("templateId", {
+    is: Joi.exist(),
+    then: Joi.forbidden().messages({
+      'object.unknown':
+        "message is not allowed when templateId is provided",
+      "any.forbidden":
+        "message is not allowed when templateId is provided",
+    }),
+    otherwise: commonValidation.message.required(),
+  }),
+
+  body: Joi.when("templateId", {
+    is: Joi.exist(),
+    then: Joi.forbidden().messages({
+      "any.forbidden":
+        "body is not allowed when templateId is provided",
+    }),
+    otherwise: emailValidation.body.optional(),
+  }),
+
   subject: emailValidation.subject,
-  body: emailValidation.body,
+
   fromEmail: emailValidation.fromEmail,
   cc: emailValidation.cc,
   bcc: emailValidation.bcc,
+
   attachments: attachmentValidation,
+
   uniqueKey: Joi.string().trim().optional(),
 
-  templateId: Joi.when("service", {
-    is: "whatsapp",
-    then: whatsAppValidation.templateId,
-    otherwise: Joi.forbidden().messages({
-      "any.forbidden": "templateId is allowed only when service is whatsapp",
-    }),
-  }),
+  templateId: Joi.string().trim().optional(),
 
-  contentVariables: Joi.when("service", {
-    is: "whatsapp",
-    then: whatsAppValidation.contentVariables,
-    otherwise: Joi.forbidden().messages({
-      "any.forbidden":
-        "contentVariables is allowed only when service is whatsapp",
-    }),
-  }),
-})
-  .unknown(false)
-  .when(Joi.object({ service: Joi.valid("whatsapp") }).unknown(), {
-    then: Joi.object()
-      .or("message", "attachments", "templateId")
-      .with("templateId", "contentVariables")
-      .nand("templateId", "message")
-      .nand("templateId", "attachments")
-      .nand("message", "contentVariables")
-      .messages({
-        "object.missing":
-          "For WhatsApp service provide either 'message', 'attachments', or ('templateId' with 'contentVariables')",
+  variableValues: Joi.object()
+    .pattern(Joi.string(), Joi.any())
+    .optional(),
+}).unknown(false)
 
-        "object.with":
-          "'contentVariables' must be provided when 'templateId' is used",
-
-        "object.nand":
-          "Templated WhatsApp messages cannot contain 'message' or 'attachments'.",
+  .when(Joi.object({ templateId: Joi.exist() }).unknown(), {
+    then: Joi.object({
+      message: Joi.forbidden().messages({
+        "any.forbidden":
+          "message is not allowed when templateId is provided",
       }),
-  });
+
+      body: Joi.forbidden().messages({
+        "any.forbidden":
+          "body is not allowed when templateId is provided",
+      })
+    }),
+  })
+
+  .when(Joi.object({ variableValues: Joi.exist() }).unknown(), {
+    then: Joi.object({
+      templateId: Joi.required().messages({
+        "any.required":
+          "templateId is required when variableValues is provided",
+      }),
+    }),
+  })
+
 
 const validateSchema = Joi.array().min(1).max(5).items(messageObject).messages({
   "array.max": "messages should not exceed 5.",
@@ -124,11 +140,11 @@ const validateRequest = async (req, res, next) => {
       const uniqueKeySet = new Set();
 
       const enrichedBody = body.map((item) => {
-        if (!item.message && service !== "email") {
+        if (!item.templateId && !item.message && service !== "email") {
           item.message = commonMessage;
         }
 
-        if (!item.body && service == "email") {
+        if (!item.templateId && !item.body && service == "email") {
           item.body = commonMessage;
         }
 

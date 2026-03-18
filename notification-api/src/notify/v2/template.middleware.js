@@ -32,7 +32,6 @@ const verifyConstraints = (variableValues, requiredVariables) => {
     for (const variable of requiredVariables) {
         const value = variableValues[variable.name];
         const constraints = variable.constraints;
-        console.log("constraints>>>>>", constraints);
         if (!constraints) continue;
 
         if (constraints.maxlength && String(value).length > parseInt(constraints.maxlength)) {
@@ -122,10 +121,8 @@ const templateMiddleware = async (req, res, next) => {
                 }
             }
         }
-        console.log(body);
         next();
     } catch (error) {
-        console.log(error);
         logger.error({
             message: error.message || "Template processing error",
             stack: error?.stack,
