@@ -12,5 +12,6 @@ router.patch(
   WebhookController.updateWebhook,
 );
 router.delete("/webhooks/:webhookId", auth, WebhookController.deleteWebhook);
+router.get("/webhooks", auth, WebhookController.getWebhooks);
 
 module.exports = router;

@@ -3,17 +3,17 @@
  * Main application file for the Notification API.
  * Sets up the Express server, defines routes, and handles request logic.
  */
-const express = require("express");
-const logger = require("./logger");
+const express = require('express');
+const logger = require('./logger');
 
-const notificationRouter = require("./notify/route");
-const logRouter = require("./logs-api/route");
+const notificationRouter = require('./notify/route');
+const logRouter = require('./logs-api/route');
 
-const authRouter = require("./auth/route");
-const statRouter = require("./stats/route");
-const webhookRoute = require("./webhook/router");
-const cors = require("cors");
-const routingRuleRouter = require("./routing-rules/route");
+const authRouter = require('./auth/route');
+const statRouter = require('./stats/route');
+const webhookRoute = require('./webhook/router');
+const cors = require('cors');
+const routingRuleRouter = require('./routing-rules/route');
 
 const app = express();
 
@@ -26,6 +26,7 @@ app.use(logRouter);
 app.use(authRouter);
 app.use(statRouter);
 app.use(routingRuleRouter);
+app.use(webhookRoute);
 
 /**
  * Route for creating and publishing a notification request.`
@@ -52,18 +53,18 @@ app.use(routingRuleRouter);
  */
 app.use((err, req, res, next) => {
   switch (err.type) {
-    case "entity.parse.failed":
+    case 'entity.parse.failed':
       return res.status(400).json({
         success: false,
-        message: "Invalid Request Body",
+        message: 'Invalid Request Body',
       });
-    case "entity.too.large":
+    case 'entity.too.large':
       return res.status(413).json({
         success: false,
-        message: "Too large request",
+        message: 'Too large request',
       });
     default:
-      logger.error("Unhandled error:", {
+      logger.error('Unhandled error:', {
         error: err.message,
         stack: err.stack,
         url: req.originalUrl,
@@ -71,7 +72,7 @@ app.use((err, req, res, next) => {
       });
 
       return res.status(500).json({
-        message: "Something broke!",
+        message: 'Something broke!',
       });
   }
 });

@@ -1,3 +1,5 @@
+const logger = require('../src/logger');
+
 const grpcCodeToHttpStatusCode = {
   0: 200, // OK
   1: 499, // CANCELLED
@@ -19,15 +21,16 @@ const grpcCodeToHttpStatusCode = {
 };
 
 //ADD WEBHOOK
-
 function addWebhook(webhookGRPCClient, payload, metadata) {
   return new Promise((resolve, reject) => {
-    webhookGRPCClient.addWebhook(
+    webhookGRPCClient.AddWebhookConfig(
       { payload: JSON.stringify(payload) },
       metadata,
       (error, response) => {
         if (error) {
-          console.log(error);
+          logger.error(
+            `Error in adding webhook config to mongo ${error.message}`,
+          );
           error = {
             statusCode: grpcCodeToHttpStatusCode[error.code],
             message: error.details,
@@ -45,12 +48,14 @@ function addWebhook(webhookGRPCClient, payload, metadata) {
 //UPDATE WEBHOOK
 function updateWebhook(webhookGRPCClient, payload, metadata) {
   return new Promise((resolve, reject) => {
-    webhookGRPCClient.updateWebhook(
+    webhookGRPCClient.updateWebhookConfig(
       { payload: JSON.stringify(payload) },
       metadata,
       (error, response) => {
         if (error) {
-          console.log(error);
+          logger.error(
+            `Error in updating webhook config to mongo ${error.message}`,
+          );
           error = {
             statusCode: grpcCodeToHttpStatusCode[error.code],
             message: error.details,
@@ -65,15 +70,40 @@ function updateWebhook(webhookGRPCClient, payload, metadata) {
 }
 
 //DELETE WEBHOOK
-
 function deleteWebhook(webhookGRPCClient, payload, metadata) {
   return new Promise((resolve, reject) => {
-    webhookGRPCClient.deleteWebhook(
+    webhookGRPCClient.deleteWebhookConfig(
       { payload: JSON.stringify(payload) },
       metadata,
       (error, response) => {
         if (error) {
-          console.log(error);
+          logger.error(
+            `Error in deleting webhook config to mongo ${error.message}`,
+          );
+          error = {
+            statusCode: grpcCodeToHttpStatusCode[error.code],
+            message: error.details,
+          };
+
+          return reject(error);
+        }
+        resolve(JSON.parse(response.payload));
+      },
+    );
+  });
+}
+
+//ALL WEBHOOK
+function getWebhooks(webhookGRPCClient, payload, metadata) {
+  return new Promise((resolve, reject) => {
+    webhookGRPCClient.AllWebhookConfig(
+      { payload: JSON.stringify(payload) },
+      metadata,
+      (error, response) => {
+        if (error) {
+          logger.error(
+            `Error in fetching webhook config from mongo ${error.message}`,
+          );
           error = {
             statusCode: grpcCodeToHttpStatusCode[error.code],
             message: error.details,
@@ -91,4 +121,5 @@ module.exports = {
   addWebhook,
   updateWebhook,
   deleteWebhook,
+  getWebhooks,
 };
