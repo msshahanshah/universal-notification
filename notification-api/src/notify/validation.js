@@ -63,32 +63,32 @@ const validateSchema = Joi.object({
     }),
   }),
 
-  contentVariables: Joi.when('service', {
+  variableValues: Joi.when('service', {
     is: 'whatsapp',
     then: whatsAppValidation.contentVariables,
     otherwise: Joi.forbidden().messages({
       'any.unknown':
-        'contentVariables is allowed only when service is whatsapp',
+        'variableValues is allowed only when service is whatsapp',
       'any.forbidden':
-        'contentVariables is allowed only when service is whatsapp',
+        'variableValues is allowed only when service is whatsapp',
     }),
   }),
 }).when(Joi.object({ service: Joi.valid('whatsapp') }).unknown(), {
   then: Joi.object()
     .or('message', 'templateId', 'attachments')
-    .with('templateId', 'contentVariables')
+    .with('templateId', 'variableValues')
     .nand('templateId', 'message')
     .nand('templateId', 'attachments')
-    .nand('message', 'contentVariables')
+    .nand('message', 'variableValues')
     .messages({
       'object.missing':
-        "For WhatsApp service provide either 'message', 'attachments', or ('templateId' with 'contentVariables')",
+        "For WhatsApp service provide either 'message', 'attachments', or ('templateId' with 'variableValues')",
 
       'object.with':
-        "'contentVariables' must be provided when 'templateId' is used",
+        "'variableValues' must be provided when 'templateId' is used",
 
       'object.nand':
-        "Templated WhatsApp messages cannot contain 'message' or 'attachments'. Or contentVariables must be present with templateId",
+        "Templated WhatsApp messages cannot contain 'message' or 'attachments'. Or variableValues must be present with templateId",
     }),
 });
 

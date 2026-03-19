@@ -45,7 +45,7 @@ const messageObject = Joi.object({
       "any.forbidden":
         "message is not allowed when templateId is provided",
     }),
-    otherwise: commonValidation.message.required(),
+    otherwise: commonValidation.message,
   }),
 
   body: Joi.when("templateId", {
@@ -88,6 +88,7 @@ const messageObject = Joi.object({
     }),
   })
 
+
   .when(Joi.object({ variableValues: Joi.exist() }).unknown(), {
     then: Joi.object({
       templateId: Joi.required().messages({
@@ -96,6 +97,7 @@ const messageObject = Joi.object({
       }),
     }),
   })
+  .or('message', 'attachments', 'templateId')
 
 
 const validateSchema = Joi.array().min(1).max(5).items(messageObject).messages({

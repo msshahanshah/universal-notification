@@ -2,7 +2,7 @@ const { getTemplateText } = require("../../../helpers/s3-template");
 const logger = require("../../logger");
 const RedisHelper = require("../../../helpers/redis.helper")
 
-const verifyVariables = (variableValues, requiredVariables) => {
+const verifyVariables = (variableValues, requiredVariables, templateId) => {
     if (!requiredVariables || !requiredVariables.length) return;
     if (!variableValues) {
         throw {
@@ -21,7 +21,7 @@ const verifyVariables = (variableValues, requiredVariables) => {
     if (!allMatched) {
         throw {
             statusCode: 400,
-            message: "Provided variables do not match the required variables for this template."
+            message: `Provided variables do not match the required variables for ${templateId} template.`
         };
     }
 }
@@ -110,8 +110,8 @@ const templateMiddleware = async (req, res, next) => {
                     await RedisHelper.setKey(templateKey, JSON.stringify(template), "template");
                 }
 
-                verifyVariables(msg.variableValues, template.requiredFields);
-                verifyConstraints(msg.variableValues, template.requiredFields);
+                verifyVariables(msg.variableValues, template.requiredFields, msg.templateId);
+                verifyConstraints(msg.variableValues, template.requiredFields, msg.templateId) ;
 
                 if (service === "email") {
                     msg.body = replaceVariables(template.messageContent, msg.variableValues);

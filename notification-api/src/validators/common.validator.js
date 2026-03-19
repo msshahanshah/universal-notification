@@ -59,10 +59,21 @@ const commonValidation = {
   message: Joi.string()
     .trim()
     .when('service', {
-      is: 'email',
-      then: Joi.forbidden().messages({
-        'any.unknown': 'Message is not allowed for email service',
-      }),
+      switch: [
+        {
+          is: 'email',
+          then: Joi.forbidden().messages({
+            'any.unknown': 'Message is not allowed for email service',
+          }),
+        },
+        {
+          is: 'whatsapp',
+          then: Joi.optional().messages({
+            'string.base': 'Message must be a string',
+            'string.empty': 'Message cannot be empty',
+          }),
+        },
+      ],
       otherwise: Joi.required().messages({
         'string.base': 'Message must be a string',
         'string.empty': 'Message cannot be empty',
