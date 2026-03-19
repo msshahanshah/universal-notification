@@ -1,10 +1,13 @@
-const serializeLogs = (rows) => {
+const { LOG_TYPE } = require("../../constants");
+
+const serializeLogs = (rows, logType) => {
   return rows.map((log) => {
     let ccEmail = log.content.cc?.length ? log.content.cc[0] : null;
     let bccEmail = log.content.bcc?.length ? log.content.bcc[0] : null;
     let fromEmail = log.content.fromEmail?.length
       ? log.content.fromEmail
       : null;
+
     const response = {
       id: log.id,
       messageId: log.messageId,
@@ -15,11 +18,16 @@ const serializeLogs = (rows) => {
       messageDate: log.updatedAt,
       message: log.status === "failed" ? log.connectorResponse : "",
       attempts: log.attempts,
-      referenceId: log.referenceId,
     };
+
+    if (logType === LOG_TYPE.SLACK_LOGS) {
+      response.referenceId = log.referenceId;
+    }
+
     if (fromEmail) response.fromEmail = fromEmail;
     if (ccEmail) response.cc = ccEmail;
     if (bccEmail) response.bcc = bccEmail;
+
     return response;
   });
 };

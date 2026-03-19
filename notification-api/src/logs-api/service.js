@@ -129,7 +129,7 @@ const viewMessageLogs = async (
 
     const totalPages = Math.ceil(count / limit);
 
-    const data = serializeLogs(rows);
+    const data = serializeLogs(rows, logType);
     let finalData = [];
 
     //===============Getting all replyed messages of slack=============
