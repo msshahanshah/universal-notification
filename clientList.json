@@ -2,44 +2,69 @@
   {
     "ID": "GKMIT",
     "SERVER_PORT": 3001,
-    "ENABLED_SERVERICES": ["slack", "email", "sms"],
+    "ENABLED_SERVERICES": ["sms", "email", "slack", "whatsapp"],
     "SLACKBOT": {
-      "TOKEN": "xoxb-",
+      "TOKEN": "xoxb-31738529348-1",
       "RABBITMQ": {
-        "EXCHANGE_NAME": "notifications_exchange",
+        "EXCHANGE_NAME": "GKMIT",
         "EXCHANGE_TYPE": "direct",
-        "QUEUE_NAME": "slackbot_queue",
+        "QUEUE_NAME": "GKMIT.slackbot_queue",
         "ROUTING_KEY": "slack"
       }
     },
     "EMAIL": {
+      "AWS": {
+        "default": true,
+        "allowCustomFromEmail": false,
+        "USER_NAME": "AKIA4TIN",
+        "PASSWORD": "BGFkZ",
+        "SENDER_EMAIL": "im@gmail.com",
+        "REGION": "ap-south-1"
+      },
       "MAILGUN": {
-        "API_KEY": "xxxx",
-        "DOMAIN": "xxxx"
+        "allowCustomFromEmail": false,
+        "API_KEY": "46920c1291050",
+        "DOMAIN": "sandbox5731f7.mailgun.org",
+        "SENDER_EMAIL": "imvidit7@gmail.com"
       },
       "RABBITMQ": {
-        "EXCHANGE_NAME": "notifications_exchange",
+        "EXCHANGE_NAME": "GKMIT",
         "EXCHANGE_TYPE": "direct",
-        "QUEUE_NAME": "email_queue",
+        "QUEUE_NAME": "GKMIT.email_queue",
         "ROUTING_KEY": "email"
       }
     },
     "SMS": {
       "TWILIO": {
-        "ACCOUNT_SID": "ACXXXX",
-        "AUTH_TOKEN": "XXXX",
-        "FROM_NUMBER": "+111111111"
+        "ACCOUNT_SID": "AC9ec0f",
+        "AUTH_TOKEN": "243867ca0",
+        "FROM_NUMBER": "+151054",
+        "default": true
       },
       "RABBITMQ": {
-        "EXCHANGE_NAME": "notifications_exchange",
+        "EXCHANGE_NAME": "GKMIT",
         "EXCHANGE_TYPE": "direct",
-        "QUEUE_NAME": "sms_queue",
+        "QUEUE_NAME": "GKMIT.sms_queue",
         "ROUTING_KEY": "sms"
+      }
+    },
+    "WHATSAPP": {
+      "TWILIO": {
+        "default": true,
+        "ACCOUNT_SID": "ACedbe",
+        "AUTH_TOKEN": "07e04c",
+        "FROM_NUMBER": "14155"
+      },
+      "RABBITMQ": {
+        "EXCHANGE_NAME": "GKMIT",
+        "EXCHANGE_TYPE": "direct",
+        "QUEUE_NAME": "GKMIT.whatsapp_queue",
+        "ROUTING_KEY": "whatsapp"
       }
     },
     "DBCONFIG": {
       "HOST": "localhost",
-      "PORT": 5432,
+      "PORT": 5434,
       "NAME": "notifications_db",
       "USER": "dikshant",
       "PASSWORD": "postgres"
@@ -52,7 +77,13 @@
       "EXCHANGE_NAME": "notifications_exchange",
       "EXCHANGE_TYPE": "direct",
       "QUEUE_NAME": "notifications_queue",
-      "ROUTING_KEY": "notifications"
+      "ROUTING_KEY": "notifications",
+      "WEBHOOK": {
+        "EXCHANGE_NAME": "notifications_exchange",
+        "EXCHANGE_TYPE": "direct",
+        "QUEUE_NAME": "notifications_queue",
+        "ROUTING_KEY": "notifications"
+      }
     }
   },
   {
@@ -60,44 +91,61 @@
     "SERVER_PORT": 3002,
     "ENABLED_SERVERICES": ["slack", "email", "sms"],
     "SLACKBOT": {
-      "TOKEN": "xoxb-",
+      "TOKEN": "xoxb-31738529348-",
       "RABBITMQ": {
-        "EXCHANGE_NAME": "notifications_exchange",
+        "EXCHANGE_NAME": "ACCEL",
         "EXCHANGE_TYPE": "direct",
-        "QUEUE_NAME": "slackbot_queue",
+        "QUEUE_NAME": "ACCEL.slackbot_queue",
         "ROUTING_KEY": "slack"
       }
     },
     "EMAIL": {
       "AWS": {
-        "USER_NAME": "xxxx",
-        "PASSWORD": "xxxx",
-        "SENDER_EMAIL": "test@mail.com",
+        "default": true,
+        "USER_NAME": "AKIA4TIN",
+        "PASSWORD": "BGFkZQWJqdMLoL",
+        "SENDER_EMAIL": "im@gmail.com",
         "REGION": "ap-south-1"
       },
       "RABBITMQ": {
-        "EXCHANGE_NAME": "notifications_exchange",
+        "EXCHANGE_NAME": "ACCEL",
         "EXCHANGE_TYPE": "direct",
-        "QUEUE_NAME": "email_queue",
+        "QUEUE_NAME": "ACCEL.email_queue",
         "ROUTING_KEY": "email"
       }
     },
     "SMS": {
       "TWILIO": {
-        "ACCOUNT_SID": "ACXXXX",
-        "AUTH_TOKEN": "XXXX",
-        "FROM_NUMBER": "+111111111"
+        "ACCOUNT_SID": "AC9ec0f2bce",
+        "AUTH_TOKEN": "243867ca0",
+        "FROM_NUMBER": "+151054",
+        "default": true
       },
       "RABBITMQ": {
-        "EXCHANGE_NAME": "notifications_exchange",
+        "EXCHANGE_NAME": "ACCEL",
         "EXCHANGE_TYPE": "direct",
-        "QUEUE_NAME": "sms_queue",
+        "QUEUE_NAME": "ACCEL.sms_queue",
         "ROUTING_KEY": "sms"
+      }
+    },
+    "WHATSAPP": {
+      "TWILIO": {
+        "default": true,
+        "allowCustomFromNumber": false,
+        "ACCOUNT_SID": "ACe628e40b",
+        "AUTH_TOKEN": "fe60f3853d",
+        "FROM_NUMBER": "1415"
+      },
+      "RABBITMQ": {
+        "EXCHANGE_NAME": "ACCEL",
+        "EXCHANGE_TYPE": "direct",
+        "QUEUE_NAME": "ACCEL.whatsapp_queue",
+        "ROUTING_KEY": "whatsapp"
       }
     },
     "DBCONFIG": {
       "HOST": "localhost",
-      "PORT": 5432,
+      "PORT": 5434,
       "NAME": "notifications_db",
       "USER": "dikshant",
       "PASSWORD": "postgres"
@@ -110,7 +158,13 @@
       "EXCHANGE_NAME": "notifications_exchange",
       "EXCHANGE_TYPE": "direct",
       "QUEUE_NAME": "notifications_queue",
-      "ROUTING_KEY": "notifications"
+      "ROUTING_KEY": "notifications",
+      "WEBHOOK": {
+        "EXCHANGE_NAME": "notifications_exchange",
+        "EXCHANGE_TYPE": "direct",
+        "QUEUE_NAME": "notifications_queue",
+        "ROUTING_KEY": "notifications"
+      }
     }
   }
 ]
