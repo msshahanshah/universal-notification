@@ -74,11 +74,11 @@ const commonValidation = {
           }),
         },
       ],
-      otherwise: Joi.required().messages({
-        'string.base': 'Message must be a string',
-        'string.empty': 'Message cannot be empty',
-        'any.required': 'Message is required for this service',
-      }),
+      // otherwise: Joi.required().messages({
+      //   'string.base': 'Message must be a string',
+      //   'string.empty': 'Message cannot be empty',
+      //   'any.required': 'Message or Template is required for this service',
+      // }),
     }),
 };
 

@@ -33,6 +33,7 @@ const attachmentValidation = Joi.alternatives().conditional("service", {
   otherwise: Joi.forbidden(),
 });
 
+
 const messageObject = Joi.object({
   service: commonValidation.service,
   destination: destinationSchema,
@@ -79,11 +80,15 @@ const messageObject = Joi.object({
       message: Joi.forbidden().messages({
         "any.forbidden":
           "message is not allowed when templateId is provided",
+        "any.unknown":
+          "message is not allowed when templateId is provided",
       }),
 
       body: Joi.forbidden().messages({
         "any.forbidden":
           "body is not allowed when templateId is provided",
+        "any.unknown":
+          "message is not allowed when templateId is provided",
       })
     }),
   })
@@ -97,8 +102,38 @@ const messageObject = Joi.object({
       }),
     }),
   })
-  .or('message', 'attachments', 'templateId')
+  .when(
+    Joi.object({ service: Joi.valid("email") }).unknown(),
+    {
+      then: Joi.object().or(
+        "templateId",
+        "body"
+      ),
+    }
+  )
 
+  .when(
+    Joi.object({ service: Joi.valid("whatsapp") }).unknown(),
+    {
+      then: Joi.object().or(
+        "message",
+        "attachments",
+        "templateId"
+      ),
+    }
+  )
+
+  .when(
+    Joi.object({
+      service: Joi.valid("sms", "slack"),
+    }).unknown(),
+    {
+      then: Joi.object().or(
+        "message",
+        "templateId"
+      ),
+    }
+  )
 
 const validateSchema = Joi.array().min(1).max(5).items(messageObject).messages({
   "array.max": "messages should not exceed 5.",
@@ -170,7 +205,6 @@ const validateRequest = async (req, res, next) => {
         enrichedBody,
         baseOptions,
       );
-
       // checking for uniqueKey for messages with attachments when there are file attachment
       if (
         messageWithFileAttachmentCount !== 0 &&

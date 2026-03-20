@@ -25,8 +25,8 @@ notificationRouter.post(
   "/v2/notify",
   auth,
   accessControl,
-  templateMiddleware,
   v2validateRequest,
+  templateMiddleware,
   v2notify,
 );
 notificationRouter.post("/notify-with-attachment", notifyWithEmailAttachment);
