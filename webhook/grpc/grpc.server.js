@@ -1,16 +1,17 @@
-const grpc = require('@grpc/grpc-js');
-const protoLoader = require('@grpc/proto-loader');
-const path = require('path');
-const logger = require('../utils/logger');
-const WebhookConfig = require('../models/webhook');
-const { encrypt } = require('../utils/cryptoUtil');
-const mongoose = require('mongoose');
+const grpc = require("@grpc/grpc-js");
+const protoLoader = require("@grpc/proto-loader");
+const path = require("path");
+const logger = require("../utils/logger");
+const WebhookConfig = require("../models/webhook");
+const { encrypt } = require("../utils/cryptoUtil");
+const mongoose = require("mongoose");
+const { isUniqueConstraintError } = require("../helpers/mongoose.helper");
 
-const PROTO_PATH = path.join(__dirname, '../webhook.proto');
+const PROTO_PATH = path.join(__dirname, "../webhook.proto");
 
 const addWebhook = async (call, callback) => {
   try {
-    const callerKey = call.metadata.get('x-internal-key')[0];
+    const callerKey = call.metadata.get("x-internal-key")[0];
 
     if (callerKey !== process.env.INTERNAL_GRPC_KEY) {
       logger.error(`GRPC call failed as, x-internal-key doesn't match`);
@@ -21,72 +22,54 @@ const addWebhook = async (call, callback) => {
     }
 
     let payload = JSON.parse(call.request.payload);
+    const {
+      clientId,
+      webhookUrl,
+      apiKey,
+      serviceTrigger,
+      retryEnabled = true,
+      isActive = true,
+    } = payload;
 
-    payload = Array.isArray(payload) ? payload : [payload];
-    const serviceObj = {};
+    //TODO write a helper function which returns all the services enabled for a client for all its webhook.
 
-    const object = payload.map((doc) => {
-      const { clientId, webhookUrl, apiKey, serviceTrigger } = doc;
-      const { retryEnabled, isActive } = doc;
-      if (!clientId || !webhookUrl || !apiKey || !serviceTrigger) {
-        return 'not valid';
-      }
-      for (let objKey in doc.serviceTrigger) {
-        if (doc.serviceTrigger[objKey].length !== 0) serviceObj[objKey] = 1;
-        else serviceObj[objKey] = 0;
-      }
-
-      return {
-        clientId: clientId,
-        webhookUrl: webhookUrl,
-        encryptedKey: encrypt(apiKey, 'key'),
-        retryEnabled: retryEnabled || false,
-        isActive: isActive || false,
-        serviceTrigger: serviceTrigger,
-        retryCount: Number.parseInt(process.env.MAX_RETRY_ATTEMPTS),
-      };
+    await WebhookConfig.create({
+      clientId,
+      webhookUrl,
+      encryptedKey: encrypt(apiKey, "abc"),
+      retryEnabled,
+      isActive,
+      serviceTrigger,
+      retryCount: Number.parseInt(process.env.MAX_RETRY_ATTEMPTS),
     });
 
-    for (const item of object) {
-      if (item === 'not valid') {
-        return callback({
-          code: grpc.status.INVALID_ARGUMENT,
-          message: 'Please provide clientId, webhookUrl, key, serviceTrigger',
-        });
-      }
-    }
-
-    await WebhookConfig.insertMany(object);
-
     const services = {};
-
-    for (let keys in serviceObj) {
-      if (serviceObj[keys] === 1) {
-        services[keys] = true;
-      } else {
-        services[keys] = false;
-      }
-    }
 
     callback(null, {
       payload: JSON.stringify({
         success: true,
-        message: 'Webhook added successfully',
+        message: "Webhook added successfully",
         services: services,
       }),
     });
   } catch (err) {
     logger.error(`Error in adding webhook configuration ${err.message}`);
+    if (isUniqueConstraintError(err)) {
+      return callback({
+        code: 6,
+        message: "Configuration already exists.",
+      });
+    }
     callback({
       code: grpc.status.INTERNAL,
-      message: 'Internal server error',
+      message: "Internal server error",
     });
   }
 };
 
 const updateWebhook = async (call, callback) => {
   try {
-    const callerKey = call.metadata.get('x-internal-key')[0];
+    const callerKey = call.metadata.get("x-internal-key")[0];
 
     if (callerKey !== process.env.INTERNAL_GRPC_KEY) {
       logger.error(`GRPC call failed as, x-internal-key doesn't match`);
@@ -111,7 +94,7 @@ const updateWebhook = async (call, callback) => {
       logger.info(`Webhook id and client id is required`);
       return callback({
         code: grpc.status.INVALID_ARGUMENT,
-        message: 'Webhook id and client id is required',
+        message: "Webhook id and client id is required",
       });
     }
 
@@ -139,7 +122,7 @@ const updateWebhook = async (call, callback) => {
     }
 
     if (apiKey) {
-      setFields.apiKey = encrypt(apiKey, 'abc');
+      setFields.apiKey = encrypt(apiKey, "abc");
     }
 
     if (isActive !== undefined) {
@@ -173,20 +156,20 @@ const updateWebhook = async (call, callback) => {
     }
 
     // mongo update
-    const result = await WebhookConfig.updateOne(
+    const result = await WebhookConfig.findOneAndUpdate(
       {
-        _id: mongoose.Types.ObjectId.createFromHexString(webhookId),
+        _id: webhookId,
         clientId: clientId,
+        deletedAt: null,
       },
       updateQuery,
     );
 
-    if (result.matchedCount === 0) {
-      logger.info(`No webhook found with id - ${webhookId}`);
-      return callback({
-        code: grpc.status.PERMISSION_DENIED,
-        message: 'Permission denied to perform action',
-      });
+    if (!result) {
+      throw {
+        statusCode: grpc.status.NOT_FOUND,
+        message: "no webhook config found",
+      };
     }
     logger.info(
       `Webhook configuration for client has beed updated successfully`,
@@ -202,34 +185,34 @@ const updateWebhook = async (call, callback) => {
     if (!Object.keys(updateQuery).length) {
       return callback({
         code: grpc.status.INVALID_ARGUMENT,
-        message: 'No fields to update',
+        message: "No fields to update",
       });
     }
 
     callback(null, {
       payload: JSON.stringify({
         success: true,
-        message: 'Webhook updated successfully',
+        message: "Webhook updated successfully",
         services,
       }),
     });
-  } catch (err) {
-    logger.error(`Error ${err}`);
+  } catch (error) {
+    logger.error(`Error ${error}`);
     callback({
-      code: grpc.status.INTERNAL,
-      message: 'Internal server error',
+      code: error.statusCode || grpc.status.INTERNAL,
+      message: error.message || "Internal server error",
     });
   }
 };
 
 const deleteWebhook = async (call, callback) => {
   try {
-    const callerKey = call.metadata.get('x-internal-key')[0];
+    const callerKey = call.metadata.get("x-internal-key")[0];
 
     if (callerKey !== process.env.INTERNAL_GRPC_KEY) {
       return callback({
         code: grpc.status.PERMISSION_DENIED,
-        message: 'Unauthorized caller',
+        message: "Unauthorized caller",
       });
     }
 
@@ -240,68 +223,49 @@ const deleteWebhook = async (call, callback) => {
       logger.info(`Client id and webhookId id is required`);
       return callback({
         code: grpc.status.INVALID_ARGUMENT,
-        message: 'Client id and webhookId id is required',
+        message: "Client id and webhookId id is required",
       });
     }
 
-    // payload expected ---
-    // {
-    //     "clientId": "...",
-    //     "webhookId": "..."
-    // }
+    const config = await WebhookConfig.findOneAndUpdate(
+      {
+        _id: webhookId,
+        deletedAt: null,
+      },
+      { deletedAt: new Date() },
+    );
 
-    // Delete webhook logic
-
-    const requiredWebhook = await WebhookConfig.find({
-      _id: mongoose.Types.ObjectId.createFromHexString(webhookId),
-      clientId,
-    }).lean();
-
-    if (requiredWebhook.length === 0) {
-      logger.info(
-        `No webhook document found for client - ${clientId} with id - ${webhookId}`,
-      );
-      return callback({
-        code: grpc.status.NOT_FOUND,
-        message: 'Webhook document not found',
-      });
+    if (!config) {
+      throw { statusCode: grpc.status.NOT_FOUND, message: "no config found." };
     }
 
+    //TODO write a helper function which returns all the services enabled for a client for all its webhook.
     const services = {};
-
-    Object.keys(requiredWebhook[0]?.serviceTrigger).forEach((service) => {
-      services[`${service}`] = false;
-    });
-
-    const result = await WebhookConfig.deleteOne({
-      _id: mongoose.Types.ObjectId.createFromHexString(webhookId),
-      clientId,
-    });
-
     callback(null, {
       payload: JSON.stringify({
         success: true,
-        message: 'Webhook deleted successfully',
+        message: "Webhook deleted successfully",
         services,
       }),
     });
   } catch (error) {
-    logger.error(`Error: ${error}`);
+    // logger.error(`Error: ${error}`);
+    console.log(error);
     callback({
-      code: grpc.status.INTERNAL,
-      message: 'Internal server error',
+      code: error.statusCode || grpc.status.INTERNAL,
+      message: error.message || "Internal server error",
     });
   }
 };
 
 const allWebhook = async (call, callback) => {
   try {
-    const callerKey = call.metadata.get('x-internal-key')[0];
+    const callerKey = call.metadata.get("x-internal-key")[0];
 
     if (callerKey !== process.env.INTERNAL_GRPC_KEY) {
       return callback({
         code: grpc.status.PERMISSION_DENIED,
-        message: 'Unauthorized caller',
+        message: "Unauthorized caller",
       });
     }
 
@@ -312,39 +276,34 @@ const allWebhook = async (call, callback) => {
       logger.info(`Client id is required`);
       return callback({
         code: grpc.status.INVALID_ARGUMENT,
-        message: 'Client id is required',
+        message: "Client id is required",
       });
     }
 
-    // payload expected ---
-    // {
-    //     "clientId": "...",
-    // }
-
-    // List webhook logic
-
     const allWebhooks = await WebhookConfig.find({
       clientId,
+      deletedAt: null,
     }).lean();
 
     if (allWebhooks.length === 0) {
-      logger.info(
-        `No webhook document found for client - ${clientId} with id - ${webhookId}`,
-      );
+      throw {
+        statusCode: grpc.status.NOT_FOUND,
+        message: "no webhook configuration found.",
+      };
     }
 
     callback(null, {
       payload: JSON.stringify({
         success: true,
-        message: 'Webhook fetched successfully',
+        message: "Webhook fetched successfully",
         data: allWebhooks,
       }),
     });
   } catch (error) {
     logger.error(`Error: ${error}`);
     callback({
-      code: grpc.status.INTERNAL,
-      message: 'Internal server error',
+      code: error.statusCode || grpc.status.INTERNAL,
+      message: error.message || "Internal server error",
     });
   }
 };
@@ -362,7 +321,7 @@ const startGrpcServer = () => {
       AddWebhookConfig: addWebhook,
       UpdateWebhookConfig: updateWebhook,
       DeleteWebhookConfig: deleteWebhook,
-      AllWebhookConfig: allWebhook
+      AllWebhookConfig: allWebhook,
     });
 
     const GRPC_HOST = process.env.GRPC_HOST;

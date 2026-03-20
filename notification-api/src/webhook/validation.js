@@ -1,6 +1,6 @@
-const Joi = require('joi');
-const { baseOptions } = require('../validators/common.validator');
-const { SecretManager } = require('universal_notification_support_lib');
+const Joi = require("joi");
+const { baseOptions } = require("../validators/common.validator");
+const { SecretManager } = require("universal_notification_support_lib");
 
 const clientServiceMap = new Map();
 async function checkWebhookServicesAreEnabledForClient(
@@ -40,44 +40,44 @@ async function checkWebhookServicesAreEnabledForClient(
 const baseWebhookSchema = {
   webhookUrl: Joi.string()
     .trim()
-    .uri({ scheme: ['https'] })
+    .uri({ scheme: ["https"] })
     .messages({
-      'string.base': 'webhookUrl must be a string',
-      'string.empty': 'webhookUrl cannot be empty',
-      'string.uriCustomScheme': 'webhookUrl must be a valid HTTPS URL',
-      'any.required': 'webhookUrl is required',
+      "string.base": "webhookUrl must be a string",
+      "string.empty": "webhookUrl cannot be empty",
+      "string.uriCustomScheme": "webhookUrl must be a valid HTTPS URL",
+      "any.required": "webhookUrl is required",
     }),
 
   apiKey: Joi.string().trim().messages({
-    'string.base': 'apiKey must be a string',
-    'string.empty': 'apiKey cannot be empty',
-    'any.required': 'apiKey is required',
+    "string.base": "apiKey must be a string",
+    "string.empty": "apiKey cannot be empty",
+    "any.required": "apiKey is required",
   }),
 
   serviceTrigger: Joi.object()
     .pattern(
       Joi.string(),
-      Joi.array().items(Joi.string().valid('success', 'failed', 'pending')),
+      Joi.array().items(Joi.string().valid("success", "failed", "pending")),
     )
     .min(1)
     .messages({
-      'object.base': 'Invalid servicesTrigger format',
-      'object.min': 'servicesTrigger object cannot be empty',
-      'object.pattern.match': 'Invalid servicesTrigger format',
-      'array.base': 'Invalid servicesTrigger format',
-      'any.only': 'Values must be one of success, failed, or pending',
-      'any.required': 'servicesTrigger is required',
+      "object.base": "Invalid servicesTrigger format",
+      "object.min": "servicesTrigger object cannot be empty",
+      "object.pattern.match": "Invalid servicesTrigger format",
+      "array.base": "Invalid servicesTrigger format",
+      "any.only": "Values must be one of success, failed, or pending",
+      "any.required": "servicesTrigger is required",
     }),
 
   retryEnabled: Joi.boolean().messages({
-    'boolean.base': 'retryEnabled must be a boolean value',
-    'any.required': 'retryEnabled is required',
+    "boolean.base": "retryEnabled must be a boolean value",
+    "any.required": "retryEnabled is required",
   }),
 
   isActive: Joi.boolean().strict().messages({
-    'object.base': 'isActive must be boolean',
-    'string.empty': 'isActive cannot be empty',
-    'any.required': 'isActive is required',
+    "object.base": "isActive must be boolean",
+    "string.empty": "isActive cannot be empty",
+    "any.required": "isActive is required",
   }),
 };
 
@@ -90,15 +90,15 @@ const createWebhookSchema = Joi.object({
 })
   .unknown(false)
   .messages({
-    'object.unknown': 'Unknown fields are not allowed',
+    "object.unknown": "Unknown fields are not allowed",
   });
 
 const updateWebhookSchema = Joi.object(baseWebhookSchema)
   .min(1)
   .unknown(false)
   .messages({
-    'object.min': 'At least one field must be provided for update',
-    'object.unknown': 'Unknown fields are not allowed',
+    "object.min": "At least one field must be provided for update",
+    "object.unknown": "Unknown fields are not allowed",
   });
 
 const webhookValidation = async (req, res, next) => {
@@ -106,24 +106,24 @@ const webhookValidation = async (req, res, next) => {
     if (!req.body) {
       throw {
         statusCode: 422,
-        message: 'Invalid Content-Type or Request Body',
+        message: "Invalid Content-Type or Request Body",
       };
     }
 
     const schema =
-      req.method === 'PATCH' ? updateWebhookSchema : createWebhookSchema;
+      req.method === "PATCH" ? updateWebhookSchema : createWebhookSchema;
 
     const { error, value } = schema.validate(req.body, baseOptions);
 
     if (error) {
-      console.log('Error', error);
+      console.log("Error", error);
       return res.status(400).json({
         success: false,
         message: error.details[0].message,
       });
     }
 
-    const clientId = req.headers['x-client-id'];
+    const clientId = req.headers["x-client-id"];
 
     if (value.servicesTrigger) {
       await checkWebhookServicesAreEnabledForClient(
@@ -137,7 +137,7 @@ const webhookValidation = async (req, res, next) => {
   } catch (error) {
     return res.status(error.statusCode || 500).json({
       success: false,
-      message: error.message || 'Internal server error',
+      message: error.message || "Internal server error",
     });
   }
 };

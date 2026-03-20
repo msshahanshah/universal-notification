@@ -1,12 +1,12 @@
-const webhookGRPCClient = require('../gRPC/webhook.client');
-const grpc = require('@grpc/grpc-js');
-const grpcHelper = require('../../helpers/grpc.helper');
-const { decrypt } = require('../../../webhook/utils/cryptoUtil');
+const webhookGRPCClient = require("../gRPC/webhook.client");
+const grpc = require("@grpc/grpc-js");
+const grpcHelper = require("../../helpers/grpc.helper");
+const { decrypt } = require("../../../webhook/utils/cryptoUtil");
 
 async function addWebhook(payload, clientId) {
   try {
     const metadata = new grpc.Metadata();
-    metadata.add('x-internal-key', process.env.INTERNAL_GRPC_KEY);
+    metadata.add("x-internal-key", process.env.INTERNAL_GRPC_KEY);
     payload.clientId = clientId;
 
     const { services } = await grpcHelper.addWebhook(
@@ -15,7 +15,7 @@ async function addWebhook(payload, clientId) {
       metadata,
     );
 
-    return { success: true, message: 'Webhook added successfully' };
+    return { success: true, message: "Webhook added successfully" };
   } catch (error) {
     throw error;
   }
@@ -24,18 +24,18 @@ async function addWebhook(payload, clientId) {
 async function updateWebhook(payload, webhookId, clientId) {
   try {
     const metadata = new grpc.Metadata();
-    metadata.add('x-internal-key', process.env.INTERNAL_GRPC_KEY);
+    metadata.add("x-internal-key", process.env.INTERNAL_GRPC_KEY);
 
     payload.webhookId = webhookId;
     payload.clientId = clientId;
 
-    const { services } = await grpcHelper.updateWebhook(
+    const result = await grpcHelper.updateWebhook(
       webhookGRPCClient,
       payload,
       metadata,
     );
 
-    return { success: true, message: 'Webhook updated successfully' };
+    return { success: true, message: "Webhook updated successfully" };
   } catch (error) {
     throw error;
   }
@@ -44,7 +44,7 @@ async function updateWebhook(payload, webhookId, clientId) {
 async function deleteWebhook(webhookId, clientId) {
   try {
     const metadata = new grpc.Metadata();
-    metadata.add('x-internal-key', process.env.INTERNAL_GRPC_KEY);
+    metadata.add("x-internal-key", process.env.INTERNAL_GRPC_KEY);
 
     const payload = {
       webhookId,
@@ -57,7 +57,7 @@ async function deleteWebhook(webhookId, clientId) {
       metadata,
     );
 
-    return { success: true, message: 'Webhook deleted successfully' };
+    return { success: true, message: "Webhook deleted successfully" };
   } catch (error) {
     throw error;
   }
@@ -66,7 +66,7 @@ async function deleteWebhook(webhookId, clientId) {
 async function getWebhooks(clientId) {
   try {
     const metadata = new grpc.Metadata();
-    metadata.add('x-internal-key', process.env.INTERNAL_GRPC_KEY);
+    metadata.add("x-internal-key", process.env.INTERNAL_GRPC_KEY);
 
     const payload = {
       clientId,
@@ -78,20 +78,19 @@ async function getWebhooks(clientId) {
       metadata,
     );
 
-    console.log('Data', data);
-
     const webhooks = data.map((webhook) => {
       return {
+        id: webhook._id,
         webhookUrl: webhook.webhookUrl,
         serviceTrigger: webhook.serviceTrigger,
         retryEnabled: webhook.retryEnabled,
-        isActive: webhook.isActive
+        isActive: webhook.isActive,
       };
     });
 
     return {
       success: true,
-      message: 'Webhook fetched successfully',
+      message: "Webhook fetched successfully",
       data: webhooks,
     };
   } catch (error) {

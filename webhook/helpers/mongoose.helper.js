@@ -15,6 +15,10 @@ const connectMongoose = async () => {
     console.error("MongoDB Connection Error:", err);
     throw err; // Rethrow error to handle it in the calling function
   }
-}
+};
 
-module.exports= {connectMongoose, mongooseInstance};
+const isUniqueConstraintError = (error) => {
+  return error.code === 11000;
+};
+
+module.exports = { connectMongoose, mongooseInstance, isUniqueConstraintError };
