@@ -152,7 +152,7 @@ async function creatingBulkNotificationRecord(clientId, service, messages) {
 
   try {
     for (const msg of messages) {
-      const { destination, content, templateId } = msg;
+      const { destination, content, templateId, variableValues } = msg;
 
       for (const number of destination) {
         logger.debug(
@@ -166,7 +166,6 @@ async function creatingBulkNotificationRecord(clientId, service, messages) {
         );
 
         serviceGuard(provider, { service, content, clientId }, clientConfig);
-
         records.push({
           messageId: uuidv4(),
           service,
@@ -175,6 +174,7 @@ async function creatingBulkNotificationRecord(clientId, service, messages) {
           status: "pending",
           attempts: 0,
           templateId,
+          variableValues
         });
       }
     }
@@ -295,7 +295,7 @@ const serviceEnforcers = {
 
   SMS: () => {},
 
-  SLACK: () => {},
+  SLACK: () => { },
 
   WHATSAPP: ({ provider, message, clientConfig }) => {
     if (!provider) return;
@@ -420,6 +420,8 @@ async function publishingNotificationRequest(notificationRecord) {
     clientId,
     fileId = undefined,
     attachments,
+    templateId,
+    variableValues
   } = notificationRecord;
 
   logger.info(
@@ -457,6 +459,8 @@ async function publishingNotificationRequest(notificationRecord) {
     provider: content?.provider,
     fileId,
     attachments,
+    templateId,
+    variableValues
   });
 }
 

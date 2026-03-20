@@ -129,7 +129,7 @@ const viewMessageLogs = async (
 
     const totalPages = Math.ceil(count / limit);
 
-    const data = serializeLogs(rows);
+    const data = serializeLogs(rows, logType);
     let finalData = [];
 
     //===============Getting all replyed messages of slack=============
@@ -172,7 +172,7 @@ const viewMessageLogs = async (
       //  adding messages replyed by users
       finalData = data.map((item) => ({
         ...item,
-        useReplyedMessages: userReplyedMessagesMap[item.referenceId] || [],
+        userReplyedMessages: userReplyedMessagesMap[item.referenceId] || [],
       }));
     }
 

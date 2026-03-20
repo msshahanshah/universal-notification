@@ -30,7 +30,7 @@ module.exports = (sequelize, schemaName) => {
 
       parentReferenceId: {
         type: DataTypes.STRING,
-        allowNull: false,
+        allowNull: true,
       },
 
       service: {

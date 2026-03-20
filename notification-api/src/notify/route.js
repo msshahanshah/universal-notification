@@ -6,6 +6,7 @@ const { validateRequest: v2validateRequest } = require("./v2/validation");
 
 const auth = require("../middleware/auth.middleware");
 const accessControl = require("../middleware/access-control.middleware");
+const templateMiddleware = require("./v2/template.middleware");
 const notificationRouter = express.Router();
 
 notificationRouter.post(
@@ -20,6 +21,7 @@ notificationRouter.post(
   auth,
   accessControl,
   v2validateRequest,
+  templateMiddleware,
   v2notify,
 );
 notificationRouter.post("/notify-with-attachment", notifyWithEmailAttachment);

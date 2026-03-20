@@ -45,27 +45,29 @@ async function slackReplyMessage(payload) {
           client,
         );
 
-        const existingMessage = await SlackReplyMessage.findOne({
-          where: {
-            parentReferenceId,
-            childReferenceId,
-            service,
-            workspaceChannelKey,
-          },
-        });
-
         const content = {
           message,
           reaction: [],
         };
 
-        if (existingMessage) {
-          content.reaction = existingMessage.content?.reaction || [];
-          await existingMessage.update({ content });
-          return {
-            success: true,
-            message: "Message updated successfully",
-          };
+        if (parentReferenceId) {
+          const existingMessage = await SlackReplyMessage.findOne({
+            where: {
+              parentReferenceId: parentReferenceId,
+              childReferenceId: childReferenceId,
+              service,
+              workspaceChannelKey,
+            },
+          });
+
+          if (existingMessage) {
+            content.reaction = existingMessage.content?.reaction || [];
+            await existingMessage.update({ content });
+            return {
+              success: true,
+              message: "Message updated successfully",
+            };
+          }
         }
 
         //creating new record for replyed message
@@ -109,11 +111,11 @@ async function slackReplyMessage(payload) {
 
         const existingMessage = await SlackReplyMessage.findOne({
           where: {
-            parentReferenceId,
-            userReferenceId, // refernce id can be same
-            service,
-            childReferenceId,
-            workspaceChannelKey,
+            parentReferenceId: parentReferenceId,
+            userReferenceId: userReferenceId, // refernce id can be same
+            service: service,
+            childReferenceId: childReferenceId,
+            workspaceChannelKey: workspaceChannelKey,
           },
         });
 
