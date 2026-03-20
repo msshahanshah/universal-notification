@@ -61,9 +61,9 @@ const serviceEnforcers = {
     }
   },
 
-  SMS: () => {},
+  SMS: () => { },
 
-  SLACK: () => {},
+  SLACK: () => { },
 
   WHATSAPP: ({ provider, message, clientConfig }) => {
     if (!provider) return;
@@ -125,7 +125,7 @@ const selectProvider = async (service, destination, clientId) => {
       return defaultProvider?.toUpperCase();
     }
 
-    if(service === 'whatsapp') {
+    if (service === 'whatsapp') {
       return defaultProvider?.toUpperCase();
     }
 
@@ -146,12 +146,11 @@ const creatingNotificationRecord = async (
   clientId,
   service,
   destination,
-  content,
-  templateId = null,
+  content
 ) => {
   const clientConfig = await getClientConfig(clientId);
   const enabledServices = clientConfig?.ENABLED_SERVERICES;
-
+  const { templateId, variableValues } = content;
   if (!Array.isArray(enabledServices)) {
     logger.error("Invalid or missing ENABLED_SERVERICES in client config", {
       clientId,
@@ -190,14 +189,27 @@ const creatingNotificationRecord = async (
           status: 'pending',
           attempts: 0,
           templateId,
+          variableValues
         });
+
 
         logger.info('Notification record created successfully', {
           number,
           ...record.dataValues,
         });
 
-        return { success: true, number, ...record.dataValues };
+        const response = { ...record.dataValues };
+
+        if (response.templateId == null) {
+          delete response.templateId;
+          delete response.variableValues;
+        }
+
+        return {
+          success: true,
+          number,
+          ...response,
+        };
       }),
     );
 
@@ -236,6 +248,8 @@ const publishingNotificationRequest = async (notificationRecord) => {
     clientId,
     fileId = undefined,
     attachments,
+    templateId,
+    variableValues
   } = notificationRecord;
 
   const rabbitConnect = await rabbitManager.getClient(clientId);
@@ -257,6 +271,8 @@ const publishingNotificationRequest = async (notificationRecord) => {
     provider: content?.provider,
     fileId,
     attachments,
+    templateId,
+    variableValues
   });
 };
 

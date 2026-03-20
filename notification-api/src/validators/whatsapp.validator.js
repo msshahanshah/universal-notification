@@ -64,11 +64,17 @@ const whatsAppValidation = {
 
   attachments: Joi.when("service", {
     is: "whatsapp",
-    then: Joi.array()
-      .optional()
-      .custom((value, helpers) => {
-        return validateWhatsAppAttachements(value, helpers);
+    then: Joi.when("templateId", {
+      is: Joi.exist(),
+      then: Joi.forbidden().messages({
+        "any.forbidden": "attachments are not allowed when templateId is provided for whatsapp"
       }),
+      otherwise: Joi.array()
+        .optional()
+        .custom((value, helpers) => {
+          return validateWhatsAppAttachements(value, helpers);
+        })
+    }),
 
     otherwise: Joi.forbidden(),
   }),

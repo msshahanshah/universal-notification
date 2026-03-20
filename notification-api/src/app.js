@@ -11,6 +11,7 @@ const logRouter = require("./logs-api/route");
 
 const authRouter = require("./auth/route");
 const statRouter = require("./stats/route");
+const templateRouter = require("./template/route");
 const routingRuleRouter = require("./routing-rules/route");
 
 const app = express();
@@ -23,6 +24,7 @@ app.use(notificationRouter);
 app.use(logRouter);
 app.use(authRouter);
 app.use(statRouter);
+app.use(templateRouter);
 app.use(routingRuleRouter);
 
 /**

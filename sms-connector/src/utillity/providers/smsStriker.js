@@ -1,4 +1,5 @@
-const axios = require("axios")
+const axios = require("axios");
+const logger = require("../../logger");
 class SmsStrikerProvider {
     constructor(config) {
         this.username = config.USERNAME;
@@ -8,11 +9,19 @@ class SmsStrikerProvider {
         this.type = config.TYPE
     }
 
-    async send({ to, message }) {
-        const msg = `Your OTP is ${message}. Please do not share Powered by: LINQLT`;
+    async send({ to, message, templateId }) {
+        try {
+            // const msg = `Your OTP is ${message}. Please do not share Powered by: LINQLT`;
 
-        const response = await axios.post(`https://www.smsstriker.com/API/sms.php?username=${this.username}&password=${this.password}&from=${this.from}&to=${to}&msg=${msg}&type=${this.type}&template_id=${this.template_id}`);
-        return response.data;
+            const response = await axios.post(`https://www.smsstriker.com/API/sms.php?username=${this.username}&password=${this.password}&from=${this.from}&to=${to}&msg=${message}&type=${this.type}&template_id=${templateId}`);
+
+            return response.data;
+        } catch (error) {
+            logger.error({
+                message: error.message,
+                stack: error?.stack
+            })
+        }
     }
 
     async dummySend({ to, message }) {

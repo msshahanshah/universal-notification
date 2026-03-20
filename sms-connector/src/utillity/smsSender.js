@@ -1,7 +1,8 @@
 const TextlocalProvider = require("./providers/textlocal");
 const MSG91Provider = require("./providers/msg91");
 const TwilioProvider = require("./providers/twilio");
-const SmsStrikerProvider = require("./providers/smsStriker")
+const SmsStrikerProvider = require("./providers/smsStriker");
+const Fast2Sms = require("./providers/fast2sms");
 
 class SmsSender {
   constructor(clientConfig, provider = "DEFAULT") {
@@ -16,7 +17,8 @@ class SmsSender {
       TEXTLOCAL: TextlocalProvider,
       MSG91: MSG91Provider,
       TWILIO: TwilioProvider,
-      SMSSTRIKER: SmsStrikerProvider
+      SMSSTRIKER: SmsStrikerProvider,
+      FAST2SMS: Fast2Sms
     };
 
     let selectedProvider = this.provider;
@@ -37,7 +39,7 @@ class SmsSender {
     }
 
     const providerConfig = this.clientConfig?.[selectedProvider];
-    
+
     if (!providerConfig) {
       throw new Error(`Configuration not found for provider ${this.provider}`);
     }
@@ -52,10 +54,10 @@ class SmsSender {
     this.stat = instance.getBalance.bind(instance);
   }
 
-  async sendSms({ to, message }) {
+  async sendSms({ to, message, templateId }) {
     if (!this.sender) throw new Error("SMS sender not initialized");
     try {
-      const result = await this.sender({ to, message });
+      const result = await this.sender({ to, message, templateId });
       console.log(
         `SMS sent via ${this.provider}:`,
         result?.data || result?.sid || result,

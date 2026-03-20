@@ -6,7 +6,7 @@ class TextlocalProvider {
         this.senderId = config.SENDER;
     }
 
-    async send({ to, message }) {
+    async send({ to, message, templateId}) {
         const params = new URLSearchParams({
             apikey: this.apiKey,
             numbers: to,

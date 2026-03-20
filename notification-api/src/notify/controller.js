@@ -31,23 +31,23 @@ const notify = async (req, res) => {
       attachments,
       templateId,
       fromNumber,
-      contentVariables,
+      variableValues ,
     } = req.body;
 
     const clientID = req.headers['x-client-id'];
 
     // Build content
     let content = message
-      ? { message, attachments, templateId, fromNumber, contentVariables }
+      ? { message, attachments, templateId, fromNumber, variableValues }
       : { subject, body, fromEmail, cc, bcc, attachments };
 
-    if (contentVariables) {
+    if (variableValues) {
       content = {
         message,
         attachments,
-        templateId,
         fromNumber,
-        contentVariables,
+        templateId,
+        variableValues,
       };
     }
 

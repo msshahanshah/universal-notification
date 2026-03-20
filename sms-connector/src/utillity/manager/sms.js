@@ -29,9 +29,9 @@ class SMSManager {
         }
         logger.info(`[${clientId}] Testing SMS service connection...`);
         const smsSender = new SmsSender(smsConfig, provider);
-        await smsSender.initialize();
         logger.info(`[${clientId}] SMS service connection successful.`);
         this.smsCache.set(key, smsSender);
+        return await smsSender.initialize();
         // set the key as clientId and provider 
     }
 

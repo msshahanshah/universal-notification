@@ -22,20 +22,12 @@ const notify = async (req, res) => {
         attachments,
         templateId,
         uniqueKey,
+        variableValues
       } = msg;
 
       const content = textMessage
-        ? { message: textMessage, uniqueKey, attachments, templateId }
-        : {
-            subject,
-            body,
-            fromEmail,
-            cc,
-            bcc,
-            attachments,
-            uniqueKey,
-            templateId,
-          };
+        ? { message: textMessage, uniqueKey, attachments }
+        : { subject, body, fromEmail, cc, bcc, attachments, uniqueKey};
 
       // insert into bulk
       bulkMessages.push({
@@ -44,6 +36,8 @@ const notify = async (req, res) => {
         content,
         attachments,
         uniqueKey,
+        templateId,
+        variableValues
       });
     }
 

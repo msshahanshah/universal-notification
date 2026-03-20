@@ -18,7 +18,7 @@ module.exports = {
   },
 
   SERVICE_PROVIDERS: {
-    SMS: ["twilio"],
+    SMS: ["twilio", "smsstriker"],
     EMAIL: ["aws", "mailgun", "sendgrid", "gmail"],
     SLACK: ["slackbot"],
     WHATSAPP: ["twilio"],

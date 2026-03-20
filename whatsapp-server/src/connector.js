@@ -28,13 +28,11 @@ async function connectAndConsume(clientConfigList) {
         await rabbitClient.consume({
           service: "whatsapp",
           sender: async (payload, messageId) => {
-            const { destination, content, provider } = payload;
+            const { destination, content, provider, templateId, variableValues } = payload;
             const {
               fromNumber,
-              templateId,
               attachments = [],
-              message,
-              contentVariables,
+              message
             } = content;
 
             const msgData = {
@@ -43,7 +41,7 @@ async function connectAndConsume(clientConfigList) {
               attachments,
               message,
               destination,
-              contentVariables,
+              contentVariables: variableValues,
               provider,
             };
 
@@ -74,7 +72,7 @@ async function connectAndConsume(clientConfigList) {
                     attachment,
                     message,
                     destination,
-                    contentVariables,
+                    contentVariables: variableValues,
                     provider,
                   },
                   messageId,
