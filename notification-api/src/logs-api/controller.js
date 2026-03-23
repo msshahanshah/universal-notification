@@ -104,7 +104,6 @@ const messageLogs = async (req, res) => {
 const slackMessageLogs = async (req, res) => {
   try {
     const {
-      service = null,
       status = null,
       page = 1,
       limit = 10,
@@ -119,6 +118,9 @@ const slackMessageLogs = async (req, res) => {
       "from-date": fromDate = null,
       "to-date": toDate = null,
     } = req.query;
+
+    // service must be fixed for slack logs
+    const service = "slack";
 
     const limitInt = parseInt(limit);
     const idClient = req.header("X-Client-Id");
