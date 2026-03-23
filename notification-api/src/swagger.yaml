@@ -381,7 +381,7 @@ components:
               templateId:
                 type: string
                 description: WhatsApp template identifier
-              contentVariables:
+              variableValues:
                 type: object
                 description: Template variable mapping (string → string)
                 additionalProperties:
@@ -397,7 +397,7 @@ components:
                 - 'https://example.com/file.pdf'
             - destination: '+919929797900'
               templateId: 'templateId'
-              contentVariables:
+              variableValues:
                 '1': 'value1'
                 '2': 'value2'
 
@@ -407,44 +407,40 @@ components:
         data:
           type: object
           properties:
-            failed:
-              type: array
-              description: List of failed service notifications
-              items:
-                $ref: '#/components/schemas/V2ServiceFailure'
-            success:
-              type: array
-              description: List of successfully processed service notifications
-              items:
-                $ref: '#/components/schemas/V2ServiceSuccess'
+            email:
+              $ref: '#/components/schemas/V2ServiceResult'
+            sms:
+              $ref: '#/components/schemas/V2ServiceResult'
+            slack:
+              $ref: '#/components/schemas/V2ServiceResult'
+            whatsapp:
+              $ref: '#/components/schemas/V2ServiceResult'
           example:
-            failed: []
-            success:
-              - service: email
-                messageIds:
-                  - 'a1b2c3d4-e5f6-7890-abcd-ef1234567890'
-                preSignedUrls:
-                  - uniqueKey: 'email-1'
-                    urls:
-                      - fileName: 'invoice.pdf'
-                        s3:
-                          url: 'https://bucket.s3.ap-south-1.amazonaws.com/'
-                          fields:
-                            bucket: 'bucket'
-                            key: 'uploads/CLIENT/msg-uuid-1/invoice.pdf'
-                            X-Amz-Algorithm: 'AWS4-HMAC-SHA256'
-                            X-Amz-Signature: 'abc123'
-              - service: sms
-                messageIds:
-                  - 'b2c3d4e5-f6a7-8901-bcde-f12345678901'
+            email:
+              success: true
+              message: "Notification request accepted and queued."
+              messageIds: ["15471e6e-aa54-47d3-9618-3ff92d75446e"]
+              preSignedUrls: []
+            slack:
+              success: true
+              message: "Notification request accepted and queued."
+              messageIds: ["296c0beb-a519-45ec-9b6c-b0aeb86e034c"]
+              preSignedUrls: []
+
+    V2ServiceResult:
+      oneOf:
+        - $ref: '#/components/schemas/V2ServiceSuccess'
+        - $ref: '#/components/schemas/V2ServiceFailure'
 
     V2ServiceSuccess:
       type: object
       properties:
-        service:
+        success:
+          type: boolean
+          example: true
+        message:
           type: string
-          enum: [email, sms, slack, whatsapp]
-          example: email
+          example: 'Notification request accepted and queued.'
         messageIds:
           type: array
           items:
@@ -461,16 +457,15 @@ components:
     V2ServiceFailure:
       type: object
       properties:
-        service:
-          type: string
-          enum: [email, sms, slack, whatsapp]
-          example: sms
+        success:
+          type: boolean
+          example: false
         statusCode:
           type: integer
           example: 400
         message:
           type: string
-          example: 'Bulk insert failed'
+          example: 'Bulk insert failed.'
 
     V2PreSignedUrlGroup:
       type: object
@@ -561,8 +556,6 @@ components:
                       - type: number
                   dataType:
                     type: string
-                  required:
-                    type: boolean
 
     TemplateResponse:
       type: object
@@ -935,7 +928,7 @@ paths:
             schema:
               $ref: '#/components/schemas/NotifyV2Request'
       responses:
-        '200':
+        '202':
           description: All notifications processed successfully
           content:
             application/json:
@@ -965,24 +958,25 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-        '417':
+        '207':
           description: |
             Expectation Failed — partial success. Some services processed successfully,
-            others failed. Response body contains both `data.success` and `data.failed`.
+            others failed. Response body contains service-specific results in `data`.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/NotifyV2Response'
               example:
                 data:
-                  failed:
-                    - service: sms
-                      statusCode: 400
-                      message: 'Bulk insert failed'
-                  success:
-                    - service: email
-                      messageIds:
-                        - 'a1b2c3d4-e5f6-7890-abcd-ef1234567890'
+                  email:
+                    success: false
+                    statusCode: 400
+                    message: 'Bulk insert failed.'
+                  slack:
+                    success: true
+                    message: "Notification request accepted and queued."
+                    messageIds: ["296c0beb-a519-45ec-9b6c-b0aeb86e034c"]
+                    preSignedUrls: []
         '500':
           description: Internal server error
           content:
