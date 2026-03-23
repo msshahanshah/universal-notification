@@ -15,7 +15,7 @@ async function addWebhook(payload, clientId) {
       metadata,
     );
 
-    return { success: true, message: "Webhook added successfully" };
+    return { services };
   } catch (error) {
     throw error;
   }
@@ -29,13 +29,13 @@ async function updateWebhook(payload, webhookId, clientId) {
     payload.webhookId = webhookId;
     payload.clientId = clientId;
 
-    const result = await grpcHelper.updateWebhook(
+    const { services } = await grpcHelper.updateWebhook(
       webhookGRPCClient,
       payload,
       metadata,
     );
 
-    return { success: true, message: "Webhook updated successfully" };
+    return { services };
   } catch (error) {
     throw error;
   }
@@ -57,7 +57,7 @@ async function deleteWebhook(webhookId, clientId) {
       metadata,
     );
 
-    return { success: true, message: "Webhook deleted successfully" };
+    return { services };
   } catch (error) {
     throw error;
   }
@@ -88,11 +88,7 @@ async function getWebhooks(clientId) {
       };
     });
 
-    return {
-      success: true,
-      message: "Webhook fetched successfully",
-      data: webhooks,
-    };
+    return data;
   } catch (error) {
     throw error;
   }

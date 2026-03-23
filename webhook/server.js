@@ -1,32 +1,20 @@
-require('dotenv').config();
+require("dotenv").config();
 
-const fastify = require('fastify')({ logger: true });
-const mongoose = require('mongoose');
-
-const webhookRoutes = require('./routes/webhookRoutes');
-const { connectMongoose } = require('./helpers/mongoose.helper');
-const { startGrpcServer } = require('./grpc/grpc.server');
-
-require('./cron/webhookCron');
+const logger = require("./utils/logger");
+const { connectMongoose } = require("./helpers/mongoose.helper");
+const { startGrpcServer } = require("./grpc/grpc.server");
 
 /**
- * ✅ Enable CORS
+ * Cron Schedular
  */
-fastify.register(require('@fastify/cors'), {
-  origin: true, // allow all origins (POC)
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
-});
-
-fastify.register(webhookRoutes, { prefix: '/api/webhook' });
+require("./cron/webhookCron");
 
 const start = async () => {
   try {
     await connectMongoose();
     startGrpcServer();
-    await fastify.listen({ port: 5200 });
-    console.log('Server running on port 5200');
   } catch (err) {
-    fastify.log.error(err);
+    logger.error(`[WEBHOOK SERVICE] Server Stops ${err}`);
     process.exit(1);
   }
 };

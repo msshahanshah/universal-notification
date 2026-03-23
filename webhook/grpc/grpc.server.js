@@ -4,8 +4,12 @@ const path = require("path");
 const logger = require("../utils/logger");
 const WebhookConfig = require("../models/webhook");
 const { encrypt } = require("../utils/cryptoUtil");
-const mongoose = require("mongoose");
-const { isUniqueConstraintError } = require("../helpers/mongoose.helper");
+
+const {
+  isUniqueConstraintError,
+  findAllEnabledServicesForClient,
+} = require("../helpers/mongoose.helper");
+const { isValidObjectId } = require("mongoose");
 
 const PROTO_PATH = path.join(__dirname, "../webhook.proto");
 
@@ -31,8 +35,6 @@ const addWebhook = async (call, callback) => {
       isActive = true,
     } = payload;
 
-    //TODO write a helper function which returns all the services enabled for a client for all its webhook.
-
     await WebhookConfig.create({
       clientId,
       webhookUrl,
@@ -43,7 +45,7 @@ const addWebhook = async (call, callback) => {
       retryCount: Number.parseInt(process.env.MAX_RETRY_ATTEMPTS),
     });
 
-    const services = {};
+    const services = await findAllEnabledServicesForClient(clientId);
 
     callback(null, {
       payload: JSON.stringify({
@@ -98,20 +100,12 @@ const updateWebhook = async (call, callback) => {
       });
     }
 
-    // Expected req body ---
-
-    //    {
-    //   "webhookUrl": "webhookUrl1",
-    //   "clientId": "client-id"
-    //   "serviceTrigger": {
-    //     "email": ["success"],
-    //     "slack": ["success"],
-    //.     "sms": ["success"] , "sms": ["failed"] == >> "sms": ["success", "failed"]
-    //   },
-    //   "apiKey": "API-Key",
-    //   "isActive": true,
-    // webhookId:webhook-id
-    //   }
+    if (!isValidObjectId(webhookId)) {
+      return callback({
+        code: grpc.status.NOT_FOUND,
+        message: `no webhook config found with id ${webhookId}`,
+      });
+    }
 
     const setFields = {};
     const addToSetFields = {};
@@ -175,19 +169,7 @@ const updateWebhook = async (call, callback) => {
       `Webhook configuration for client has beed updated successfully`,
     );
 
-    const services = {};
-    if (payload.serviceTrigger) {
-      Object.entries(payload.serviceTrigger).forEach(([key, value]) => {
-        services[key] = value.length > 0;
-      });
-    }
-
-    if (!Object.keys(updateQuery).length) {
-      return callback({
-        code: grpc.status.INVALID_ARGUMENT,
-        message: "No fields to update",
-      });
-    }
+    const services = await findAllEnabledServicesForClient(clientId);
 
     callback(null, {
       payload: JSON.stringify({
@@ -198,6 +180,12 @@ const updateWebhook = async (call, callback) => {
     });
   } catch (error) {
     logger.error(`Error ${error}`);
+    if (isUniqueConstraintError(error)) {
+      return callback({
+        code: grpc.status.ALREADY_EXISTS,
+        message: "Configuration already exists.",
+      });
+    }
     callback({
       code: error.statusCode || grpc.status.INTERNAL,
       message: error.message || "Internal server error",
@@ -227,6 +215,12 @@ const deleteWebhook = async (call, callback) => {
       });
     }
 
+    if (!isValidObjectId(webhookId)) {
+      return callback({
+        code: grpc.status.NOT_FOUND,
+        message: `no webhook config found with id ${webhookId}`,
+      });
+    }
     const config = await WebhookConfig.findOneAndUpdate(
       {
         _id: webhookId,
@@ -240,7 +234,7 @@ const deleteWebhook = async (call, callback) => {
     }
 
     //TODO write a helper function which returns all the services enabled for a client for all its webhook.
-    const services = {};
+    const services = await findAllEnabledServicesForClient(clientId);
     callback(null, {
       payload: JSON.stringify({
         success: true,

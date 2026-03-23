@@ -3,8 +3,13 @@ const webhookService = require("./service");
 async function addWebhook(req, res) {
   try {
     const clientId = req.headers["x-client-id"];
-    const result = await webhookService.addWebhook(req.body, clientId);
-    res.status(201).json(result);
+    const { services } = await webhookService.addWebhook(req.body, clientId);
+
+    // TODO update redis for enabled services
+    res.status(201).json({
+      success: true,
+      message: "webhook configuration added successfully.",
+    });
   } catch (error) {
     error.message = error?.message || "Internal server error";
     error.statusCode = error?.statusCode || 500;
@@ -18,19 +23,16 @@ async function updateWebhook(req, res) {
   try {
     const clientId = req.headers["x-client-id"];
     const webhookId = req.params.webhookId;
-    // console.log(+webhookId === NaN);
-    // if (+webhookId === NaN) {
-    //   throw {
-    //     message: "Please send valid webhook id",
-    //     statusCode: 400,
-    //   };
-    // }
-    const result = await webhookService.updateWebhook(
+
+    const { services } = await webhookService.updateWebhook(
       req.body,
       webhookId,
       clientId,
     );
-    res.status(201).json(result);
+    res.status(201).json({
+      success: true,
+      message: "webhook configuration updated successfully.",
+    });
   } catch (error) {
     error.message = error?.message || "Internal server error";
     error.statusCode = error?.statusCode || 500;
@@ -43,14 +45,15 @@ async function deleteWebhook(req, res) {
   try {
     const clientId = req.headers["x-client-id"];
     const webhookId = req.params.webhookId;
-    if (+webhookId === NaN) {
-      throw {
-        message: "Please send valid webhook id",
-        statusCode: 400,
-      };
-    }
-    const result = await webhookService.deleteWebhook(webhookId, clientId);
-    res.status(201).json(result);
+
+    const { services } = await webhookService.deleteWebhook(
+      webhookId,
+      clientId,
+    );
+    res.status(204).json({
+      success: true,
+      message: "webhook configuration deleted successfully.",
+    });
   } catch (error) {
     error.message = error?.message || "Internal server error";
     error.statusCode = error?.statusCode || 500;
@@ -63,7 +66,11 @@ async function getWebhooks(req, res) {
   try {
     const clientId = req.headers["x-client-id"];
     const result = await webhookService.getWebhooks(clientId);
-    res.status(200).json(result);
+    res.status(200).json({
+      success: true,
+      message: "webhook configuration fetched successfully.",
+      data: result,
+    });
   } catch (error) {
     error.message = error?.message || "Internal server error";
     error.statusCode = error?.statusCode || 500;

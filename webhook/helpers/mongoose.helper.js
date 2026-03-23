@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const webhook = require("../models/webhook");
 
 let mongooseInstance = null;
 
@@ -21,4 +22,22 @@ const isUniqueConstraintError = (error) => {
   return error.code === 11000;
 };
 
-module.exports = { connectMongoose, mongooseInstance, isUniqueConstraintError };
+const findAllEnabledServicesForClient = async (clientId) => {
+  const services = await webhook.find(
+    { clientId, deletedAt: null },
+    "serviceTrigger",
+  );
+
+  const uniqueService = [
+    ...new Set(services.flatMap((item) => Object.keys(item.serviceTrigger))),
+  ];
+
+  return uniqueService;
+};
+
+module.exports = {
+  connectMongoose,
+  mongooseInstance,
+  isUniqueConstraintError,
+  findAllEnabledServicesForClient,
+};
