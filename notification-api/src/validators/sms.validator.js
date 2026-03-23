@@ -38,10 +38,10 @@ const smsValidation = {
 
           // Check validity
           if (!phoneUtil.isValidNumber(parsedNumber)) {
-            return helpers.message("Invalid phone number ");
+            return helpers.message("Invalid phone number");
           }
         } catch (err) {
-          return helpers.message("Invalid phone number ");
+          return helpers.message("Invalid phone number");
         }
       }
 

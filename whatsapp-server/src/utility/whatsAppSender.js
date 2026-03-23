@@ -67,7 +67,7 @@ class WhatsAppSender {
       }
 
       const clientId = process.env.clientList;
-      const webHookCallbackUrl = process.env.WEBHOOK_CALLBACK_URL;
+      const webHookCallbackUrl = process.env.BACKEND_API_URL;
 
       if (!webHookCallbackUrl) {
         logger.error("ERROR: Webhook callback url in env variables.");
@@ -80,7 +80,7 @@ class WhatsAppSender {
 
       if (webHookCallbackUrl) {
         data["statusCallback"] =
-          `${process.env.WEBHOOK_CALLBACK_URL}/webhook/whatsapp?id=${clientId}`;
+          `${process.env.BACKEND_API_URL}/webhook/whatsapp?id=${clientId}`;
       }
 
       if (message) {

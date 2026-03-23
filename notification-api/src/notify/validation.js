@@ -7,6 +7,7 @@ const emailValidation = require('../validators/email.validator');
 const slackValidation = require('../validators/slack.validator');
 const smsValidation = require('../validators/sms.validator');
 const whatsAppValidation = require('../validators/whatsapp.validator');
+const cleanJoiMessage = require('../../helpers/cleanJoiMessage');
 
 require('dotenv').config({
   path: require('path').resolve(__dirname, '../../../.env'),
@@ -104,7 +105,7 @@ const validateRequest = (req, res, next) => {
     if (error) {
       return res
         .status(400)
-        .json({ success: false, message: error.details[0].message });
+        .json({ success: false, message: cleanJoiMessage(error.details[0].message) });
     }
     req.body = value;
     next();
