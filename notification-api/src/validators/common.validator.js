@@ -200,7 +200,7 @@ const validateAttachments = (values, helpers) => {
 const validateWhatsAppAttachements = (values, helpers) => {
   if (values.length == 0) {
     return helpers.message(
-      'Attachments array can not be empty',
+      'Attachments can not be empty',
     );
   } 
   if (values.length) {
