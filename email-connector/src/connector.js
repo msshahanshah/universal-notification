@@ -15,7 +15,7 @@ async function connectAndConsume(clientConfigList) {
         );
         // Get RabbitMQ client from package manager
         const rabbitClient = await connectionManager.getRabbitMQ(clientItem.ID);
-
+        console.log(rabbitClient);
         // Get database for this client
         const db = await connectionManager.getModels(clientItem.ID);
 
@@ -53,7 +53,41 @@ async function connectAndConsume(clientConfigList) {
                 { where: { messageId } },
               );
             }
-            return emailSender.sendEmail(messageId, msgData);
+
+            try {
+              const res = await emailSender.sendEmail(messageId, msgData);
+              if (content.isWebhookEnabled) {
+                logger.info(
+                  `Webhook message published for email with id: ${messageId}`,
+                );
+                await rabbitClient.publishMessage("webhook", {
+                  clientId: clientItem.ID,
+                  service: "email",
+                  status: "sent",
+                  details: {
+                    messageId,
+                    connectorResponse: res,
+                  },
+                });
+              }
+            } catch (error) {
+              if (content.isWebhookEnabled) {
+                logger.info(
+                  `Webhook message published for email with id: ${messageId}`,
+                );
+                await rabbitClient.publishMessage("webhook", {
+                  clientId: clientItem.ID,
+                  service: "email",
+                  status: "failed",
+                  details: {
+                    messageId,
+                    connectorResponse: res,
+                  },
+                });
+
+                throw error;
+              }
+            }
           },
           db,
           maxProcessAttemptCount: 3,
@@ -84,7 +118,10 @@ async function closeConnections(clientId) {
       logger.info("Closed all connections");
     }
   } catch (error) {
-    logger.error("Failed to close connections:", { message: error.message, stack: error?.stack });
+    logger.error("Failed to close connections:", {
+      message: error.message,
+      stack: error?.stack,
+    });
   }
 }
 module.exports = {
