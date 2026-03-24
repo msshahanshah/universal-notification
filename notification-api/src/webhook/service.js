@@ -73,17 +73,21 @@ async function getWebhookConfigs(clientId, query) {
 
 // ---------------- ENABLED SERVICES ----------------
 async function getWebhookEnabledServices(clientId, service) {
-  let services = await getCacheTriggerServices(clientId);
+  try {
+    let services = await getCacheTriggerServices(clientId);
 
-  if (!services.length) {
-    const { enabledServices } = await fetchWebhookConfigs(clientId, {
-      fields: "enabledServices",
-    });
+    if (!services.length) {
+      const { enabledServices } = await fetchWebhookConfigs(clientId, {
+        fields: "enabledServices",
+      });
 
-    services = await cacheEnabledServices(clientId, enabledServices);
+      services = await cacheTriggerServices(clientId, enabledServices);
+    }
+
+    return service ? services.includes(service) : services;
+  } catch (error) {
+    throw error;
   }
-
-  return service ? services.includes(service) : services;
 }
 
 module.exports = {

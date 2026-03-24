@@ -48,7 +48,7 @@ class RedisHelper {
 
   static async sadd(key, values, expire) {
     try {
-      const result = await redisClient.sAdd(key, values);
+      const result = await redisClient.sAdd(key, ...values);
 
       if (expire) {
         await redisClient.expire(key, expire);

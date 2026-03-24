@@ -60,8 +60,8 @@ const notify = async (req, res) => {
     }
 
     //TODO check webhookenabled
-    const isWebhookEnabled = getWebhookEnabledServices(clientID, service);
-
+    const isWebhookEnabled = await getWebhookEnabledServices(clientID, service);
+    console.log(">>>>>>", isWebhookEnabled);
     content["isWebhookEnabled"] = isWebhookEnabled;
 
     const notificationRecords = await creatingNotificationRecord(
