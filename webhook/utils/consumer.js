@@ -2,43 +2,53 @@ require("dotenv").config();
 
 const WebhookConfig = require("../models/webhook");
 const WebhookCronScheduler = require("../models/webhookCronSchedulerModel");
-const {} = require("../helpers/webhook.helper");
+const WebhookLog = require("../models/webhookLogsModel");
+
+const { processNotifications } = require("../helpers/job.helper");
+
 const logger = require("./logger");
 
 const consumeNotification = async (payload, messageId) => {
   try {
-    console.log("webhook consuming >>>", payload);
-    // const { service, status, clientId, messageId } = payload;
-    // const query = {
-    //   clientId: clientId,
-    //   [`serviceTrigger.${service}`]: status,
-    // };
+    logger.info(`Webhook consume start: messageId=${messageId}`);
 
-    // const webhooks = await WebhookConfig.find(query).lean();
+    const { service, status, clientId } = payload;
 
-    // const docs = webhooks.map((doc) => {
-    //   return {
-    //     id: doc._id,
-    //     clientId: clientId,
-    //     webhookUrl: doc.webhookUrl,
-    //     serviceTrigger: doc.serviceTrigger,
-    //     status: "pending",
-    //     retryAttempts: 0,
-    //     webhookPayload: {
-    //       messageId: messageId,
-    //       service,
-    //       status,
-    //       clientId,
-    //     },
-    //   };
-    // });
+    const query = {
+      clientId,
+      isActive: true,
+      deletedAt: null,
+      [`serviceTrigger.${service}`]: { $exists: true, $eq: status },
+    };
 
-    // logger.info(`Docs fetched from webhook configs`);
-    // await WebhookCronScheduler.insertMany(docs);
-    logger.info(`Docs inserted in mongo cron scheduler collection`);
-    // TODO make first webhook call from here. It will not await for webhook.
+    const configs = await WebhookConfig.find(query).select("webhookUrl");
+
+    logger.info(`Found ${configs.length} webhook configs`);
+
+    const schedulerDocs = configs.map((record) => ({
+      clientId,
+      webhookUrl: record.webhookUrl,
+      status: "pending",
+      serviceTrigger: { [service]: status },
+      retryAttempts: 0,
+      webhookPayload: payload,
+      webhookResponse: {},
+    }));
+
+    if (!schedulerDocs.length) {
+      logger.warn(`No webhook configs found for clientId=${clientId}`);
+      return;
+    }
+
+    const records = await WebhookCronScheduler.insertMany(schedulerDocs);
+
+    logger.info(`Inserted ${records.length} records into scheduler`);
+
+    // await processNotifications(records);
+
+    logger.info(`Webhook processing completed for messageId=${messageId}`);
   } catch (err) {
-    logger.error(`Error in consuming webhook request ${err}`);
+    logger.error(`Error in consumeNotification: ${err.stack}`);
     throw err;
   }
 };

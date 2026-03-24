@@ -64,8 +64,8 @@ async function connectAndConsume(clientConfigList) {
                   clientId: clientItem.ID,
                   service: "email",
                   status: "sent",
+                  messageId,
                   details: {
-                    messageId,
                     connectorResponse: res,
                   },
                 });

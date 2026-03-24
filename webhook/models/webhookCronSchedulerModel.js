@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 const webhookCronSchedulerSchema = new mongoose.Schema(
   {
     clientId: {
@@ -19,7 +19,7 @@ const webhookCronSchedulerSchema = new mongoose.Schema(
 
     status: {
       type: String,
-      enum: ['success', 'failed'],
+      enum: ["success", "failed", "pending"],
       required: true,
     },
 
@@ -43,6 +43,6 @@ const webhookCronSchedulerSchema = new mongoose.Schema(
 );
 
 module.exports = mongoose.model(
-  'WebhookCronScheduler',
+  "WebhookCronScheduler",
   webhookCronSchedulerSchema,
 );
