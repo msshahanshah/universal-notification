@@ -2,10 +2,12 @@ const { getTemplateText } = require("../../../helpers/s3-template");
 const logger = require("../../logger");
 const RedisHelper = require("../../../helpers/redis.helper")
 
-const verifyVariables = (variableValues, requiredVariables, templateId) => {
+const verifyVariables = (variableValues, requiredVariables, templateId, service) => {
+    console.log("service", service);
     if (!requiredVariables || !requiredVariables.length) return;
     if (!variableValues) {
         throw {
+            service,
             statusCode: 400,
             message: "Variable values are required when the template has defined variables."
         };
@@ -20,13 +22,14 @@ const verifyVariables = (variableValues, requiredVariables, templateId) => {
 
     if (!allMatched) {
         throw {
+            service,
             statusCode: 400,
             message: `Provided variables do not match the required variables for ${templateId} template.`
         };
     }
 }
 
-const verifyConstraints = (variableValues, requiredVariables) => {
+const verifyConstraints = (variableValues, requiredVariables, service) => {
     if (!requiredVariables || !requiredVariables.length) return;
 
     for (const variable of requiredVariables) {
@@ -36,6 +39,7 @@ const verifyConstraints = (variableValues, requiredVariables) => {
 
         if (constraints.maxlength && String(value).length > parseInt(constraints.maxlength)) {
             throw {
+                service,
                 statusCode: 400,
                 message: `Variable '${variable.name}' exceeds the maximum length of ${constraints.maxlength} characters.`
             };
@@ -43,6 +47,7 @@ const verifyConstraints = (variableValues, requiredVariables) => {
 
         if (constraints.dataType === "number" && isNaN(Number(value))) {
             throw {
+                service,
                 statusCode: 400,
                 message: `Variable '${variable.name}' must be a valid number.`
             };
@@ -50,6 +55,7 @@ const verifyConstraints = (variableValues, requiredVariables) => {
 
         if (constraints.dataType === "integer" && !Number.isInteger(Number(value))) {
             throw {
+                service,
                 statusCode: 400,
                 message: `Variable '${variable.name}' must be a valid integer.`
             };
@@ -78,6 +84,7 @@ const templateMiddleware = async (req, res, next) => {
 
                 if (!msg.variableValues) {
                     throw {
+                        service,
                         statusCode: 400,
                         message: `Variable values are required for template '${msg.templateId}'.`
                     }
@@ -98,8 +105,9 @@ const templateMiddleware = async (req, res, next) => {
 
                     if (!template) {
                         throw {
+                            service,
                             statusCode: 404,
-                            message: `Template '${msg.templateId}' for service '${service}' was not found.`
+                            message: `Template '${msg.templateId}' was not found.`
                         };
                     }
 
@@ -110,8 +118,8 @@ const templateMiddleware = async (req, res, next) => {
                     await RedisHelper.setKey(templateKey, JSON.stringify(template), "template");
                 }
 
-                verifyVariables(msg.variableValues, template.requiredFields, msg.templateId);
-                verifyConstraints(msg.variableValues, template.requiredFields, msg.templateId) ;
+                verifyVariables(msg.variableValues, template.requiredFields, msg.templateId, service);
+                verifyConstraints(msg.variableValues, template.requiredFields, service);
 
                 if (service === "email") {
                     msg.body = replaceVariables(template.messageContent, msg.variableValues);
@@ -126,11 +134,17 @@ const templateMiddleware = async (req, res, next) => {
         logger.error({
             message: error.message || "Template processing error",
             stack: error?.stack,
+            service: error?.service,
             clientId: req.headers["x-client-id"]
         });
         return res.status(error.statusCode || 500).json({
-            success: false,
-            message: error.message || "Internal server error during template processing"
+            data: {
+                [error?.service || "internal"]: {
+                    success: false,
+                    statusCode: error.statusCode,
+                    message: error.message,
+                },
+            },
         });
     }
 }
