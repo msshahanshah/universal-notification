@@ -1,8 +1,7 @@
 const authService = require("./service");
 const RedisHelper = require("../../helpers/redis.helper");
 const logger = require("../logger");
-const { stack } = require("sequelize/lib/utils");
-const { error } = require("winston");
+
 const login = async (req, res) => {
   try {
     const { username, password } = req.body;

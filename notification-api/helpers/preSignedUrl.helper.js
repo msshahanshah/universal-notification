@@ -17,7 +17,7 @@ const generatePreSignedUrl = async (clientId, messageId, attachements) => {
         const params = {
           Bucket: process.env.AWS_S3_BUCKET_NAME,
           Key: fileKey, // file name
-          Conditions: [["content-length-range", 0, 20 * 1024 * 1024]], // 20 MB
+          Conditions: [["content-length-range", 1024, 20 * 1024 * 1024]], //1B, 20 MB
           Expires: 300,
           // Fields: {
           //   "Content-Type": ""
