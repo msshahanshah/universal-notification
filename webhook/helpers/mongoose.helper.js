@@ -24,7 +24,7 @@ const isUniqueConstraintError = (error) => {
 
 const findAllEnabledServicesForClient = async (clientId) => {
   const services = await webhook.find(
-    { clientId, deletedAt: null },
+    { clientId, isActive: true, deletedAt: null },
     "serviceTrigger",
   );
 

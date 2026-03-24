@@ -1,4 +1,5 @@
 const logger = require("../../logger");
+const { getWebhookEnabledServices } = require("../../webhook/service");
 const { notifyService: notifyV2Service } = require("./service");
 
 const notify = async (req, res) => {
@@ -22,12 +23,15 @@ const notify = async (req, res) => {
         attachments,
         templateId,
         uniqueKey,
-        variableValues
+        variableValues,
       } = msg;
 
       const content = textMessage
         ? { message: textMessage, uniqueKey, attachments }
-        : { subject, body, fromEmail, cc, bcc, attachments, uniqueKey};
+        : { subject, body, fromEmail, cc, bcc, attachments, uniqueKey };
+
+      const isWebhookEnabled = getWebhookEnabledServices(clientId, service);
+      content["isWebhookEnabled"] = isWebhookEnabled;
 
       // insert into bulk
       bulkMessages.push({
@@ -37,7 +41,7 @@ const notify = async (req, res) => {
         attachments,
         uniqueKey,
         templateId,
-        variableValues
+        variableValues,
       });
     }
 

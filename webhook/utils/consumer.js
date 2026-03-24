@@ -5,35 +5,36 @@ const WebhookCronScheduler = require("../models/webhookCronSchedulerModel");
 const {} = require("../helpers/webhook.helper");
 const logger = require("./logger");
 
-const consumeNotification = async (payload) => {
+const consumeNotification = async (payload, messageId) => {
   try {
-    const { service, status, clientId, messageId } = payload;
-    const query = {
-      clientId: clientId,
-      [`serviceTrigger.${service}`]: status,
-    };
+    console.log("webhook consuming >>>", payload);
+    // const { service, status, clientId, messageId } = payload;
+    // const query = {
+    //   clientId: clientId,
+    //   [`serviceTrigger.${service}`]: status,
+    // };
 
-    const webhooks = await WebhookConfig.find(query).lean();
+    // const webhooks = await WebhookConfig.find(query).lean();
 
-    const docs = webhooks.map((doc) => {
-      return {
-        id: doc._id,
-        clientId: clientId,
-        webhookUrl: doc.webhookUrl,
-        serviceTrigger: doc.serviceTrigger,
-        status: "pending",
-        retryAttempts: 0,
-        webhookPayload: {
-          messageId: messageId,
-          service,
-          status,
-          clientId,
-        },
-      };
-    });
+    // const docs = webhooks.map((doc) => {
+    //   return {
+    //     id: doc._id,
+    //     clientId: clientId,
+    //     webhookUrl: doc.webhookUrl,
+    //     serviceTrigger: doc.serviceTrigger,
+    //     status: "pending",
+    //     retryAttempts: 0,
+    //     webhookPayload: {
+    //       messageId: messageId,
+    //       service,
+    //       status,
+    //       clientId,
+    //     },
+    //   };
+    // });
 
-    logger.info(`Docs fetched from webhook configs`);
-    await WebhookCronScheduler.insertMany(docs);
+    // logger.info(`Docs fetched from webhook configs`);
+    // await WebhookCronScheduler.insertMany(docs);
     logger.info(`Docs inserted in mongo cron scheduler collection`);
     // TODO make first webhook call from here. It will not await for webhook.
   } catch (err) {

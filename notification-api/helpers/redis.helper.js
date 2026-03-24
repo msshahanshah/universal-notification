@@ -28,13 +28,48 @@ class RedisHelper {
       const expiryString =
         type === AUTH_TOKEN.ACCESS_TOKEN
           ? access_token_expire
-          : type === "template" ? template_expire : refresh_token_expire;
+          : type === "template"
+            ? template_expire
+            : refresh_token_expire;
 
       const expiryInSeconds = parseExpiryToSeconds(expiryString);
 
       return await redisClient.set(key, value, {
         EX: expiryInSeconds,
       });
+    } catch (err) {
+      throw {
+        statusCode: 500,
+        message: "Internal Server Error",
+        originalError: err.message,
+      };
+    }
+  }
+
+  static async sadd(key, values, expire) {
+    try {
+      const result = await redisClient.sAdd(key, values);
+
+      if (expire) {
+        await redisClient.expire(key, expire);
+      }
+
+      return result;
+    } catch (err) {
+      throw {
+        statusCode: 500,
+        message: "Internal Server Error",
+        originalError: err.message,
+      };
+    }
+  }
+
+  static async smembers(key) {
+    try {
+      const exists = await redisClient.exists(key);
+      if (!exists) return [];
+
+      return await redisClient.sMembers(key);
     } catch (err) {
       throw {
         statusCode: 500,

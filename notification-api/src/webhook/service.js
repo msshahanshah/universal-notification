@@ -1,19 +1,31 @@
-const webhookGRPCClient = require("../gRPC/webhook.client");
-const grpc = require("@grpc/grpc-js");
-const grpcHelper = require("../../helpers/grpc.helper");
-const { decrypt } = require("../../../webhook/utils/cryptoUtil");
+const logger = require("../logger");
 
+const {
+  fetchWebhookConfigs,
+  addWebhookGRPC,
+  updateWebhookGRPC,
+  deleteWebhookGRPC,
+} = require("../webhook/client");
+
+const {
+  getCacheTriggerServices,
+  cacheTriggerServices,
+} = require("../../helpers/webhookCache.helper");
+
+// ---------------- ADD ----------------
 async function addWebhook(payload, clientId) {
   try {
-    const metadata = new grpc.Metadata();
-    metadata.add("x-internal-key", process.env.INTERNAL_GRPC_KEY);
     payload.clientId = clientId;
 
-    const { services } = await grpcHelper.addWebhook(
-      webhookGRPCClient,
-      payload,
-      metadata,
-    );
+    const services = await addWebhookGRPC(payload);
+
+    cacheTriggerServices(clientId, services)
+      .then(() => {
+        logger.info(`Webhook trigger services updated for ${clientId}`);
+      })
+      .catch(() => {
+        logger.error(`Failed to update trigger services for ${clientId}`);
+      });
 
     return { services };
   } catch (error) {
@@ -21,77 +33,63 @@ async function addWebhook(payload, clientId) {
   }
 }
 
+// ---------------- UPDATE ----------------
 async function updateWebhook(payload, webhookId, clientId) {
   try {
-    const metadata = new grpc.Metadata();
-    metadata.add("x-internal-key", process.env.INTERNAL_GRPC_KEY);
-
     payload.webhookId = webhookId;
     payload.clientId = clientId;
 
-    const { services } = await grpcHelper.updateWebhook(
-      webhookGRPCClient,
-      payload,
-      metadata,
-    );
+    const services = await updateWebhookGRPC(payload);
 
-    return { services };
-  } catch (error) {
-    throw error;
-  }
-}
-
-async function deleteWebhook(webhookId, clientId) {
-  try {
-    const metadata = new grpc.Metadata();
-    metadata.add("x-internal-key", process.env.INTERNAL_GRPC_KEY);
-
-    const payload = {
-      webhookId,
-      clientId,
-    };
-
-    const { services } = await grpcHelper.deleteWebhook(
-      webhookGRPCClient,
-      payload,
-      metadata,
-    );
-
-    return { services };
-  } catch (error) {
-    throw error;
-  }
-}
-
-async function getWebhooks(clientId) {
-  try {
-    const metadata = new grpc.Metadata();
-    metadata.add("x-internal-key", process.env.INTERNAL_GRPC_KEY);
-
-    const payload = {
-      clientId,
-    };
-
-    const { data } = await grpcHelper.getWebhooks(
-      webhookGRPCClient,
-      payload,
-      metadata,
-    );
-
-    const webhooks = data.map((webhook) => {
-      return {
-        id: webhook._id,
-        webhookUrl: webhook.webhookUrl,
-        serviceTrigger: webhook.serviceTrigger,
-        retryEnabled: webhook.retryEnabled,
-        isActive: webhook.isActive,
-      };
+    cacheTriggerServices(clientId, services).catch(() => {
+      logger.error(`Failed to update trigger services for ${clientId}`);
     });
 
-    return data;
+    return { services };
   } catch (error) {
     throw error;
   }
 }
 
-module.exports = { addWebhook, updateWebhook, deleteWebhook, getWebhooks };
+// ---------------- DELETE ----------------
+async function deleteWebhook(webhookId, clientId) {
+  try {
+    const services = await deleteWebhookGRPC({ webhookId, clientId });
+
+    cacheTriggerServices(clientId, services).catch(() => {
+      logger.error(`Failed to update trigger services for ${clientId}`);
+    });
+
+    return { services };
+  } catch (error) {
+    throw error;
+  }
+}
+
+// ---------------- GET CONFIG ----------------
+async function getWebhookConfigs(clientId, query) {
+  return await fetchWebhookConfigs(clientId, query);
+}
+
+// ---------------- ENABLED SERVICES ----------------
+async function getWebhookEnabledServices(clientId, service) {
+  let services = await getCacheTriggerServices(clientId);
+
+  if (!services.length) {
+    const { enabledServices } = await fetchWebhookConfigs(clientId, {
+      fields: "enabledServices",
+    });
+
+    services = await cacheEnabledServices(clientId, enabledServices);
+  }
+
+  return service ? services.includes(service) : services;
+}
+
+module.exports = {
+  addWebhook,
+  updateWebhook,
+  deleteWebhook,
+  getWebhookConfigs,
+  getWebhookEnabledServices,
+};

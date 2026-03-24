@@ -264,7 +264,7 @@ const allWebhook = async (call, callback) => {
     }
 
     const payload = JSON.parse(call.request.payload);
-    const { clientId } = payload;
+    const { clientId, query } = payload;
 
     if (!clientId) {
       logger.info(`Client id is required`);
@@ -274,12 +274,34 @@ const allWebhook = async (call, callback) => {
       });
     }
 
-    const allWebhooks = await WebhookConfig.find({
-      clientId,
-      deletedAt: null,
-    }).lean();
+    // destructure query params
+    const { fields } = query;
 
-    if (allWebhooks.length === 0) {
+    // response body
+    const response = {};
+
+    if (fields) {
+      const fieldsArr = fields.split(",");
+
+      if (fieldsArr.includes("configurations")) {
+        response["configurations"] = await WebhookConfig.find({
+          clientId,
+          deletedAt: null,
+        }).lean();
+      }
+
+      if (fields.includes("enabledServices")) {
+        response["enabledServices"] =
+          await findAllEnabledServicesForClient(clientId);
+      }
+    } else {
+      response["configurations"] = await WebhookConfig.find({
+        clientId,
+        deletedAt: null,
+      }).lean();
+    }
+
+    if (Object.keys(response).length === 0) {
       throw {
         statusCode: grpc.status.NOT_FOUND,
         message: "no webhook configuration found.",
@@ -290,7 +312,7 @@ const allWebhook = async (call, callback) => {
       payload: JSON.stringify({
         success: true,
         message: "Webhook fetched successfully",
-        data: allWebhooks,
+        data: response,
       }),
     });
   } catch (error) {
