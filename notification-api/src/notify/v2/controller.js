@@ -87,7 +87,7 @@ const notify = async (req, res) => {
   }
 
   // prepare statusCode
-  const statusCode = isFailed && isSuccess ? 207 : isSuccess ? 200 : 400;
+  const statusCode = isFailed && isSuccess ? 207 : isSuccess ? 202 : 400;
   return res.status(statusCode).json({
     data,
   });

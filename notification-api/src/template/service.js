@@ -108,7 +108,7 @@ const getTemplates = async (clientId, queryParams) => {
     const offset = (page - 1) * limit;
     const where = {};
 
-    if (service) where.service = service.toUpperCase();
+    if (service) where.service = service;
     if (templateId) where.template_id = templateId;
     if (name) where.name = name;
 
@@ -130,8 +130,8 @@ const getTemplates = async (clientId, queryParams) => {
             const preSignedUrl = await getTemplatePreSigned(fileKey);
 
             template.messageContent = preSignedUrl;
-            delete template.deletedAt;
         }
+        delete template.deletedAt;
     }
     return {
         templates,

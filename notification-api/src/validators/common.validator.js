@@ -4,6 +4,7 @@ const {
   fileNameRegex,
   urlRegex,
   validPublicURL,
+  fileNameRegexWithExtension,
 } = require('../../helpers/regex.helper');
 
 // --------------------COMMON  VALIDATION----------------------------
@@ -110,6 +111,12 @@ function validateFileName(fileName) {
   return null;
 }
 
+function validateFileNameWithExtension(fileName) {
+  if (!fileName?.length) return 'FileName cannot be empty';
+  if (!fileNameRegexWithExtension.test(fileName)) return 'FileName is not valid';
+  return null;
+}
+
 function validateUrl(url) {
   if (!url?.length) return 'Url cannot be empty';
   if (!urlRegex.test(url)) return 'Url is not valid';
@@ -191,6 +198,11 @@ const validateAttachments = (values, helpers) => {
 };
 
 const validateWhatsAppAttachements = (values, helpers) => {
+  if (values.length == 0) {
+    return helpers.message(
+      'Attachments can not be empty',
+    );
+  } 
   if (values.length) {
     if (values.length > 10)
       return helpers.message(
@@ -200,7 +212,7 @@ const validateWhatsAppAttachements = (values, helpers) => {
     //checking for array of filenames
     if (Array.isArray(values) && typeof values[0] === 'string') {
       const firstIsUrl = validPublicURL(values[0]);
-      const firstIsFile = validateFileName(values[0]) === null ? true : false;
+      const firstIsFile = validateFileNameWithExtension(values[0]) === null ? true : false;
 
       if (!firstIsUrl && !firstIsFile) {
         return helpers.message(
@@ -210,16 +222,16 @@ const validateWhatsAppAttachements = (values, helpers) => {
 
       for (const item of values) {
         if (firstIsUrl && !validPublicURL(item)) {
-          return helpers.message('All attachments must be public URLs');
+          return helpers.message('All attachments must be either public URLs or valid file names.');
         }
 
-        if (firstIsFile && validateFileName(item) !== null) {
-          return helpers.message('All attachments must be file names');
+        if (firstIsFile && validateFileNameWithExtension(item) !== null) {
+          return helpers.message('All attachments must be either public URLs or valid file names.');
         }
       }
 
       if (firstIsFile) {
-          const map = new Map();
+        const map = new Map();
         for (let idx = 0; idx < values.length; idx++) {
           const item = values[idx];
           const clearedFileName = item.trim();
@@ -245,4 +257,5 @@ module.exports = {
   baseOptions,
   validateAttachments,
   validateWhatsAppAttachements,
+  validateFileNameWithExtension
 };

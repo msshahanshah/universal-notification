@@ -59,7 +59,7 @@ const whatsAppValidation = {
     })
     .messages({
       "string.base": "Destination must be a string",
-      "any.required": "Destination is required for Whatsapp service",
+      "any.required": "Destination is required",
     }),
 
   attachments: Joi.when("service", {
@@ -67,7 +67,8 @@ const whatsAppValidation = {
     then: Joi.when("templateId", {
       is: Joi.exist(),
       then: Joi.forbidden().messages({
-        "any.forbidden": "attachments are not allowed when templateId is provided for whatsapp"
+        "any.forbidden": "attachments are not allowed when templateId is provided ",
+        "any.unknown" : "attachments are not allowed when templateId is provided "
       }),
       otherwise: Joi.array()
         .optional()
@@ -92,8 +93,8 @@ const whatsAppValidation = {
     "string.empty": "Message cannot be empty",
   }),
 
-  contentVariables: Joi.object().optional().messages({
-    "object.base": "contentVariables must be an object",
+  variableValues: Joi.object().optional().messages({
+    "object.base": "Variable values must be an object",
   }),
 };
 

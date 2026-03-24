@@ -9,6 +9,7 @@ const slackValidation = require("../../validators/slack.validator");
 const smsValidation = require("../../validators/sms.validator");
 const whatsAppValidation = require("../../validators/whatsapp.validator");
 const logger = require("../../logger");
+const cleanJoiMessage = require("../../../helpers/cleanJoiMessage");
 
 const destinationSchema = Joi.alternatives()
   .conditional("service", {
@@ -98,7 +99,7 @@ const messageObject = Joi.object({
     then: Joi.object({
       templateId: Joi.required().messages({
         "any.required":
-          "templateId is required when variableValues is provided",
+          "templateId is required when variable values is provided",
       }),
     }),
   })
@@ -213,7 +214,7 @@ const validateRequest = async (req, res, next) => {
         throw {
           service,
           statusCode: 400,
-          message: `distinct uniqueKey is required to sent message with attachment. Please provide uniqueKey for ${service}`,
+          message: `distinct uniqueKey is required to sent message with attachment.`,
         };
       }
 
@@ -221,7 +222,7 @@ const validateRequest = async (req, res, next) => {
         throw {
           service,
           statusCode: 400,
-          message: error.details[0]?.message || error.message,
+          message: cleanJoiMessage(error.details[0]?.message) || error.message,
         };
       }
 
