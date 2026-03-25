@@ -53,41 +53,7 @@ async function connectAndConsume(clientConfigList) {
                 { where: { messageId } },
               );
             }
-
-            try {
-              const res = await emailSender.sendEmail(messageId, msgData);
-              if (content.isWebhookEnabled) {
-                logger.info(
-                  `Webhook message published for email with id: ${messageId}`,
-                );
-                await rabbitClient.publishMessage("webhook", {
-                  clientId: clientItem.ID,
-                  service: "email",
-                  status: "sent",
-                  messageId,
-                  details: {
-                    connectorResponse: res,
-                  },
-                });
-              }
-            } catch (error) {
-              if (content.isWebhookEnabled) {
-                logger.info(
-                  `Webhook message published for email with id: ${messageId}`,
-                );
-                await rabbitClient.publishMessage("webhook", {
-                  clientId: clientItem.ID,
-                  service: "email",
-                  status: "failed",
-                  details: {
-                    messageId,
-                    connectorResponse: res,
-                  },
-                });
-
-                throw error;
-              }
-            }
+            return emailSender.sendEmail(messageId, msgData);
           },
           db,
           maxProcessAttemptCount: 3,
