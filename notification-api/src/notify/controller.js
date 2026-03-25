@@ -39,7 +39,14 @@ const notify = async (req, res) => {
 
     // Build content
     let content = message
-      ? { message, attachments, templateId, fromNumber, variableValues }
+      ? {
+          message,
+          attachments,
+          templateId,
+          fromNumber,
+          variableValues,
+          clientId: clientID,
+        }
       : {
           subject,
           body,
@@ -47,6 +54,7 @@ const notify = async (req, res) => {
           cc,
           bcc,
           attachments,
+          clientId: clientID,
         };
 
     if (variableValues) {
@@ -59,9 +67,7 @@ const notify = async (req, res) => {
       };
     }
 
-    //TODO check webhookenabled
     const isWebhookEnabled = await getWebhookEnabledServices(clientID, service);
-    console.log(">>>>>>", isWebhookEnabled);
     content["isWebhookEnabled"] = isWebhookEnabled;
 
     const notificationRecords = await creatingNotificationRecord(

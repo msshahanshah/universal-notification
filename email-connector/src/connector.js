@@ -15,7 +15,7 @@ async function connectAndConsume(clientConfigList) {
         );
         // Get RabbitMQ client from package manager
         const rabbitClient = await connectionManager.getRabbitMQ(clientItem.ID);
-        console.log(rabbitClient);
+
         // Get database for this client
         const db = await connectionManager.getModels(clientItem.ID);
 

@@ -65,19 +65,6 @@ const processNotifications = async (messages, maxRetryAttempts = 4) => {
         const res = result.value;
         const responseText = await res.text().catch(() => "");
 
-        // Treat non-2xx as failure
-        if (!res.ok) {
-          logger.error(
-            `Webhook HTTP error: ${msg.webhookUrl}, status=${res.status}`,
-          );
-
-          // handling failed message
-          return handleFailure(msg, {
-            error: `HTTP ${res.status}`,
-            body: responseText,
-          });
-        }
-
         logger.info(
           `Webhook success: ${msg.webhookUrl}, statusCode=${res.status}`,
         );

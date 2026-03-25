@@ -73,8 +73,9 @@ async function getWebhookConfigs(clientId, query) {
 
 // ---------------- ENABLED SERVICES ----------------
 async function getWebhookEnabledServices(clientId, service) {
+  let services = [];
   try {
-    let services = await getCacheTriggerServices(clientId);
+    services = await getCacheTriggerServices(clientId);
 
     if (!services.length) {
       const { enabledServices } = await fetchWebhookConfigs(clientId, {
@@ -86,7 +87,11 @@ async function getWebhookEnabledServices(clientId, service) {
 
     return service ? services.includes(service) : services;
   } catch (error) {
-    throw error;
+    logger.error(
+      `failed to fetch enabled services for client ${clientId}, ERROR: ${JSON.stringify(error)}`,
+    );
+  } finally {
+    return service ? services.includes(service) : services;
   }
 }
 

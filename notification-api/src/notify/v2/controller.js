@@ -27,8 +27,17 @@ const notify = async (req, res) => {
       } = msg;
 
       const content = textMessage
-        ? { message: textMessage, uniqueKey, attachments }
-        : { subject, body, fromEmail, cc, bcc, attachments, uniqueKey };
+        ? { message: textMessage, uniqueKey, attachments, clientId }
+        : {
+            subject,
+            body,
+            fromEmail,
+            cc,
+            bcc,
+            attachments,
+            uniqueKey,
+            clientId,
+          };
 
       const isWebhookEnabled = getWebhookEnabledServices(clientId, service);
       content["isWebhookEnabled"] = isWebhookEnabled;

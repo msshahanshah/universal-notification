@@ -44,7 +44,8 @@ const consumeNotification = async (payload, messageId) => {
 
     logger.info(`Inserted ${records.length} records into scheduler`);
 
-    // await processNotifications(records);
+    // initial processing
+    await processNotifications(records);
 
     logger.info(`Webhook processing completed for messageId=${messageId}`);
   } catch (err) {

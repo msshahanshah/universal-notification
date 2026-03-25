@@ -233,7 +233,6 @@ const deleteWebhook = async (call, callback) => {
       throw { statusCode: grpc.status.NOT_FOUND, message: "no config found." };
     }
 
-    //TODO write a helper function which returns all the services enabled for a client for all its webhook.
     const services = await findAllEnabledServicesForClient(clientId);
     callback(null, {
       payload: JSON.stringify({
@@ -243,8 +242,7 @@ const deleteWebhook = async (call, callback) => {
       }),
     });
   } catch (error) {
-    // logger.error(`Error: ${error}`);
-    console.log(error);
+    logger.error(`Error: ${error}`);
     callback({
       code: error.statusCode || grpc.status.INTERNAL,
       message: error.message || "Internal server error",
