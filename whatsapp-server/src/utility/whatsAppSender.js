@@ -80,7 +80,7 @@ class WhatsAppSender {
 
       if (webHookCallbackUrl) {
         data["statusCallback"] =
-          `${process.env.BACKEND_API_URL}/webhook/whatsapp?id=${clientId}`;
+          `${process.env.BACKEND_API_URL}/webhook/whatsapp?id=${clientId}&provider="TWILIO"`;
       }
 
       if (message) {
@@ -138,9 +138,9 @@ class WhatsAppSender {
       return result;
     } catch (err) {
       logger.error(`Error in sending whatsapp message via ${this.provider}`, {
-        error: err.message,
+        message: err.message,
       });
-      throw err;
+      throw err.message;
     }
   }
 }
