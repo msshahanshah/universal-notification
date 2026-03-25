@@ -654,6 +654,105 @@ components:
         totalPages:
           type: integer
 
+    # ─── Webhook ──────────────────────────────────────────────────────────────
+    WebhookRequest:
+      type: object
+      required:
+        - webhookUrl
+        - apiKey
+        - serviceTrigger
+        - retryEnabled
+      properties:
+        webhookUrl:
+          type: string
+          format: uri
+          example: 'https://example.com/webhook'
+          description: Destination HTTPS URL for webhook delivery.
+        apiKey:
+          type: string
+          example: 'my-secret-api-key'
+          description: Secret API key sent with each webhook call for authentication.
+        serviceTrigger:
+          type: object
+          description: |
+            Map of service name → list of event statuses that should trigger the webhook.
+            Allowed statuses: `success`, `failed`, `pending`.
+          additionalProperties:
+            type: array
+            items:
+              type: string
+          example:
+            email: [success, failed]
+            sms: [failed]
+        retryEnabled:
+          type: boolean
+          example: true
+          description: Whether failed webhook deliveries should be retried automatically.
+
+    WebhookUpdateRequest:
+      type: object
+      description: |
+        Partial update — at least one field must be provided.
+        Unknown fields are rejected.
+      minProperties: 1
+      properties:
+        webhookUrl:
+          type: string
+          format: uri
+          example: 'https://example.com/webhook'
+        apiKey:
+          type: string
+          example: 'new-secret-key'
+        serviceTrigger:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              type: string
+          example:
+            email: [success]
+        retryEnabled:
+          type: boolean
+          example: false
+        isActive:
+          type: boolean
+          example: true
+          description: Activate or deactivate this webhook configuration.
+
+    WebhookResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        clientId:
+          type: string
+          example: 'client-abc'
+        webhookUrl:
+          type: string
+          format: uri
+          example: 'https://example.com/webhook'
+        serviceTrigger:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              type: string
+          example:
+            email: [success, failed]
+        retryEnabled:
+          type: boolean
+          example: true
+        isActive:
+          type: boolean
+          example: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
     # ─── Common ──────────────────────────────────────────────────────────────
     ErrorResponse:
       type: object
@@ -1817,6 +1916,218 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
         '404':
           description: Routing rule not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  # ── Webhooks ───────────────────────────────────────────────────────────────
+  /webhooks:
+    post:
+      summary: Register a new webhook configuration
+      tags: [Webhooks]
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ClientIdHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WebhookRequest'
+            example:
+              webhookUrl: 'https://example.com/webhook'
+              apiKey: 'my-secret-api-key'
+              serviceTrigger:
+                email: [success, failed]
+                sms: [failed]
+              retryEnabled: true
+      responses:
+        '201':
+          description: Webhook configuration added successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: webhook configuration added successfully.
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden — client does not have access to one or more requested services
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    get:
+      summary: List webhook configurations for the authenticated client
+      tags: [Webhooks]
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ClientIdHeader'
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 10
+        - name: fields
+          in: query
+          schema:
+            type: string
+          description: Comma-separated list of fields to return (e.g. `enabledServices`).
+      responses:
+        '200':
+          description: Webhook configurations fetched successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: webhook configuration fetched successfully.
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/WebhookResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /webhooks/{webhookId}:
+    parameters:
+      - name: webhookId
+        in: path
+        required: true
+        schema:
+          type: string
+        description: Unique identifier of the webhook configuration.
+
+    patch:
+      summary: Partially update a webhook configuration
+      tags: [Webhooks]
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ClientIdHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WebhookUpdateRequest'
+            example:
+              isActive: false
+              retryEnabled: false
+      responses:
+        '200':
+          description: Webhook configuration updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: webhook configuration updated successfully.
+        '400':
+          description: Validation error — unknown fields or no fields provided
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Webhook configuration not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    delete:
+      summary: Delete a webhook configuration
+      tags: [Webhooks]
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ClientIdHeader'
+      responses:
+        '200':
+          description: Webhook configuration deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: webhook configuration deleted successfully.
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Webhook configuration not found
           content:
             application/json:
               schema:
