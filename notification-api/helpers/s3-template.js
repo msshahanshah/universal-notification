@@ -11,7 +11,7 @@ const s3 = new S3Client({
 
 const uploadTemplateToS3 = async (fileKey, htmlContent) => {
     const params = {
-        Bucket: process.env.AWS_TEMPLATE_BUCKET_NAME,
+        Bucket: process.env.AWS_S3_BUCKET_NAME,
         Key: fileKey,
         Body: htmlContent,
         ContentType: "text/html"
@@ -26,7 +26,7 @@ const uploadTemplateToS3 = async (fileKey, htmlContent) => {
 
 const getTemplatePreSigned = async (fileKey) => {
     const params = {
-        Bucket: process.env.AWS_TEMPLATE_BUCKET_NAME,
+        Bucket: process.env.AWS_S3_BUCKET_NAME,
         Key: fileKey
     };
 
@@ -41,7 +41,7 @@ const getTemplatePreSigned = async (fileKey) => {
 
 const getTemplateText = async (fileKey) => {
     const params = {
-        Bucket: process.env.AWS_TEMPLATE_BUCKET_NAME,
+        Bucket: process.env.AWS_S3_BUCKET_NAME,
         Key: fileKey
     };
 
@@ -54,7 +54,7 @@ const getTemplateText = async (fileKey) => {
 
 const removeTemplateFromS3 = async (fileKey) => {
     const params = {
-        Bucket: process.env.AWS_TEMPLATE_BUCKET_NAME,
+        Bucket: process.env.AWS_S3_BUCKET_NAME,
         Key: fileKey
     };
 
