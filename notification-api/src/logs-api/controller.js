@@ -13,7 +13,7 @@ const deliveryStatus = async (req, res, next) => {
       deliveryStatus: result.status,
     };
 
-    if (result.status === "failed") {
+    if (result.status?.includes("fail")) {
       data["deliveryResponse"] = result?.deliveryResponse;
     }
     res.status(200).json({
