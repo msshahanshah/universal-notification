@@ -79,9 +79,26 @@ async function getWebhooks(req, res) {
   }
 }
 
+// ---------------- GET ----------------
+async function getWebhooksLogs(req, res) {
+  try {
+    const clientId = req.headers["x-client-id"];
+
+    const result = await webhookService.getWebhookLogs(clientId, req.query);
+
+    return res.status(200).json({
+      success: true,
+      message: "webhook logs fetched successfully.",
+      data: result,
+    });
+  } catch (error) {
+    return handleError(res, error);
+  }
+}
 module.exports = {
   addWebhook,
   updateWebhook,
   deleteWebhook,
   getWebhooks,
+  getWebhooksLogs,
 };

@@ -23,6 +23,18 @@ async function fetchWebhookConfigs(clientId, query) {
   return data;
 }
 
+async function fetchWebhookLogs(clientId, query) {
+  const payload = { clientId, query };
+
+  const { data } = await grpcHelper.getWebhookLogs(
+    webhookGRPCClient,
+    payload,
+    getMetadata(),
+  );
+
+  return data;
+}
+
 async function addWebhookGRPC(payload) {
   if (!webhookGRPCClient) {
     throw { statusCode: 503, message: "service unavailable" };
@@ -64,4 +76,5 @@ module.exports = {
   addWebhookGRPC,
   updateWebhookGRPC,
   deleteWebhookGRPC,
+  fetchWebhookLogs,
 };
