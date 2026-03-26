@@ -10,12 +10,13 @@ const {
   creatingNotificationRecord,
   publishingNotificationRequest,
   getNotificationData,
-} = require('./service');
+} = require("./service");
 
-const { validPublicURL } = require('../../helpers/regex.helper');
-const { fromNumber, templateId } = require('../validators/whatsapp.validator');
+const { validPublicURL } = require("../../helpers/regex.helper");
+const { fromNumber, templateId } = require("../validators/whatsapp.validator");
 const { generatePreSignedUrl } = require("../../helpers/preSignedUrl.helper");
 const logger = require("../logger");
+const { getWebhookEnabledServices } = require("../webhook/service");
 
 const notify = async (req, res) => {
   try {
@@ -31,15 +32,30 @@ const notify = async (req, res) => {
       attachments,
       templateId,
       fromNumber,
-      variableValues ,
+      variableValues,
     } = req.body;
 
-    const clientID = req.headers['x-client-id'];
+    const clientID = req.headers["x-client-id"];
 
     // Build content
     let content = message
-      ? { message, attachments, templateId, fromNumber, variableValues }
-      : { subject, body, fromEmail, cc, bcc, attachments };
+      ? {
+          message,
+          attachments,
+          templateId,
+          fromNumber,
+          variableValues,
+          clientId: clientID,
+        }
+      : {
+          subject,
+          body,
+          fromEmail,
+          cc,
+          bcc,
+          attachments,
+          clientId: clientID,
+        };
 
     if (variableValues) {
       content = {
@@ -50,6 +66,9 @@ const notify = async (req, res) => {
         variableValues,
       };
     }
+
+    const isWebhookEnabled = await getWebhookEnabledServices(clientID, service);
+    content["isWebhookEnabled"] = isWebhookEnabled;
 
     const notificationRecords = await creatingNotificationRecord(
       clientID,
@@ -74,7 +93,7 @@ const notify = async (req, res) => {
     let preSignedUrls;
     if (
       attachments?.length &&
-      typeof attachments[0] === 'string' &&
+      typeof attachments[0] === "string" &&
       !validPublicURL(attachments[0])
     ) {
       preSignedUrls = await generatePreSignedUrl(
@@ -91,7 +110,7 @@ const notify = async (req, res) => {
     if (
       !attachments ||
       attachments?.length === 0 ||
-      typeof attachments[0] === 'object' ||
+      typeof attachments[0] === "object" ||
       validPublicURL(attachments[0])
     ) {
       publishResults = await Promise.all(
@@ -111,14 +130,14 @@ const notify = async (req, res) => {
 
     const response = {
       success: true,
-      status: 'accepted',
+      status: "accepted",
       message:
         attachments?.length &&
-        typeof attachments[0] === 'string' &&
+        typeof attachments[0] === "string" &&
         !validPublicURL(attachments[0])
-          ? 'Waiting for file upload on URL (expiry 5 mins).'
+          ? "Waiting for file upload on URL (expiry 5 mins)."
           : `Notification request accepted ${
-              publishResults ? 'and queued.' : ''
+              publishResults ? "and queued." : ""
             }`,
       preSignedUrls,
     };
@@ -136,7 +155,7 @@ const notify = async (req, res) => {
     });
     return res.status(error.statusCode || 500).json({
       success: false,
-      message: error.message || 'Internal server error',
+      message: error.message || "Internal server error",
     });
   }
 };
@@ -199,8 +218,8 @@ const notifyWithEmailAttachment = async (req, res) => {
 
     return res.status(202).json({
       success: true,
-      status: 'accepted',
-      message: `Notification request accepted ${result ? 'and queued.' : ''}`,
+      status: "accepted",
+      message: `Notification request accepted ${result ? "and queued." : ""}`,
       messageId, // Return the ID to the client
     });
   } catch (err) {

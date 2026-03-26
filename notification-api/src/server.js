@@ -238,7 +238,7 @@ if (cluster.isMaster) {
 
       // Handle unhandled promise rejections
       process.on("unhandledRejection", (reason, promise) => {
-        logger.error(`[${process.env.clientList}] Unhandled Rejection at:`, {
+        logger.error(`[${process.env.clientList}] Unhandled Rejection at:${reason}`, {
           promise,
           reason: reason.message || reason,
         });

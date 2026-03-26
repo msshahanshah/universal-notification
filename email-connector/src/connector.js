@@ -84,7 +84,10 @@ async function closeConnections(clientId) {
       logger.info("Closed all connections");
     }
   } catch (error) {
-    logger.error("Failed to close connections:", { message: error.message, stack: error?.stack });
+    logger.error("Failed to close connections:", {
+      message: error.message,
+      stack: error?.stack,
+    });
   }
 }
 module.exports = {
