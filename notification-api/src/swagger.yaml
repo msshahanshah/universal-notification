@@ -249,17 +249,6 @@ components:
           type: string
           description: Fallback message used when an individual service entry has no message/body.
           example: 'This is a common message'
-        templateId:
-          type: string
-          description: Optional template ID to apply before sending.
-          example: '7ec67efd-21e1-4189-aa8e-25686a6f8845'
-        variables:
-          type: object
-          description: Template variable values (required when templateId is provided).
-          additionalProperties: true
-          example:
-            name: 'Rahul'
-            orderId: '12345'
         sms:
           type: array
           description: List of SMS notifications (max 5)
