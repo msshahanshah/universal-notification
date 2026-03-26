@@ -4,7 +4,10 @@ const WebhookConfig = require("../models/webhook");
 const WebhookCronScheduler = require("../models/webhookCronSchedulerModel");
 const WebhookLog = require("../models/webhookLogsModel");
 
-const { processNotifications } = require("../helpers/job.helper");
+const {
+  processNotifications,
+  findAllEligibleNotifications,
+} = require("../helpers/job.helper");
 
 const logger = require("./logger");
 
@@ -44,9 +47,20 @@ const consumeNotification = async (payload, messageId) => {
 
     logger.info(`Inserted ${records.length} records into scheduler`);
 
+    // add apiKey to recently pushed docs
+    const enrichedRecords = records.map((rec) => {
+      const matchingConfig = configs.find(
+        (c) => c.webhookUrl === rec.webhookUrl,
+      );
+
+      return {
+        ...rec.toObject(),
+        apiKey: matchingConfig?.apiKey,
+      };
+    });
     // initial processing
-    processNotifications(records).catch((err) => {
-      logger.error("Notification processing failed", err);
+    processNotifications(enrichedRecords).catch((err) => {
+      logger.error("Immediate notification processing failed", err);
     });
 
     logger.info(`Webhook processing completed for messageId=${messageId}`);

@@ -43,7 +43,6 @@ const handleFailure = async (msg, errorData, maxRetryAttempts = 4) => {
 
 const processNotifications = async (messages, maxRetryAttempts = 4) => {
   try {
-    console.log(messages);
     logger.info(`Processing ${messages.length} webhook messages`);
 
     // step 1: update retryAttempts
