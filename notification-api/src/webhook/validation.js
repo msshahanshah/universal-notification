@@ -41,39 +41,61 @@ const baseWebhookSchema = {
   webhookUrl: Joi.string()
     .trim()
     .uri({ scheme: ["https"] })
+    .custom((value, helpers) => {
+      try {
+        const url = new URL(value);
+
+        if (
+          url.hostname === "localhost" ||
+          url.hostname.startsWith("127.") ||
+          url.hostname === "0.0.0.0"
+        ) {
+          return helpers.error("webhook.localhost");
+        }
+
+        return value;
+      } catch (err) {
+        return helpers.error("string.uri");
+      }
+    })
+    .required()
     .messages({
       "string.base": "webhookUrl must be a string",
       "string.empty": "webhookUrl cannot be empty",
+      "string.uri": "webhookUrl must be a valid HTTPS URL",
       "string.uriCustomScheme": "webhookUrl must be a valid HTTPS URL",
+      "webhook.localhost": "webhookUrl cannot be a localhost or private URL",
       "any.required": "webhookUrl is required",
     }),
 
-  apiKey: Joi.string().trim().messages({
+  apiKey: Joi.string().trim().min(1).required().messages({
     "string.base": "apiKey must be a string",
     "string.empty": "apiKey cannot be empty",
     "any.required": "apiKey is required",
   }),
 
   serviceTrigger: Joi.object()
-    .pattern(Joi.string(), Joi.array().items(Joi.string().trim().min(1)))
+    .pattern(
+      Joi.string(),
+      Joi.array().items(
+        Joi.string().valid("sent", "success", "failed", "pending"),
+      ),
+    )
     .min(1)
+    .required()
     .messages({
       "object.base": "Invalid servicesTrigger format",
       "object.min": "servicesTrigger object cannot be empty",
-      "object.pattern.match": "Invalid servicesTrigger format",
-      "array.base": "Invalid servicesTrigger format",
-      "any.only": "Values must be one of success, failed, or pending",
       "any.required": "servicesTrigger is required",
     }),
 
-  retryEnabled: Joi.boolean().messages({
+  retryEnabled: Joi.boolean().required().messages({
     "boolean.base": "retryEnabled must be a boolean value",
     "any.required": "retryEnabled is required",
   }),
 
-  isActive: Joi.boolean().strict().messages({
-    "object.base": "isActive must be boolean",
-    "string.empty": "isActive cannot be empty",
+  isActive: Joi.boolean().strict().required().messages({
+    "boolean.base": "isActive must be a boolean",
     "any.required": "isActive is required",
   }),
 };
