@@ -167,7 +167,7 @@ const removeTemplate = async (clientId, id) => {
 
 
 const modifyService = async (clientId, id, payload) => {
-    const { service, templateId, name, messageContent, variables } = payload;
+    let { service, templateId, name, messageContent, variables } = payload;
     const dbConnect = await global.connectionManager.getModels(clientId);
 
     const templateExist = await dbConnect.Template.findOne({
@@ -199,6 +199,9 @@ const modifyService = async (clientId, id, payload) => {
         validateTemplate(messageContent);
     }
 
+    if (!variables) {
+        variables = templateExist.requiredFields
+    }
     if (messageContent && variables && !verifyVariables(messageContent, variables)) {
         throw {
             statusCode: 400,
