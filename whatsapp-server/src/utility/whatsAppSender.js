@@ -80,7 +80,7 @@ class WhatsAppSender {
 
       if (webHookCallbackUrl) {
         data["statusCallback"] =
-          `${process.env.BACKEND_API_URL}/webhook/whatsapp?id=${clientId}&provider="TWILIO"`;
+          `${process.env.BACKEND_API_URL}/webhook/whatsapp?id=${clientId}&provider=TWILIO`;
       }
 
       if (message) {

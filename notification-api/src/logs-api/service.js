@@ -172,7 +172,7 @@ const viewMessageLogs = async (
       //  adding messages replyed by users
       finalData = data.map((item) => ({
         ...item,
-        userReplyedMessages: userReplyedMessagesMap[item.referenceId] || [],
+        userRepliedMessages: userReplyedMessagesMap[item.referenceId] || [],
       }));
     }
 
