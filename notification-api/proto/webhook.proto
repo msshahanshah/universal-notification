@@ -7,7 +7,7 @@ service WebhookService {
     rpc UpdateWebhookConfig (WebhookConfigRequest) returns (WebhookConfigResponse);
     rpc DeleteWebhookConfig (WebhookConfigRequest) returns (WebhookConfigResponse);
     rpc AllWebhookConfig (WebhookConfigRequest) returns (WebhookConfigResponse);
-    rpc getAllWebhookLogs (webhookLogsRequest) returns (webhookLogsResponse);
+    rpc GetAllWebhookLogs (WebhookLogsRequest) returns (WebhookLogsResponse);
 }
 
 message WebhookConfigRequest {
@@ -18,9 +18,9 @@ message WebhookConfigResponse {
     string payload = 1;
 }
 
-message webhookLogsRequest {
+message WebhookLogsRequest {
     string payload = 1;
 }
-message webhookLogsResponse {
+message WebhookLogsResponse {
     string payload = 1;
 }

@@ -119,7 +119,7 @@ function getWebhooks(webhookGRPCClient, payload, metadata) {
 
 function getWebhookLogs(webhookGRPCClient, payload, metadata) {
   return new Promise((resolve, reject) => {
-    webhookGRPCClient.getAllWebhookLogs(
+    webhookGRPCClient.GetAllWebhookLogs(
       { payload: JSON.stringify(payload) },
       metadata,
       (error, response) => {

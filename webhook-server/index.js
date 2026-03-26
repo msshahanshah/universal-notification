@@ -94,7 +94,7 @@ function startGrpcServer() {
         UpdateWebhookConfig: updateWebhook,
         DeleteWebhookConfig: deleteWebhook,
         AllWebhookConfig: allWebhook,
-        getAllWebhookLogs: getAllWebhookLogs,
+        GetAllWebhookLogs: getAllWebhookLogs,
       });
 
       const GRPC_HOST = process.env.GRPC_HOST;
