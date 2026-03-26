@@ -2,19 +2,21 @@ require("dotenv").config();
 
 const WebhookCronScheduler = require("../models/webhookCronSchedulerModel");
 const WebhookLog = require("../models/webhookLogsModel");
+const { decrypt } = require("../utils/cryptoUtil");
 
 const logger = require("../utils/logger");
 
 const handleFailure = async (msg, errorData, maxRetryAttempts = 4) => {
-  const nextAttempt = msg.retryAttempts + 1;
+  const currentAttempt = msg.retryAttempts; // already incremented
 
-  if (nextAttempt >= maxRetryAttempts) {
+  if (currentAttempt >= maxRetryAttempts) {
     await WebhookLog.create({
       clientId: msg.clientId,
       webhookUrl: msg.webhookUrl,
       serviceTrigger: msg.serviceTrigger,
+      apiKey: msg.apiKey,
       status: "failed",
-      retryAttempts: nextAttempt,
+      retryAttempts: currentAttempt,
       webhookPayload: msg.webhookPayload,
       webhookResponse: errorData,
     });
@@ -22,14 +24,12 @@ const handleFailure = async (msg, errorData, maxRetryAttempts = 4) => {
     await WebhookCronScheduler.deleteOne({ _id: msg._id });
 
     logger.error(
-      `Max retries reached. Moved to logs: ${msg._id}, attempts=${nextAttempt}`,
+      `Max retries reached. Moved to logs: ${msg._id}, attempts=${currentAttempt}`,
     );
   } else {
-    //  Retry
     await WebhookCronScheduler.updateOne(
       { _id: msg._id },
       {
-        $inc: { retryAttempts: 1 },
         $set: {
           status: "failed",
           webhookResponse: errorData,
@@ -37,30 +37,51 @@ const handleFailure = async (msg, errorData, maxRetryAttempts = 4) => {
       },
     );
 
-    logger.warn(`Retry scheduled: ${msg._id}, attempts=${nextAttempt}`);
+    logger.warn(`Retry scheduled: ${msg._id}, attempts=${currentAttempt}`);
   }
 };
 
 const processNotifications = async (messages, maxRetryAttempts = 4) => {
   try {
+    console.log(messages);
     logger.info(`Processing ${messages.length} webhook messages`);
 
+    // step 1: update retryAttempts
+    await WebhookCronScheduler.bulkWrite(
+      messages.map((msg) => ({
+        updateOne: {
+          filter: {
+            _id: msg._id,
+            status: { $ne: "processing" },
+          },
+          update: {
+            $inc: { retryAttempts: 1 },
+            $set: { status: "processing" },
+          },
+        },
+      })),
+    );
+
+    // step 2: call webhook
     const results = await Promise.allSettled(
       messages.map((msg) => {
         logger.info(`Calling webhook: ${msg.webhookUrl}`);
 
         return fetch(msg.webhookUrl, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            "X-API-KEY": decrypt(msg.apiKey),
+          },
           body: JSON.stringify(msg.webhookPayload),
         });
       }),
     );
 
+    // STEP 3: Handle results
     const operations = results.map(async (result, index) => {
       const msg = messages[index];
 
-      // HANDLE SUCCESSFUL FETCH (but still check HTTP status)
       if (result.status === "fulfilled") {
         const res = result.value;
         const responseText = await res.text().catch(() => "");
@@ -69,7 +90,6 @@ const processNotifications = async (messages, maxRetryAttempts = 4) => {
           `Webhook success: ${msg.webhookUrl}, statusCode=${res.status}`,
         );
 
-        // Move to logs
         await WebhookLog.create({
           clientId: msg.clientId,
           webhookUrl: msg.webhookUrl,
@@ -87,14 +107,13 @@ const processNotifications = async (messages, maxRetryAttempts = 4) => {
 
         logger.info(`Moved to logs & deleted from scheduler: ${msg._id}`);
       } else {
-        // NETWORK FAILURE
         const errorMsg = result.reason?.message || "Unknown error";
 
         logger.error(
           `Webhook failed (network): ${msg.webhookUrl}, error=${errorMsg}`,
         );
 
-        return handleFailure(msg, { error: errorMsg });
+        return handleFailure(msg, { error: errorMsg }, maxRetryAttempts);
       }
     });
 
@@ -103,24 +122,76 @@ const processNotifications = async (messages, maxRetryAttempts = 4) => {
     logger.info(`Finished processing webhook batch`);
   } catch (err) {
     logger.error(`Error in processing notifications: ${err.stack}`);
-    throw err;
   }
 };
 
 const findAllEligibleNotifications = async (
-  window = 30, // minutes
+  window = 30,
   maxRetryAttempt = 4,
   time = new Date(),
 ) => {
-  // Calculate cutoff time
   const cutoffTime = new Date(time.getTime() - window * 60 * 1000);
 
-  console.log("cutoffTime>>", cutoffTime);
+  const data = await WebhookCronScheduler.aggregate([
+    {
+      $match: {
+        retryAttempts: { $lte: maxRetryAttempt },
+        updatedAt: { $lte: cutoffTime },
+      },
+    },
+    {
+      $lookup: {
+        from: "webhookconfigs",
+        let: {
+          clientId: "$clientId",
+          webhookUrl: "$webhookUrl",
+        },
+        pipeline: [
+          {
+            $match: {
+              $expr: {
+                $and: [
+                  { $eq: ["$clientId", "$$clientId"] },
+                  { $eq: ["$webhookUrl", "$$webhookUrl"] },
+                  { $eq: ["$isActive", true] },
 
-  const data = await WebhookCronScheduler.find({
-    retryAttempts: { $lte: maxRetryAttempt }, // strictly less
-    updatedAt: { $lte: new Date(cutoffTime) }, // older than window
-  });
+                  {
+                    $or: [
+                      { $eq: ["$deletedAt", null] },
+                      { $not: ["$deletedAt"] },
+                    ],
+                  },
+                ],
+              },
+            },
+          },
+          {
+            $project: {
+              apiKey: 1,
+              _id: 0,
+            },
+          },
+        ],
+        as: "config",
+      },
+    },
+    {
+      $unwind: {
+        path: "$config",
+        preserveNullAndEmptyArrays: false,
+      },
+    },
+    {
+      $addFields: {
+        apiKey: "$config.apiKey",
+      },
+    },
+    {
+      $project: {
+        config: 0,
+      },
+    },
+  ]);
 
   return data;
 };

@@ -1,41 +1,47 @@
 const crypto = require("crypto");
-require("dotenv").config();
 
-const algorithm = process.env.ALGORITHM;
+const ALGORITHM = "aes-256-gcm";
+const MASTER_KEY = process.env.MASTER_ENCRYPTION_KEY;
 
-// Always derive 32-byte key using SHA256
-const getKey = (key) => {
-  return crypto.createHash("sha256").update(key).digest();
+// Convert key → 32 bytes
+const getKey = (key) => crypto.createHash("sha256").update(key).digest();
+
+const encrypt = (text, key = MASTER_KEY) => {
+  if (!text) return "";
+
+  const iv = crypto.randomBytes(12);
+  const cipher = crypto.createCipheriv(ALGORITHM, getKey(key), iv);
+
+  const encrypted = Buffer.concat([
+    cipher.update(text, "utf8"),
+    cipher.final(),
+  ]);
+
+  const authTag = cipher.getAuthTag();
+
+  // return everything in one string
+  return `${iv.toString("hex")}:${encrypted.toString("hex")}:${authTag.toString("hex")}`;
 };
 
-const encrypt = (text, key) => {
-  const iv = crypto.randomBytes(16);
-  const akey = getKey(key);
+const decrypt = (data, key = MASTER_KEY) => {
+  if (!data) return "";
 
-  const cipher = crypto.createCipheriv(algorithm, akey, iv);
+  const [ivHex, encryptedHex, authTagHex] = data.split(":");
 
-  let encrypted = cipher.update(text, "utf8", "hex");
-  encrypted += cipher.final("hex");
+  const decipher = crypto.createDecipheriv(
+    ALGORITHM,
+    getKey(key),
+    Buffer.from(ivHex, "hex"),
+  );
 
-  return iv.toString("hex") + ":" + encrypted;
+  decipher.setAuthTag(Buffer.from(authTagHex, "hex"));
+
+  const decrypted = Buffer.concat([
+    decipher.update(Buffer.from(encryptedHex, "hex")),
+    decipher.final(),
+  ]);
+
+  return decrypted.toString("utf8");
 };
 
-const decrypt = (encryptedText, key) => {
-  const parts = encryptedText.split(":");
-  const iv = Buffer.from(parts[0], "hex");
-  const encryptedData = parts[1];
-  const akey = getKey(key);
-
-  const decipher = crypto.createDecipheriv(algorithm, akey, iv);
-
-  let decrypted = decipher.update(encryptedData, "hex", "utf8");
-  decrypted += decipher.final("utf8");
-
-  return decrypted;
-};
-
-const generateSalt = (key) => {
-  return key + process.env.MASTER_ENCRYPTION_KEY;
-};
-
-module.exports = { encrypt, decrypt, generateSalt };
+module.exports = { encrypt, decrypt };

@@ -7,7 +7,7 @@ const webhookConfigSchema = new mongoose.Schema(
       required: true,
     },
     webhookUrl: { type: String, required: true },
-    encryptedKey: { type: String, required: true },
+    apiKey: { type: String, required: true },
     serviceTrigger: {
       type: Object,
       required: true,

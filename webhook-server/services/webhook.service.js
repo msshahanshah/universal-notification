@@ -38,7 +38,7 @@ const addWebhook = async (call, callback) => {
     await WebhookConfig.create({
       clientId,
       webhookUrl,
-      encryptedKey: encrypt(apiKey, "abc"),
+      apiKey: encrypt(apiKey),
       retryEnabled,
       isActive,
       serviceTrigger,
@@ -116,7 +116,7 @@ const updateWebhook = async (call, callback) => {
     }
 
     if (apiKey) {
-      setFields.apiKey = encrypt(apiKey, "abc");
+      setFields.apiKey = encrypt(apiKey);
     }
 
     if (isActive !== undefined) {

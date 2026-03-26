@@ -21,7 +21,7 @@ const consumeNotification = async (payload, messageId) => {
       [`serviceTrigger.${service}`]: { $exists: true, $eq: status },
     };
 
-    const configs = await WebhookConfig.find(query).select("webhookUrl");
+    const configs = await WebhookConfig.find(query).select("webhookUrl apiKey");
 
     logger.info(`Found ${configs.length} webhook configs`);
 
@@ -45,12 +45,13 @@ const consumeNotification = async (payload, messageId) => {
     logger.info(`Inserted ${records.length} records into scheduler`);
 
     // initial processing
-    await processNotifications(records);
+    processNotifications(records).catch((err) => {
+      logger.error("Notification processing failed", err);
+    });
 
     logger.info(`Webhook processing completed for messageId=${messageId}`);
   } catch (err) {
     logger.error(`Error in consumeNotification: ${err.stack}`);
-    throw err;
   }
 };
 

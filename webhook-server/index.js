@@ -21,48 +21,53 @@ let grpcServer = null;
 let isShuttingDown = false;
 
 async function connectAndConsume() {
-  const clientConfigList = await loadClientConfigs();
-  if (!Array.isArray(clientConfigList)) {
-    throw new Error("clientConfigList must be an array");
-  }
+  try {
+    const clientConfigList = await loadClientConfigs();
+    if (!Array.isArray(clientConfigList)) {
+      throw new Error("clientConfigList must be an array");
+    }
 
-  const results = await Promise.allSettled(
-    clientConfigList.map(async (clientItem) => {
-      if (!clientItem?.ID) {
-        throw new Error("Invalid client config: missing ID");
-      }
+    const results = await Promise.allSettled(
+      clientConfigList.map(async (clientItem) => {
+        if (!clientItem?.ID) {
+          throw new Error("Invalid client config: missing ID");
+        }
 
-      const rabbitClient = await connectionManager.getRabbitMQ(clientItem.ID);
+        const rabbitClient = await connectionManager.getRabbitMQ(clientItem.ID);
 
-      if (!rabbitClient || typeof rabbitClient.consume !== "function") {
-        throw new Error(
-          `RabbitMQ client not available for client ${clientItem.ID}`,
-        );
-      }
+        if (!rabbitClient || typeof rabbitClient.consume !== "function") {
+          throw new Error(
+            `RabbitMQ client not available for client ${clientItem.ID}`,
+          );
+        }
 
-      await rabbitClient.consume({
-        service: "webhook",
-        sender: consumeNotification,
-        db: null,
-        maxProcessAttemptCount: 3,
+        await rabbitClient.consume({
+          service: "webhook",
+          sender: consumeNotification,
+          db: null,
+          maxProcessAttemptCount: 3,
+        });
+
+        logger.info(`RabbitMQ consumer started for client ${clientItem.ID}`);
+      }),
+    );
+
+    const failed = results.filter((r) => r.status === "rejected");
+    if (failed.length > 0) {
+      failed.forEach((f) => {
+        logger.error("Failed to start one of the consumers:", {
+          error: f.reason?.message || f.reason,
+          stack: f.reason?.stack,
+        });
       });
+      logger.error(`Failed to start ${failed.length} RabbitMQ consumer(s)`);
+      return;
+    }
 
-      logger.info(`RabbitMQ consumer started for client ${clientItem.ID}`);
-    }),
-  );
-
-  const failed = results.filter((r) => r.status === "rejected");
-  if (failed.length > 0) {
-    failed.forEach((f) => {
-      logger.error("Failed to start one of the consumers:", {
-        error: f.reason?.message || f.reason,
-        stack: f.reason?.stack,
-      });
-    });
-    throw new Error(`Failed to start ${failed.length} RabbitMQ consumer(s)`);
+    logger.info("All RabbitMQ consumers initialized successfully.");
+  } catch (error) {
+    logger.error(`error in connection and Consume; ${JSON.stringify(error)}`);
   }
-
-  logger.info("All RabbitMQ consumers initialized successfully.");
 }
 
 function startGrpcServer() {
