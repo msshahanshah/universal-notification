@@ -9,6 +9,7 @@ const {
   updateWebhook,
   deleteWebhook,
   allWebhook,
+  getAllWebhookLogs,
 } = require("./services/webhook.service");
 
 const grpc = require("@grpc/grpc-js");
@@ -93,6 +94,7 @@ function startGrpcServer() {
         UpdateWebhookConfig: updateWebhook,
         DeleteWebhookConfig: deleteWebhook,
         AllWebhookConfig: allWebhook,
+        getAllWebhookLogs: getAllWebhookLogs,
       });
 
       const GRPC_HOST = process.env.GRPC_HOST;

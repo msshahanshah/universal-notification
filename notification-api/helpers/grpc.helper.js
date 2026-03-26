@@ -1,4 +1,4 @@
-const logger = require('../src/logger');
+const logger = require("../src/logger");
 
 const grpcCodeToHttpStatusCode = {
   0: 200, // OK
@@ -117,9 +117,33 @@ function getWebhooks(webhookGRPCClient, payload, metadata) {
   });
 }
 
+function getWebhookLogs(webhookGRPCClient, payload, metadata) {
+  return new Promise((resolve, reject) => {
+    webhookGRPCClient.getAllWebhookLogs(
+      { payload: JSON.stringify(payload) },
+      metadata,
+      (error, response) => {
+        if (error) {
+          logger.error(
+            `Error in fetching webhook logs from mongo ${error.message}`,
+          );
+          error = {
+            statusCode: grpcCodeToHttpStatusCode[error.code],
+            message: error.details,
+          };
+
+          return reject(error);
+        }
+        resolve(JSON.parse(response.payload));
+      },
+    );
+  });
+}
+
 module.exports = {
   addWebhook,
   updateWebhook,
   deleteWebhook,
   getWebhooks,
+  getWebhookLogs,
 };

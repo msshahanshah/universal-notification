@@ -5,6 +5,7 @@ const {
   addWebhookGRPC,
   updateWebhookGRPC,
   deleteWebhookGRPC,
+  fetchWebhookLogs,
 } = require("../webhook/client");
 
 const {
@@ -71,6 +72,11 @@ async function getWebhookConfigs(clientId, query) {
   return await fetchWebhookConfigs(clientId, query);
 }
 
+// ---------------- GET CONFIG ----------------
+async function getWebhookLogs(clientId, query) {
+  return await fetchWebhookLogs(clientId, query);
+}
+
 // ---------------- ENABLED SERVICES ----------------
 async function getWebhookEnabledServices(clientId, service) {
   let services = [];
@@ -100,5 +106,6 @@ module.exports = {
   updateWebhook,
   deleteWebhook,
   getWebhookConfigs,
+  getWebhookLogs,
   getWebhookEnabledServices,
 };

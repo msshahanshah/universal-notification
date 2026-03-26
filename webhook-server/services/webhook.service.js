@@ -3,6 +3,9 @@ const protoLoader = require("@grpc/proto-loader");
 const path = require("path");
 const logger = require("../utils/logger");
 const WebhookConfig = require("../models/webhook");
+const WebhookCronScheduler = require("../models/webhookCronSchedulerModel");
+const WebhookLogs = require("../models/webhookLogsModel");
+
 const { encrypt } = require("../utils/cryptoUtil");
 
 const {
@@ -273,8 +276,8 @@ const allWebhook = async (call, callback) => {
     }
 
     // destructure query params
-    const { fields } = query;
-
+    const { fields, page = 1, limit = 10 } = query;
+    const skip = (page - 1) * limit;
     // response body
     const response = {};
 
@@ -285,7 +288,10 @@ const allWebhook = async (call, callback) => {
         response["configurations"] = await WebhookConfig.find({
           clientId,
           deletedAt: null,
-        }).lean();
+        })
+          .skip(skip)
+          .limit(limit)
+          .lean();
       }
 
       if (fields.includes("enabledServices")) {
@@ -296,7 +302,10 @@ const allWebhook = async (call, callback) => {
       response["configurations"] = await WebhookConfig.find({
         clientId,
         deletedAt: null,
-      }).lean();
+      })
+        .skip(skip)
+        .limit(limit)
+        .lean();
     }
 
     if (Object.keys(response).length === 0) {
@@ -311,6 +320,58 @@ const allWebhook = async (call, callback) => {
         success: true,
         message: "Webhook fetched successfully",
         data: response,
+      }),
+    });
+  } catch (error) {
+    logger.error(`Error: ${error}`);
+    callback({
+      code: error.statusCode || grpc.status.INTERNAL,
+      message: error.message || "Internal server error",
+    });
+  }
+};
+
+const getAllWebhookLogs = async (call, callback) => {
+  try {
+    const callerKey = call.metadata.get("x-internal-key")[0];
+
+    if (callerKey !== process.env.INTERNAL_GRPC_KEY) {
+      return callback({
+        code: grpc.status.PERMISSION_DENIED,
+        message: "Unauthorized caller",
+      });
+    }
+
+    const payload = JSON.parse(call.request.payload);
+    const { clientId, query } = payload;
+
+    if (!clientId) {
+      logger.info(`Client id is required`);
+      return callback({
+        code: grpc.status.INVALID_ARGUMENT,
+        message: "Client id is required",
+      });
+    }
+
+    // destructure query params
+    const { fields, page = 1, limit = 10 } = query;
+    const skip = (page - 1) * limit;
+
+    // fetch all logs
+    const schedulerLogs = await WebhookCronScheduler.find({
+      clientId,
+    })
+      .skip(skip)
+      .limit(limit);
+    const completedLogs = await WebhookLogs.find({ clientId })
+      .skip(skip)
+      .limit(limit);
+
+    callback(null, {
+      payload: JSON.stringify({
+        success: true,
+        message: "Webhook logs fetched successfully",
+        data: [...schedulerLogs, ...completedLogs],
       }),
     });
   } catch (error) {
@@ -358,4 +419,10 @@ const startGrpcServer = () => {
   }
 };
 
-module.exports = { addWebhook, allWebhook, updateWebhook, deleteWebhook };
+module.exports = {
+  addWebhook,
+  allWebhook,
+  updateWebhook,
+  deleteWebhook,
+  getAllWebhookLogs,
+};

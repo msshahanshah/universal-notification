@@ -120,6 +120,47 @@ const updateWebhookSchema = Joi.object(baseWebhookSchema)
     "object.unknown": "Unknown fields are not allowed",
   });
 
+const queryValidationSchema = Joi.object({
+  page: Joi.number()
+    .min(1)
+    .custom((value, helpers) => {
+      const raw = helpers.original;
+      // Reject decimal representation like "1.0", "2.5"
+      if (typeof raw === "string" && !/^[0-9]+$/.test(raw)) {
+        return helpers.error("number.integer");
+      }
+      return value;
+    })
+    .integer()
+    .optional()
+    .messages({
+      "number.base": "Page must be a number",
+      "number.integer": "Page must be an integer",
+      "number.min": "Page must be at least 1",
+      "number.unsafe": "Page must be a valid integer",
+    }),
+  limit: Joi.number()
+    .min(1)
+    .custom((value, helpers) => {
+      const raw = helpers.original;
+      // Reject decimal representation like "1.0", "2.5"
+      if (typeof raw === "string" && !/^[0-9]+$/.test(raw)) {
+        return helpers.error("number.integer");
+      }
+      return value;
+    })
+    .integer()
+    .max(100)
+    .optional()
+    .messages({
+      "number.base": "Limit must be a number",
+      "number.integer": "Limit must be an integer",
+      "number.min": "Limit must be at least 1",
+      "number.max": "Limit cannot exceed 100",
+      "number.unsafe": "Limit must be a valid integer",
+    }),
+});
+
 const webhookValidation = async (req, res, next) => {
   try {
     if (!req.body) {
@@ -160,4 +201,27 @@ const webhookValidation = async (req, res, next) => {
     });
   }
 };
-module.exports = webhookValidation;
+
+const queryValidation = (req, res, next) => {
+  try {
+    const { error, value } = queryValidationSchema.validate(
+      req.query,
+      baseOptions,
+    );
+    if (error) {
+      return res.status(400).json({
+        success: false,
+        message: error.details[0].message,
+      });
+    }
+
+    // proceed
+    next();
+  } catch (error) {
+    return res.status(error.statusCode || 500).json({
+      success: false,
+      message: error.message || "Internal server error",
+    });
+  }
+};
+module.exports = { webhookValidation, queryValidation };

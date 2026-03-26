@@ -2,7 +2,7 @@ const express = require("express");
 const auth = require("../middleware/auth.middleware");
 const accessControl = require("../middleware/access-control.middleware");
 const WebhookController = require("./controller");
-const webhookValidation = require("./validation");
+const { webhookValidation, queryValidation } = require("./validation");
 const router = express.Router();
 
 router.post(
@@ -25,6 +25,19 @@ router.delete(
   accessControl,
   WebhookController.deleteWebhook,
 );
-router.get("/webhooks", auth, accessControl, WebhookController.getWebhooks);
+router.get(
+  "/webhooks",
+  auth,
+  accessControl,
+  queryValidation,
+  WebhookController.getWebhooks,
+);
+router.get(
+  "/webhooks/logs",
+  auth,
+  accessControl,
+  queryValidation,
+  WebhookController.getWebhooksLogs,
+);
 
 module.exports = router;
