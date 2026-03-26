@@ -1,94 +1,113 @@
 const grpcClient = require("../gRPC/grpc.client");
-const grpc = require('@grpc/grpc-js');
+const grpc = require("@grpc/grpc-js");
 const { fetchBalance, updateBalance } = require("./service");
 const logger = require("../logger");
 
 const labelMap = {
-    TWILIO: "Amount",
-    FAST2SMS: "Credits",
-    MSG91: "Wallet Amount",
-    SMSSTRIKER: "Total Messages",
-    DEFAULT: "Amount"
+  TWILIO: "Amount",
+  FAST2SMS: "Credits",
+  MSG91: "Wallet Amount",
+  SMSSTRIKER: "Total Messages",
+  DEFAULT: "Amount",
 };
 
 const getBalance = async (req, res) => {
-    try {
-        const clientId = req.headers["x-client-id"];
-        const { service, provider } = req.query;
+  try {
+    const clientId = req.headers["x-client-id"];
+    const { service, provider } = req.query;
 
-        if (!service || !provider) {
-            throw { message: "service or provider is missing", statusCode: 400 };
+    if (!service || !provider) {
+      throw { message: "service or provider is missing", statusCode: 400 };
+    }
+
+    if (!grpcClient) {
+      throw { statusCode: 503, message: "service unavailable" };
+    }
+
+    const metadata = new grpc.Metadata();
+    metadata.add("x-internal-key", process.env.INTERNAL_GRPC_KEY);
+
+    grpcClient.GetBalance(
+      { clientId, provider: provider ? provider.toUpperCase() : undefined },
+      metadata,
+      async (err, response) => {
+        if (err) {
+          console.error("gRPC error:", err);
+          return res.status(+err.metadata?.get("error-code")?.[0] || 500).json({
+            success: false,
+            message: err.metadata?.get("message")?.[0] || err.message,
+          });
         }
 
-        const metadata = new grpc.Metadata();
-        metadata.add("x-internal-key", process.env.INTERNAL_GRPC_KEY);
+        const prov = response.provider?.toUpperCase();
+        const label = labelMap[prov] || labelMap.DEFAULT;
 
-        grpcClient.GetBalance({ clientId, provider: provider ? provider.toUpperCase() : undefined }, metadata, async (err, response) => {
-            if (err) {
-                console.error("gRPC error:", err);
-                return res.status(+err.metadata?.get("error-code")?.[0] || 500).json({
-                    success: false,
-                    message: err.metadata?.get("message")?.[0] || err.message
-                });
-            }
+        await updateBalance(clientId, response, label, service.toUpperCase());
 
-            const prov = response.provider?.toUpperCase();
-            const label = labelMap[prov] || labelMap.DEFAULT;
+        logger.info(
+          `Balance updated and fetched successfully | client ${clientId} | service ${service} | provider ${provider}`,
+        );
 
-            await updateBalance(clientId, response, label, service.toUpperCase());
-
-            logger.info(`Balance updated and fetched successfully | client ${clientId} | service ${service} | provider ${provider}`);
-
-            return res.json({
-                success: true,
-                message: "Balance fetched successfully",
-                data: {
-                    provider: response.provider,
-                    label,
-                    balance: response.balance,
-                    currency: response?.currency
-                }
-            });
+        return res.json({
+          success: true,
+          message: "Balance fetched successfully",
+          data: {
+            provider: response.provider,
+            label,
+            balance: response.balance,
+            currency: response?.currency,
+          },
         });
-
-    } catch (error) {
-        logger.error({
-            message: error.message,
-            stack: error?.stack
-        });
-        return res.status(error.statusCode || 500).json({ success: false, message: error.message });
-    }
+      },
+    );
+  } catch (error) {
+    logger.error({
+      message: error.message,
+      stack: error?.stack,
+    });
+    return res
+      .status(error.statusCode || 500)
+      .json({ success: false, message: error.message });
+  }
 };
 
 const viewBalance = async (req, res) => {
-    try {
-        const clientId = req.headers["x-client-id"];
-        const { service, provider } = req.query;
+  try {
+    const clientId = req.headers["x-client-id"];
+    const { service, provider } = req.query;
 
-        if (!service || !provider) {
-            throw { message: "service and provider are missing", statusCode: 400 };
-        }
-
-        const response = await fetchBalance(clientId, service.toUpperCase(), provider.toUpperCase());
-
-        logger.info(`Balance fetched successfully | client ${clientId} | service ${service} | provider ${provider}`);
-        return res.json({
-            success: true,
-            message: "Balance fetched successfully",
-            data: {
-                provider: response.provider,
-                label: response.balance_type,
-                balance: response.balance,
-                currency: response.currency
-            }
-        });
-    } catch (error) {
-        logger.error({
-            message: error.message,
-            stack: error?.stack
-        });
-        return res.status(error.statusCode || 500).json({ success: false, message: error.message })
+    if (!service || !provider) {
+      throw { message: "service and provider are missing", statusCode: 400 };
     }
-}
+
+    const response = await fetchBalance(
+      clientId,
+      service.toUpperCase(),
+      provider.toUpperCase(),
+    );
+
+    logger.info(
+      `Balance fetched successfully | client ${clientId} | service ${service} | provider ${provider}`,
+    );
+    return res.json({
+      success: true,
+      message: "Balance fetched successfully",
+      data: {
+        provider: response.provider,
+        label: response.balance_type,
+        balance: response.balance,
+        currency: response.currency,
+      },
+    });
+  } catch (error) {
+    logger.error({
+      message: error.message,
+      stack: error?.stack,
+    });
+    return res
+      .status(error.statusCode || 500)
+      .json({ success: false, message: error.message });
+  }
+};
 
 module.exports = { getBalance, viewBalance };
