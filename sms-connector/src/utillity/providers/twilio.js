@@ -8,11 +8,24 @@ class TwilioProvider {
   }
 
   async send({ to, message, templateId }) {
-    return this.client.messages.create({
+    const data = {
       body: message,
       from: this.from,
       to,
-    });
+    }
+
+    const webHookCallbackUrl = process.env.BACKEND_API_URL;
+    console.log(webHookCallbackUrl);
+
+    if (webHookCallbackUrl) {
+      data["statusCallback"] =
+        `${process.env.BACKEND_API_URL}/webhook/sms?id=GKMIT&provider=TWILIO`;
+    }
+
+    let res = await this.client.messages.create(data);
+    res = { ...res.toJSON(), referenceId: res.sid };
+    // console.log(res)
+    return res;
   }
 
   async dummySend({ to, message }) {

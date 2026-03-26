@@ -2,6 +2,7 @@ const cluster = require('cluster');
 const logger = require('./logger');
 const { connectAndConsume, closeConnections } = require('./connector');
 const { loadClientConfigs } = require('./utillity/loadClientConfigs');
+const webhookRouter = require('./webhook/route');
 
 // Master process logic
 if (cluster.isMaster) {
@@ -56,6 +57,19 @@ if (cluster.isMaster) {
     (async () => {
         try {
             // Load client configurations in the worker
+            const SMS_PORT = process.env.PORT || process.env.SERVER_PORT || 7000;
+            const express = require('express');
+            const app = express();
+
+            app.use(express.json());
+            app.use(express.urlencoded({ extended: false }));
+            logger.info(`Starting SMS server at port ${SMS_PORT}...`);
+
+            app.use(webhookRouter);
+
+            app.listen(SMS_PORT, () => {
+                logger.info(`SMS server is listening at port ${SMS_PORT}`);
+            });
             const clients = await loadClientConfigs();
             const serverPort = +process.env.SERVER_PORT;
             const clientConfigList = clients.filter(c => c.SERVER_PORT === serverPort);

@@ -9,13 +9,13 @@
     "dev": "nodemon src/index.js"
   },
   "dependencies": {
-    "universal_notification_support_lib": "github:msshahanshah/universal_notification_support_lib#development",
     "@grpc/grpc-js": "^1.14.3",
     "@grpc/proto-loader": "^0.8.0",
     "@universal-notifier/secret-manager": "github:gkmit-dikshant/aws-secret-manager-package#development",
     "amqplib": "^0.10.8",
     "axios": "^1.13.2",
     "dotenv": "^16.4.1",
+    "express": "^5.2.1",
     "handlebars": "^4.7.7",
     "lru-cache": "^11.1.0",
     "nodemailer": "^7.0.2",
@@ -24,6 +24,7 @@
     "redis": "^5.11.0",
     "sequelize": "^6.37.1",
     "twilio": "^5.6.0",
+    "universal_notification_support_lib": "github:msshahanshah/universal_notification_support_lib#development",
     "winston": "^3.11.0"
   },
   "devDependencies": {

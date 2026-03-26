@@ -72,6 +72,11 @@ module.exports = (sequelize, schemaName) => {
         allowNull: true,
       },
 
+      referenceId: {
+        type: DataTypes.STRING,
+        allowNull: true,
+      },
+
       // ID of the template used for the notification (optional)
       templateId: {
         type: DataTypes.STRING,
