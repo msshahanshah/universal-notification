@@ -7,7 +7,7 @@ const handleError = (res, error) => {
 
   return res.status(statusCode).json({
     success: false,
-    message,
+    message: statusCode === 500 ? "internal server error" : message,
   });
 };
 
@@ -74,6 +74,7 @@ async function getWebhooks(req, res) {
       data: result,
     });
   } catch (error) {
+    console.log(error);
     return handleError(res, error);
   }
 }

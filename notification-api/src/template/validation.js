@@ -1,18 +1,31 @@
 const Joi = require("joi");
 const { commonValidation } = require("../validators/common.validator");
+const cleanJoiMessage = require("../../helpers/cleanJoiMessage");
 
 const registerTemplateSchema = Joi.object({
-    service: Joi.string()
+    service: Joi.string().trim()
         .valid("slack", "sms", "email", "whatsapp")
         .required(),
 
-    templateId: Joi.string().when("service", {
-        is: Joi.valid("sms", "whatsapp"),
-        then: Joi.required(),
-        otherwise: Joi.optional(),
-    }),
+    templateId: Joi.string()
+        .trim()
+        .pattern(/^[A-Za-z0-9_-]+$/)
+        .min(3)
+        .max(50)
+        .when("service", {
+            is: Joi.valid("sms", "whatsapp"),
+            then: Joi.required(),
+            otherwise: Joi.optional(),
+        })
+        .messages({
+            "string.pattern.base":
+                "templateId can contain only letters, numbers, _ and - without spaces",
+            "string.empty": "templateId cannot be empty",
+            "any.required": "templateId is required for sms and whatsapp",
+        }),
 
     name: Joi.string()
+        .trim()
         .min(3)
         .max(20)
         .required()
@@ -24,7 +37,7 @@ const registerTemplateSchema = Joi.object({
             "any.required": "Name is required"
         }),
 
-    messageContent: Joi.string().required().when("service", {
+    messageContent: Joi.string().trim().required().when("service", {
         is: Joi.valid("slack", "sms", "whatsapp"),
         then: Joi.string().custom((value, helpers) => {
             if (/<[^>]+>/.test(value)) {
@@ -38,8 +51,22 @@ const registerTemplateSchema = Joi.object({
         Joi.object({
             name: Joi.string().required(),
             constraints: Joi.object({
-                maxlength: Joi.alternatives().try(Joi.string(), Joi.number()).optional(),
-                dataType: Joi.string().optional()
+                maxlength: Joi.number()
+                    .integer()
+                    .min(1)
+                    .optional()
+                    .messages({
+                        "number.base": "maxlength must be an integer",
+                        "number.integer": "maxlength must be an integer",
+                        "number.min": "maxlength must be greater than 0",
+                    }),
+                dataType: Joi.string()
+                    .valid("string", "integer", "number")
+                    .optional()
+                    .messages({
+                        "any.only": "dataType must be one of [string, integer, number]",
+                        "string.base": "dataType must be a string",
+                    }),
             }).optional()
         })
     ).optional(),
@@ -85,7 +112,7 @@ const validateRegisterTemplateBody = (req, res, next) => {
         if (error) {
             return res.status(400).json({
                 success: false,
-                message: error.details[0].message,
+                message: cleanJoiMessage(error.details[0].message),
             });
         }
 
@@ -94,7 +121,7 @@ const validateRegisterTemplateBody = (req, res, next) => {
     } catch (error) {
         return res.status(error.statusCode || 500).json({
             success: false,
-            message: error.message || "Internal server error",
+            message: cleanJoiMessage(error.message) || "Internal server error",
         });
     }
 };
@@ -102,11 +129,11 @@ const validateRegisterTemplateBody = (req, res, next) => {
 const validateQueryTemplateRequest = (req, res, next) => {
     try {
         const { error, value } = queryTemplateSchema.validate(req.query, { abortEarly: false, stripUnknown: true });
-
+        console.log(error)
         if (error) {
             return res.status(400).json({
                 success: false,
-                message: error.details[0].message,
+                message: cleanJoiMessage(error.details[0].message),
             });
         }
 
@@ -115,7 +142,7 @@ const validateQueryTemplateRequest = (req, res, next) => {
     } catch (error) {
         return res.status(error.statusCode || 500).json({
             success: false,
-            message: error.message || "Internal server error",
+            message: cleanJoiMessage(error.message) || "Internal server error",
         });
     }
 };
@@ -143,11 +170,11 @@ const paramIdSchema = Joi.object({
 const validateParamId = (req, res, next) => {
     try {
         const { error, value } = paramIdSchema.validate(req.params, { stripUnknown: true });
-
+        console.log(error)
         if (error) {
             return res.status(400).json({
                 success: false,
-                message: error.details[0].message,
+                message: cleanJoiMessage(error.details[0].message),
             });
         }
 
@@ -156,7 +183,7 @@ const validateParamId = (req, res, next) => {
     } catch (error) {
         return res.status(error.statusCode || 500).json({
             success: false,
-            message: error.message || "Internal server error",
+            message: cleanJoiMessage(error.details[0].message) || "Internal server error",
         });
     }
 };

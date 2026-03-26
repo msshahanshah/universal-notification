@@ -9,6 +9,9 @@ const getMetadata = () => {
 };
 
 async function fetchWebhookConfigs(clientId, query) {
+  if (!webhookGRPCClient) {
+    throw { statusCode: 503, message: "service unavailable" };
+  }
   const payload = { clientId, query };
 
   const { data } = await grpcHelper.getWebhooks(
@@ -33,6 +36,9 @@ async function fetchWebhookLogs(clientId, query) {
 }
 
 async function addWebhookGRPC(payload) {
+  if (!webhookGRPCClient) {
+    throw { statusCode: 503, message: "service unavailable" };
+  }
   const { services } = await grpcHelper.addWebhook(
     webhookGRPCClient,
     payload,
@@ -42,6 +48,9 @@ async function addWebhookGRPC(payload) {
 }
 
 async function updateWebhookGRPC(payload) {
+  if (!webhookGRPCClient) {
+    throw { statusCode: 503, message: "service unavailable" };
+  }
   const { services } = await grpcHelper.updateWebhook(
     webhookGRPCClient,
     payload,
@@ -51,6 +60,9 @@ async function updateWebhookGRPC(payload) {
 }
 
 async function deleteWebhookGRPC(payload) {
+  if (!webhookGRPCClient) {
+    throw { statusCode: 503, message: "service unavailable" };
+  }
   const { services } = await grpcHelper.deleteWebhook(
     webhookGRPCClient,
     payload,
