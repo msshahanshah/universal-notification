@@ -17,6 +17,7 @@ on:
           - slack-connector
           - sms-connector
           - whatsapp-server
+          - webhook-server
       environment:
         description: "Environment to deploy to"
         required: true
