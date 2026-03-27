@@ -3,6 +3,7 @@ const { baseOptions } = require("../validators/common.validator");
 const { SecretManager } = require("universal_notification_support_lib");
 
 const clientServiceMap = new Map();
+
 async function checkWebhookServicesAreEnabledForClient(
   servicesTrigger,
   clientId,
@@ -58,20 +59,17 @@ const baseWebhookSchema = {
         return helpers.error("string.uri");
       }
     })
-    .required()
     .messages({
       "string.base": "webhookUrl must be a string",
       "string.empty": "webhookUrl cannot be empty",
       "string.uri": "webhookUrl must be a valid HTTPS URL",
       "string.uriCustomScheme": "webhookUrl must be a valid HTTPS URL",
       "webhook.localhost": "webhookUrl cannot be a localhost or private URL",
-      "any.required": "webhookUrl is required",
     }),
 
-  apiKey: Joi.string().trim().min(1).required().messages({
+  apiKey: Joi.string().trim().min(1).messages({
     "string.base": "apiKey must be a string",
     "string.empty": "apiKey cannot be empty",
-    "any.required": "apiKey is required",
   }),
 
   serviceTrigger: Joi.object()
@@ -82,37 +80,49 @@ const baseWebhookSchema = {
       ),
     )
     .min(1)
-    .required()
     .messages({
       "object.base": "Invalid servicesTrigger format",
       "object.min": "servicesTrigger object cannot be empty",
-      "any.required": "servicesTrigger is required",
     }),
 
-  retryEnabled: Joi.boolean().required().messages({
+  retryEnabled: Joi.boolean().messages({
     "boolean.base": "retryEnabled must be a boolean value",
-    "any.required": "retryEnabled is required",
   }),
 
-  isActive: Joi.boolean().strict().required().messages({
+  isActive: Joi.boolean().strict().messages({
     "boolean.base": "isActive must be a boolean",
-    "any.required": "isActive is required",
   }),
 };
 
 const createWebhookSchema = Joi.object({
-  ...baseWebhookSchema,
-  webhookUrl: baseWebhookSchema.webhookUrl.required(),
-  apiKey: baseWebhookSchema.apiKey.required(),
-  serviceTrigger: baseWebhookSchema.serviceTrigger.required(),
-  retryEnabled: baseWebhookSchema.retryEnabled.required(),
+  webhookUrl: baseWebhookSchema.webhookUrl.required().messages({
+    "any.required": "webhookUrl is required",
+  }),
+
+  apiKey: baseWebhookSchema.apiKey.required().messages({
+    "any.required": "apiKey is required",
+  }),
+
+  serviceTrigger: baseWebhookSchema.serviceTrigger.required().messages({
+    "any.required": "servicesTrigger is required",
+  }),
+
+  retryEnabled: baseWebhookSchema.retryEnabled,
+
+  isActive: baseWebhookSchema.isActive,
 })
   .unknown(false)
   .messages({
     "object.unknown": "Unknown fields are not allowed",
   });
 
-const updateWebhookSchema = Joi.object(baseWebhookSchema)
+const updateWebhookSchema = Joi.object({
+  webhookUrl: baseWebhookSchema.webhookUrl,
+  apiKey: baseWebhookSchema.apiKey,
+  serviceTrigger: baseWebhookSchema.serviceTrigger,
+  retryEnabled: baseWebhookSchema.retryEnabled,
+  isActive: baseWebhookSchema.isActive,
+})
   .min(1)
   .unknown(false)
   .messages({
@@ -159,6 +169,7 @@ const queryValidationSchema = Joi.object({
       "number.max": "Limit cannot exceed 100",
       "number.unsafe": "Limit must be a valid integer",
     }),
+  fields: Joi.string(),
 });
 
 const webhookValidation = async (req, res, next) => {
