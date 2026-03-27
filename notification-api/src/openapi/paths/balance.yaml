@@ -1,11 +1,11 @@
-/balance:
+balance:
   get:
     summary: Get real-time provider balance
     tags: [Balance]
     security:
       - bearerAuth: []
     parameters:
-      - $ref: "#/components/parameters/ClientIdHeader"
+      - $ref: "../index.yaml#/components/parameters/ClientIdHeader"
       - name: service
         in: query
         required: true
@@ -48,34 +48,34 @@
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/ErrorResponse"
+              $ref: "../index.yaml#/components/schemas/ErrorResponse"
       "401":
         description: Unauthorized
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/ErrorResponse"
+              $ref: "../index.yaml#/components/schemas/ErrorResponse"
       "403":
         description: Forbidden
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/ErrorResponse"
+              $ref: "../index.yaml#/components/schemas/ErrorResponse"
       "500":
         description: Internal Server Error
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/ErrorResponse"
+              $ref: "../index.yaml#/components/schemas/ErrorResponse"
 
-/refresh-balance:
+refreshBalance:
   post:
     summary: Force-refresh cached provider balance
     tags: [Balance]
     security:
       - bearerAuth: []
     parameters:
-      - $ref: "#/components/parameters/ClientIdHeader"
+      - $ref: "../index.yaml#/components/parameters/ClientIdHeader"
       - name: service
         in: query
         required: true
@@ -118,22 +118,22 @@
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/ErrorResponse"
+              $ref: "../index.yaml#/components/schemas/ErrorResponse"
       "401":
         description: Unauthorized
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/ErrorResponse"
+              $ref: "../index.yaml#/components/schemas/ErrorResponse"
       "403":
         description: Forbidden
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/ErrorResponse"
+              $ref: "../index.yaml#/components/schemas/ErrorResponse"
       "500":
         description: Internal Server Error
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/ErrorResponse"
+              $ref: "../index.yaml#/components/schemas/ErrorResponse"

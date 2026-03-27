@@ -106,14 +106,15 @@ if (cluster.isMaster) {
       // Start master router
       try {
         const proxy = httpProxy.createProxyServer({});
-        const YAML = require("yamljs");
         const swaggerUi = require("swagger-ui-express");
-        const swaggerDoc = YAML.load(path.join(__dirname, "openapi", "index.yaml"));
+        const SwaggerParser = require("@apidevtools/swagger-parser");
+        const swaggerDoc = await SwaggerParser.dereference(path.join(__dirname, "openapi", "index.yaml"));
         const masterApp = express();
 
         // cors setting
         masterApp.use(require("cors")());
         const MASTER_SERVER_PORT = process.env.PORT || 8000;
+        
         masterApp.use("/api-docs", swaggerUi.serve, (req, res, next) => {
           const protocol = req.headers["x-forwarded-proto"] || req.protocol || "http";
           const host = req.headers["x-forwarded-host"] || req.headers.host;

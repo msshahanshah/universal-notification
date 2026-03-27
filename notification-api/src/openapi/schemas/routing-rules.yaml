@@ -57,7 +57,7 @@ RoutingRuleListResponse:
     rows:
       type: array
       items:
-        $ref: "#/components/schemas/RoutingRuleResponse"
+        $ref: "../index.yaml#/components/schemas/RoutingRuleResponse"
     total:
       type: integer
     currentPage:

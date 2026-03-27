@@ -1,20 +1,20 @@
-/notify:
+notify:
   post:
     summary: Send a notification (SMS / Slack / Email)
     tags: [Notification]
     security:
       - bearerAuth: []
     parameters:
-      - $ref: "#/components/parameters/ClientIdHeader"
+      - $ref: "../index.yaml#/components/parameters/ClientIdHeader"
     requestBody:
       required: true
       content:
         application/json:
           schema:
             oneOf:
-              - $ref: "#/components/schemas/NotifySms"
-              - $ref: "#/components/schemas/NotifySlack"
-              - $ref: "#/components/schemas/NotifyEmail"
+              - $ref: "../index.yaml#/components/schemas/NotifySms"
+              - $ref: "../index.yaml#/components/schemas/NotifySlack"
+              - $ref: "../index.yaml#/components/schemas/NotifyEmail"
             discriminator:
               propertyName: service
           examples:
@@ -62,32 +62,32 @@
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/ErrorResponse"
+              $ref: "../index.yaml#/components/schemas/ErrorResponse"
       "401":
         description: Unauthorized
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/ErrorResponse"
+              $ref: "../index.yaml#/components/schemas/ErrorResponse"
       "403":
         description: Forbidden
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/ErrorResponse"
+              $ref: "../index.yaml#/components/schemas/ErrorResponse"
 
-/notify-with-attachment:
+notifyWithAttachment:
   post:
     summary: Send an email notification with file attachment (pre-signed S3 upload)
     tags: [Notification]
     parameters:
-      - $ref: "#/components/parameters/ClientIdHeader"
+      - $ref: "../index.yaml#/components/parameters/ClientIdHeader"
     requestBody:
       required: true
       content:
         application/json:
           schema:
-            $ref: "#/components/schemas/NotifyEmailWithFileAttachment"
+            $ref: "../index.yaml#/components/schemas/NotifyEmailWithFileAttachment"
     responses:
       "202":
         description: Notification accepted and queued
@@ -113,21 +113,21 @@
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/ErrorResponse"
+              $ref: "../index.yaml#/components/schemas/ErrorResponse"
       "401":
         description: Unauthorized
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/ErrorResponse"
+              $ref: "../index.yaml#/components/schemas/ErrorResponse"
       "403":
         description: Forbidden
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/ErrorResponse"
+              $ref: "../index.yaml#/components/schemas/ErrorResponse"
 
-/v2/notify:
+v2Notify:
   post:
     summary: Send multi-service notifications (V2)
     tags: [Notification]
@@ -145,20 +145,20 @@
       - Duplicate `uniqueKey` in same request → `400`
       - Messages exceeding configured limit → `400`
     parameters:
-      - $ref: "#/components/parameters/ClientIdHeader"
+      - $ref: "../index.yaml#/components/parameters/ClientIdHeader"
     requestBody:
       required: true
       content:
         application/json:
           schema:
-            $ref: "#/components/schemas/NotifyV2Request"
+            $ref: "../index.yaml#/components/schemas/NotifyV2Request"
     responses:
       "202":
         description: All notifications processed successfully
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/NotifyV2Response"
+              $ref: "../index.yaml#/components/schemas/NotifyV2Response"
       "207":
         description: |
           Partial success. Some services processed successfully, others failed.
@@ -166,7 +166,7 @@
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/NotifyV2Response"
+              $ref: "../index.yaml#/components/schemas/NotifyV2Response"
             example:
               data:
                 email:
@@ -183,7 +183,7 @@
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/NotifyV2Response"
+              $ref: "../index.yaml#/components/schemas/NotifyV2Response"
             example:
               data:
                 email:
@@ -195,22 +195,22 @@
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/ErrorResponse"
+              $ref: "../index.yaml#/components/schemas/ErrorResponse"
       "403":
         description: Forbidden
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/ErrorResponse"
+              $ref: "../index.yaml#/components/schemas/ErrorResponse"
       "413":
         description: Payload Too Large (exceeds 100 KB limit)
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/ErrorResponse"
+              $ref: "../index.yaml#/components/schemas/ErrorResponse"
       "500":
         description: Internal server error
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/ErrorResponse"
+              $ref: "../index.yaml#/components/schemas/ErrorResponse"

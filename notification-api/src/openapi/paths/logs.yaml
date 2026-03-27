@@ -1,11 +1,11 @@
-/delivery-status/{id}:
+deliveryStatusId:
   get:
     summary: Get delivery status of a message
     tags: [Status]
     security:
       - bearerAuth: []
     parameters:
-      - $ref: "#/components/parameters/ClientIdHeader"
+      - $ref: "../index.yaml#/components/parameters/ClientIdHeader"
       - name: id
         in: path
         required: true
@@ -36,25 +36,25 @@
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/ErrorResponse"
+              $ref: "../index.yaml#/components/schemas/ErrorResponse"
       "401":
         description: Unauthorized
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/ErrorResponse"
+              $ref: "../index.yaml#/components/schemas/ErrorResponse"
       "403":
         description: Forbidden
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/ErrorResponse"
+              $ref: "../index.yaml#/components/schemas/ErrorResponse"
       "404":
         description: Message ID not found
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/ErrorResponse"
+              $ref: "../index.yaml#/components/schemas/ErrorResponse"
             example:
               success: false
               message: "Message ID not found"
@@ -63,16 +63,16 @@
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/ErrorResponse"
+              $ref: "../index.yaml#/components/schemas/ErrorResponse"
 
-/logs:
+logs:
   get:
     summary: Get notification logs
     tags: [Logs]
     security:
       - bearerAuth: []
     parameters:
-      - $ref: "#/components/parameters/ClientIdHeader"
+      - $ref: "../index.yaml#/components/parameters/ClientIdHeader"
       - name: status
         in: query
         schema:
@@ -197,28 +197,28 @@
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/ErrorResponse"
+              $ref: "../index.yaml#/components/schemas/ErrorResponse"
       "401":
         description: Unauthorized
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/ErrorResponse"
+              $ref: "../index.yaml#/components/schemas/ErrorResponse"
       "403":
         description: Forbidden
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/ErrorResponse"
+              $ref: "../index.yaml#/components/schemas/ErrorResponse"
 
-/slack-logs:
+slackLogs:
   get:
     summary: Get Slack notification logs including reply messages
     tags: [Logs]
     security:
       - bearerAuth: []
     parameters:
-      - $ref: "#/components/parameters/ClientIdHeader"
+      - $ref: "../index.yaml#/components/parameters/ClientIdHeader"
       - name: status
         in: query
         schema:
@@ -337,16 +337,16 @@
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/ErrorResponse"
+              $ref: "../index.yaml#/components/schemas/ErrorResponse"
       "401":
         description: Unauthorized
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/ErrorResponse"
+              $ref: "../index.yaml#/components/schemas/ErrorResponse"
       "403":
         description: Forbidden
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/ErrorResponse"
+              $ref: "../index.yaml#/components/schemas/ErrorResponse"

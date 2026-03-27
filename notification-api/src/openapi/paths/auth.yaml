@@ -1,15 +1,15 @@
-/login:
+login:
   post:
     summary: User login
     tags: [Auth]
     parameters:
-      - $ref: "#/components/parameters/ClientIdHeader"
+      - $ref: "../index.yaml#/components/parameters/ClientIdHeader"
     requestBody:
       required: true
       content:
         application/json:
           schema:
-            $ref: "#/components/schemas/LoginRequest"
+            $ref: "../index.yaml#/components/schemas/LoginRequest"
     responses:
       "200":
         description: Login successful
@@ -36,20 +36,20 @@
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/ErrorResponse"
+              $ref: "../index.yaml#/components/schemas/ErrorResponse"
 
-/refresh:
+refresh:
   post:
     summary: Refresh access token
     tags: [Auth]
     parameters:
-      - $ref: "#/components/parameters/ClientIdHeader"
+      - $ref: "../index.yaml#/components/parameters/ClientIdHeader"
     requestBody:
       required: true
       content:
         application/json:
           schema:
-            $ref: "#/components/schemas/RefreshRequest"
+            $ref: "../index.yaml#/components/schemas/RefreshRequest"
     responses:
       "200":
         description: Token refreshed successfully
@@ -74,16 +74,16 @@
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/ErrorResponse"
+              $ref: "../index.yaml#/components/schemas/ErrorResponse"
 
-/logout:
+logout:
   post:
     summary: Logout
     tags: [Auth]
     security:
       - bearerAuth: []
     parameters:
-      - $ref: "#/components/parameters/ClientIdHeader"
+      - $ref: "../index.yaml#/components/parameters/ClientIdHeader"
     responses:
       "200":
         description: Logged out successfully
@@ -103,4 +103,4 @@
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/ErrorResponse"
+              $ref: "../index.yaml#/components/schemas/ErrorResponse"

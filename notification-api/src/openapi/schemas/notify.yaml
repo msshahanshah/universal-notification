@@ -353,13 +353,13 @@ NotifyV2Response:
       type: object
       properties:
         email:
-          $ref: "#/components/schemas/V2ServiceResult"
+          $ref: "../index.yaml#/components/schemas/V2ServiceResult"
         sms:
-          $ref: "#/components/schemas/V2ServiceResult"
+          $ref: "../index.yaml#/components/schemas/V2ServiceResult"
         slack:
-          $ref: "#/components/schemas/V2ServiceResult"
+          $ref: "../index.yaml#/components/schemas/V2ServiceResult"
         whatsapp:
-          $ref: "#/components/schemas/V2ServiceResult"
+          $ref: "../index.yaml#/components/schemas/V2ServiceResult"
       example:
         email:
           success: true
@@ -374,8 +374,8 @@ NotifyV2Response:
 
 V2ServiceResult:
   oneOf:
-    - $ref: "#/components/schemas/V2ServiceSuccess"
-    - $ref: "#/components/schemas/V2ServiceFailure"
+    - $ref: "../index.yaml#/components/schemas/V2ServiceSuccess"
+    - $ref: "../index.yaml#/components/schemas/V2ServiceFailure"
   discriminator:
     propertyName: success
 
@@ -399,7 +399,7 @@ V2ServiceSuccess:
       type: array
       description: Present only for services with file attachments (email, whatsapp)
       items:
-        $ref: "#/components/schemas/V2PreSignedUrlGroup"
+        $ref: "../index.yaml#/components/schemas/V2PreSignedUrlGroup"
 
 V2ServiceFailure:
   type: object
@@ -423,7 +423,7 @@ V2PreSignedUrlGroup:
     urls:
       type: array
       items:
-        $ref: "#/components/schemas/V2PreSignedUrl"
+        $ref: "../index.yaml#/components/schemas/V2PreSignedUrl"
 
 V2PreSignedUrl:
   type: object
@@ -455,4 +455,4 @@ PreSignedUrlResponse:
     preSignedUrls:
       type: array
       items:
-        $ref: "#/components/schemas/V2PreSignedUrl"
+        $ref: "../index.yaml#/components/schemas/V2PreSignedUrl"

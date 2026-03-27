@@ -103,50 +103,50 @@ paths:
 
   # ── Auth ────────────────────────────────────────────────────────────────────
   /login:
-    $ref: "./paths/auth.yaml#/~1login"
+    $ref: "./paths/auth.yaml#/login"
   /refresh:
-    $ref: "./paths/auth.yaml#/~1refresh"
+    $ref: "./paths/auth.yaml#/refresh"
   /logout:
-    $ref: "./paths/auth.yaml#/~1logout"
+    $ref: "./paths/auth.yaml#/logout"
 
   # ── Notification ────────────────────────────────────────────────────────────
   /notify:
-    $ref: "./paths/notify.yaml#/~1notify"
+    $ref: "./paths/notify.yaml#/notify"
   /notify-with-attachment:
-    $ref: "./paths/notify.yaml#/~1notify-with-attachment"
+    $ref: "./paths/notify.yaml#/notifyWithAttachment"
   /v2/notify:
-    $ref: "./paths/notify.yaml#/~1v2~1notify"
+    $ref: "./paths/notify.yaml#/v2Notify"
 
   # ── Delivery Status & Logs ─────────────────────────────────────────────────
   /delivery-status/{id}:
-    $ref: "./paths/logs.yaml#/~1delivery-status~1{id}"
+    $ref: "./paths/logs.yaml#/deliveryStatusId"
   /logs:
-    $ref: "./paths/logs.yaml#/~1logs"
+    $ref: "./paths/logs.yaml#/logs"
   /slack-logs:
-    $ref: "./paths/logs.yaml#/~1slack-logs"
+    $ref: "./paths/logs.yaml#/slackLogs"
 
   # ── Balance ─────────────────────────────────────────────────────────────────
   /balance:
-    $ref: "./paths/balance.yaml#/~1balance"
+    $ref: "./paths/balance.yaml#/balance"
   /refresh-balance:
-    $ref: "./paths/balance.yaml#/~1refresh-balance"
+    $ref: "./paths/balance.yaml#/refreshBalance"
 
   # ── Templates ───────────────────────────────────────────────────────────────
   /templates:
-    $ref: "./paths/templates.yaml#/~1templates"
+    $ref: "./paths/templates.yaml#/templates"
   /templates/{id}:
-    $ref: "./paths/templates.yaml#/~1templates~1{id}"
+    $ref: "./paths/templates.yaml#/templatesId"
 
   # ── Routing Rules ───────────────────────────────────────────────────────────
   /routing-rules:
-    $ref: "./paths/routing-rules.yaml#/~1routing-rules"
+    $ref: "./paths/routing-rules.yaml#/routingRules"
   /routing-rules/{ruleId}:
-    $ref: "./paths/routing-rules.yaml#/~1routing-rules~1{ruleId}"
+    $ref: "./paths/routing-rules.yaml#/routingRulesId"
 
   # ── Webhooks ────────────────────────────────────────────────────────────────
   /webhooks:
-    $ref: "./paths/webhooks.yaml#/~1webhooks"
+    $ref: "./paths/webhooks.yaml#/webhooks"
   /webhooks/logs:
-    $ref: "./paths/webhooks.yaml#/~1webhooks~1logs"
+    $ref: "./paths/webhooks.yaml#/webhooksLogs"
   /webhooks/{webhookId}:
-    $ref: "./paths/webhooks.yaml#/~1webhooks~1{webhookId}"
+    $ref: "./paths/webhooks.yaml#/webhooksId"
