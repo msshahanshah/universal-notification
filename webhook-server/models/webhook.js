@@ -18,11 +18,11 @@ const webhookConfigSchema = new mongoose.Schema(
     },
     retryCount: {
       type: Number,
-      default: 0,
+      default: 4,
     },
     isActive: {
       type: Boolean,
-      default: false,
+      default: true,
     },
     deletedAt: Date,
   },

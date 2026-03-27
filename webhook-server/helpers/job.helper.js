@@ -79,7 +79,6 @@ const processNotifications = async (messages, maxRetryAttempts = 4) => {
             retryAttempts: msg.retryAttempts,
             webhookPayload: msg.webhookPayload,
             webhookResponse: msg.webhookResponse,
-            apiKey: msg?.apiKey,
           }),
         });
       }),

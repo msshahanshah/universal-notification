@@ -1,10 +1,13 @@
 const grpc = require("@grpc/grpc-js");
-const protoLoader = require("@grpc/proto-loader");
 const path = require("path");
 const logger = require("../utils/logger");
 const WebhookConfig = require("../models/webhook");
 const WebhookCronScheduler = require("../models/webhookCronSchedulerModel");
 const WebhookLogs = require("../models/webhookLogsModel");
+const {
+  webhookConfigSerializer,
+  webhookLogsSerializer,
+} = require("../serializer");
 
 const { encrypt } = require("../utils/cryptoUtil");
 
@@ -13,8 +16,6 @@ const {
   findAllEnabledServicesForClient,
 } = require("../helpers/mongoose.helper");
 const { isValidObjectId } = require("mongoose");
-
-const PROTO_PATH = path.join(__dirname, "../webhook.proto");
 
 const addWebhook = async (call, callback) => {
   try {
@@ -289,6 +290,7 @@ const allWebhook = async (call, callback) => {
           clientId,
           deletedAt: null,
         })
+          .select("-__v")
           .skip(skip)
           .limit(limit)
           .lean();
@@ -303,6 +305,7 @@ const allWebhook = async (call, callback) => {
         clientId,
         deletedAt: null,
       })
+        .select("-__v")
         .skip(skip)
         .limit(limit)
         .lean();
@@ -314,6 +317,11 @@ const allWebhook = async (call, callback) => {
         message: "no webhook configuration found.",
       };
     }
+
+    // serialize config
+    response["configurations"] = webhookConfigSerializer(
+      response.configurations,
+    );
 
     callback(null, {
       payload: JSON.stringify({
@@ -361,17 +369,21 @@ const getAllWebhookLogs = async (call, callback) => {
     const schedulerLogs = await WebhookCronScheduler.find({
       clientId,
     })
+      .select("-__v")
       .skip(skip)
-      .limit(limit);
+      .limit(limit)
+      .lean();
     const completedLogs = await WebhookLogs.find({ clientId })
+      .select("-__v")
       .skip(skip)
-      .limit(limit);
+      .limit(limit)
+      .lean();
 
     callback(null, {
       payload: JSON.stringify({
         success: true,
         message: "Webhook logs fetched successfully",
-        data: [...schedulerLogs, ...completedLogs],
+        data: webhookLogsSerializer([...schedulerLogs, ...completedLogs]),
       }),
     });
   } catch (error) {
