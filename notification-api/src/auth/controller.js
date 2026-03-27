@@ -1,6 +1,8 @@
 const authService = require("./service");
 const RedisHelper = require("../../helpers/redis.helper");
 const logger = require("../logger");
+const { verifyToken } = require("../../helpers/jwt.helper");
+const { AUTH_TOKEN } = require("../../constants");
 
 const login = async (req, res) => {
   try {
@@ -16,6 +18,7 @@ const login = async (req, res) => {
       throw { statusCode: 401, message: `invalid username or password` };
     }
     const { accessToken, refreshToken } = await authService.login(
+      x_clientId,
       username,
       password,
     );
@@ -44,10 +47,13 @@ const refresh = async (req, res) => {
   try {
     const { refreshToken } = req.body;
     const x_clientId = req.headers["x-client-id"];
-    const newAccessToken = await authService.generateNewAccessToken(
-      refreshToken,
-      x_clientId,
-    );
+
+
+    const newAccessToken = await RedisHelper.refreshAccess(x_clientId, refreshToken)
+    // const newAccessToken = await authService.generateNewAccessToken(
+    //   refreshToken,
+    //   x_clientId,
+    // );
     return res.status(200).json({
       success: true,
       message: "refresh successful",
@@ -69,18 +75,20 @@ const refresh = async (req, res) => {
 
 const logout = async (req, res) => {
   try {
-    // remove access and refresh token from redis
-    const username = req.user.username;
+    const { refreshToken } = req.body;
+    const x_clientId = req.headers["x-client-id"];
 
-    const REDIS_ACCESS_TOKEN_KEY = RedisHelper.getAccessTokenRedisKey(username);
-    const REDIS_REFRESH_TOKEN_KEY =
-      RedisHelper.getRefreshTokenRedisKey(username);
+    const payload = verifyToken(refreshToken, AUTH_TOKEN.REFRESH_TOKEN);
+    const { username } = payload;
+    const client = username.split("@")[1];
 
-    await Promise.all([
-      RedisHelper.deleteKey(REDIS_REFRESH_TOKEN_KEY),
-      RedisHelper.deleteKey(REDIS_ACCESS_TOKEN_KEY),
-    ]);
-
+    if (client.toLowerCase() !== x_clientId.toLowerCase()) {
+      throw {
+        statusCode: 401,
+        message: "Invalid refresh token"
+      }
+    }
+    await RedisHelper.logout(x_clientId, refreshToken);
     return res.status(200).send({
       success: true,
       message: "Logout successfully",

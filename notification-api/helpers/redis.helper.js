@@ -1,8 +1,10 @@
 const { AUTH_TOKEN } = require("../constants/index");
 const redisClient = require("../src/utillity/redisClient");
+const { verifyToken, generateTokens } = require("./jwt.helper");
 const access_token_expire = process.env.ACCESS_TOKEN_TIME || "15M";
 const refresh_token_expire = process.env.REFRESH_TOKEN_TIME || "7D";
 const template_expire = process.env.TEMPLATE_TIME || "1D";
+const globalDatabaseManager = require("../src/utillity/mainDatabase")
 
 function parseExpiryToSeconds(expiry) {
   const value = parseInt(expiry.slice(0, -1), 10);
@@ -23,6 +25,91 @@ function parseExpiryToSeconds(expiry) {
 }
 
 class RedisHelper {
+  static async login(clientId, refreshToken, accessToken) {
+    await redisClient.set(
+      `refresh:${refreshToken}`,
+      accessToken,
+      "EX",
+      60 * 60 * 24 * 7 // 7 days
+    );
+
+    // Store access -> client (short TTL)
+    await redisClient.set(
+      `access:${accessToken}`,
+      clientId,
+      "EX",
+      60 * 15 // 15 min
+    );
+
+    // Track all refresh tokens per client
+    await redisClient.sAdd(`client:${clientId}:refreshTokens`, refreshToken);
+
+    console.log("Login stored");
+  }
+
+  static async logout(clientId, refreshToken) {
+    // Step 1: get access token from refresh
+    const accessToken = await redisClient.get(`refresh:${refreshToken}`);
+
+    if (!accessToken) {
+      throw {
+        statusCode: 401,
+        message: "Invalid refresh token"
+      }
+    }
+
+    if (accessToken) {
+      // Step 2: delete access token
+      await redisClient.del(`access:${accessToken}`);
+    }
+
+    // Step 3: delete refresh token
+    await redisClient.del(`refresh:${refreshToken}`);
+
+    // Step 4: remove from client set
+    await redisClient.sRem(`client:${clientId}:refreshTokens`, refreshToken);
+
+    console.log("Logout successful");
+  }
+
+  static async refreshAccess(clientId, refreshToken) {
+    const oldAccess = await redisClient.get(`refresh:${refreshToken}`);
+
+    if (!oldAccess) {
+      throw {
+        statusCode: 401,
+        message: "Invalid refresh token"
+      }
+    }
+
+    const newAccess = await generateNewAccessToken(
+      refreshToken,
+      clientId,
+    );
+
+    // Step 4: store new access token
+    await redisClient.set(
+      `access:${newAccess}`,
+      clientId,
+      "EX",
+      60 * 15
+    );
+
+    // Step 5: update refresh -> new access
+    await redisClient.set(
+      `refresh:${refreshToken}`,
+      newAccess,
+      "EX",
+      60 * 60 * 24 * 7
+    );
+
+    // Step 6: delete old access token 
+    // if request is send before access expire
+    await redisClient.del(`access:${oldAccess}`);
+
+    return newAccess;
+  }
+
   static async setKey(key, value, type) {
     try {
       const expiryString =
@@ -111,4 +198,38 @@ class RedisHelper {
   }
 }
 
+const generateNewAccessToken = async (refreshToken, x_clientId) => {
+  try {
+    const payload = verifyToken(refreshToken, AUTH_TOKEN.REFRESH_TOKEN);
+    if (!payload) {
+      throw { message: "Unauthorized", statusCode: 401 };
+    }
+
+    const globalDb = await globalDatabaseManager.getModels();;
+    const user = await globalDb.User.findOne({
+      where: { username: payload.username },
+    });
+
+    if (!user) {
+      throw { message: "User no longer exists", statusCode: 404 };
+    }
+    const username = user.username;
+    const userClient = username.split("@")[1];
+    if (!userClient) {
+      throw { statusCode: 401, message: `Invalid refresh token` };
+    }
+    if (userClient.toLowerCase() !== x_clientId.toLowerCase()) {
+      throw { statusCode: 401, message: `Invalid refresh token` };
+    }
+    const newPayload = { id: user.id, username: user.username };
+    const token = generateTokens(newPayload, { access: true });
+
+    return token.accessToken;
+  } catch (error) {
+    throw {
+      message: error.message || "Invalid refresh token",
+      statusCode: error.statusCode || 401,
+    };
+  }
+};
 module.exports = RedisHelper;

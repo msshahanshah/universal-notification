@@ -10,6 +10,7 @@ const smsValidation = require("../../validators/sms.validator");
 const whatsAppValidation = require("../../validators/whatsapp.validator");
 const logger = require("../../logger");
 const cleanJoiMessage = require("../../../helpers/cleanJoiMessage");
+const { SERVICES } = require("../../../constants");
 
 const destinationSchema = Joi.alternatives()
   .conditional("service", {
@@ -169,10 +170,11 @@ const validateRequest = async (req, res, next) => {
         logger.error(
           `ERROR: ${service} is not enabled for ${clientId}. All enabled services for ${clientId} are ${JSON.stringify(enabledServices)}`,
         );
+        // service = service.toUpperCase();
         throw {
           service,
           statusCode: 400,
-          message: `${service} is not enabled for client ${clientId}`,
+          message: SERVICES.service.toUpperCase() ? `${service} is not enabled` : "Invalid service",
         };
       }
     });
