@@ -1,0 +1,66 @@
+RoutingRuleRequest:
+  type: object
+  required:
+    - service
+    - provider
+    - matchKey
+    - matchValue
+  properties:
+    service:
+      type: string
+      enum: [email, slack, sms, whatsapp]
+      example: email
+    provider:
+      type: string
+      example: AWS_SES
+    matchKey:
+      type: string
+      example: DOMAIN
+    matchValue:
+      type: string
+      example: gmail.com
+      description: |
+        - email: Valid email address or domain name.
+        - sms/whatsapp: Valid country calling code (e.g., 91).
+        - slack: Valid Slack channel, group, or DM ID (e.g., C0123ABC456).
+
+RoutingRuleResponse:
+  type: object
+  properties:
+    id:
+      type: integer
+    service:
+      type: string
+      example: EMAIL
+    provider:
+      type: string
+      example: AWS_SES
+    matchKey:
+      type: string
+      example: DOMAIN
+    matchValue:
+      type: string
+      example: gmail.com
+    createdAt:
+      type: string
+      format: date-time
+    updatedAt:
+      type: string
+      format: date-time
+
+RoutingRuleListResponse:
+  type: object
+  properties:
+    success:
+      type: boolean
+      example: true
+    rows:
+      type: array
+      items:
+        $ref: "#/components/schemas/RoutingRuleResponse"
+    total:
+      type: integer
+    currentPage:
+      type: integer
+    totalPages:
+      type: integer

@@ -1,0 +1,205 @@
+/notify:
+  post:
+    summary: Send a notification (SMS / Slack / Email)
+    tags: [Notification]
+    security:
+      - bearerAuth: []
+    parameters:
+      - $ref: "#/components/parameters/ClientIdHeader"
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            oneOf:
+              - $ref: "#/components/schemas/NotifySms"
+              - $ref: "#/components/schemas/NotifySlack"
+              - $ref: "#/components/schemas/NotifyEmail"
+            discriminator:
+              propertyName: service
+          examples:
+            sms:
+              summary: SMS Notification
+              value:
+                service: sms
+                message: "Hello Rahul, how are you"
+                destination: "+919929797900"
+            slack:
+              summary: Slack Notification
+              value:
+                service: slack
+                message: "Good Morning, Guys"
+                destination: "C08Q1239E10R"
+            email:
+              summary: Email Notification
+              value:
+                service: email
+                destination: "user@example.com"
+                subject: "Recent Mail"
+                body: "Email body content"
+                fromEmail: "sender@example.com"
+                cc: "itest@gmail.com"
+                bcc: "itest@gmail.com"
+    responses:
+      "202":
+        description: Notification accepted and queued
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status:
+                  type: string
+                  example: accepted
+                message:
+                  type: string
+                  example: Notification request accepted and queued.
+                messageId:
+                  type: string
+                  example: "7ec67efd-21e1-4189-aa8e-25686a6f8845"
+      "400":
+        description: Validation error
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ErrorResponse"
+      "401":
+        description: Unauthorized
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ErrorResponse"
+      "403":
+        description: Forbidden
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ErrorResponse"
+
+/notify-with-attachment:
+  post:
+    summary: Send an email notification with file attachment (pre-signed S3 upload)
+    tags: [Notification]
+    security:
+      - bearerAuth: []
+    parameters:
+      - $ref: "#/components/parameters/ClientIdHeader"
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/NotifyEmailWithFileAttachment"
+    responses:
+      "200":
+        description: Pre-signed upload URL returned
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PreSignedUrlResponse"
+      "400":
+        description: Validation error
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ErrorResponse"
+      "401":
+        description: Unauthorized
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ErrorResponse"
+      "403":
+        description: Forbidden
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ErrorResponse"
+
+/v2/notify:
+  post:
+    summary: Send multi-service notifications (V2)
+    tags: [Notification]
+    security:
+      - bearerAuth: []
+    operationId: notifyV2
+    description: |
+      Sends notifications across multiple services (SMS, Email, Slack, WhatsApp) in one request.
+
+      ### Constraints
+      - Maximum payload size: **100 KB** — returns `413` if exceeded
+      - Maximum **5** messages per service
+      - If both `message` and `commonMessage` are missing → `400`
+      - If `attachments` are present without `uniqueKey` → `400`
+      - Duplicate `uniqueKey` in same request → `400`
+      - Messages exceeding configured limit → `400`
+    parameters:
+      - $ref: "#/components/parameters/ClientIdHeader"
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/NotifyV2Request"
+    responses:
+      "202":
+        description: All notifications processed successfully
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NotifyV2Response"
+      "207":
+        description: |
+          Partial success. Some services processed successfully, others failed.
+          Response body contains service-specific results in `data`.
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NotifyV2Response"
+            example:
+              data:
+                email:
+                  success: false
+                  statusCode: 400
+                  message: "Bulk insert failed."
+                slack:
+                  success: true
+                  message: "Notification request accepted and queued."
+                  messageIds: ["296c0beb-a519-45ec-9b6c-b0aeb86e034c"]
+                  preSignedUrls: []
+      "400":
+        description: Validation error — one or more service-level payloads are invalid
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NotifyV2Response"
+            example:
+              data:
+                email:
+                  success: false
+                  statusCode: 400
+                  message: "Email no-reply.com in destination is invalid."
+      "401":
+        description: Unauthorized
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ErrorResponse"
+      "403":
+        description: Forbidden
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ErrorResponse"
+      "413":
+        description: Payload Too Large (exceeds 100 KB limit)
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ErrorResponse"
+      "500":
+        description: Internal server error
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ErrorResponse"

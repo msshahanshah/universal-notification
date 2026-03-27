@@ -1,0 +1,74 @@
+TemplateRequest:
+  type: object
+  required:
+    - service
+    - name
+    - messageContent
+  properties:
+    service:
+      type: string
+      enum: [slack, sms, email, whatsapp]
+      example: email
+    templateId:
+      type: string
+      example: "7ec67efd-21e1-4189-aa8e-25686a6f8845"
+      description: |
+        External template ID (e.g., for SMS/WhatsApp providers). When provided,
+        the `variables` field becomes required.
+    name:
+      type: string
+      minLength: 3
+      maxLength: 20
+      example: "Welcome_Template"
+    messageContent:
+      type: string
+      example: "Hello {{name}}, welcome to our service!"
+    variables:
+      type: array
+      description: Required when `templateId` is provided.
+      items:
+        type: object
+        required:
+          - name
+        properties:
+          name:
+            type: string
+            example: "name"
+          constraints:
+            type: object
+            properties:
+              maxlength:
+                oneOf:
+                  - type: string
+                  - type: number
+              dataType:
+                type: string
+
+TemplateResponse:
+  type: object
+  properties:
+    id:
+      type: integer
+      example: 1
+    templateId:
+      type: string
+      example: "7ec67efd-21e1-4119-aa8e-25686a6f8845"
+    service:
+      type: string
+      example: "email"
+    name:
+      type: string
+      example: "welcome_template"
+    messageContent:
+      type: string
+      example: "https://bucket-name.s3.region.amazonaws.com/templates/client-id/template-id.html"
+    requiredFields:
+      type: array
+      items:
+        type: object
+    createdAt:
+      type: string
+      format: date-time
+    updatedAt:
+      type: string
+      format: date-time

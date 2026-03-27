@@ -1,0 +1,258 @@
+/delivery-status/{messageId}:
+  get:
+    summary: Get delivery status of a message
+    tags: [Status]
+    security:
+      - bearerAuth: []
+    parameters:
+      - $ref: "#/components/parameters/ClientIdHeader"
+      - name: messageId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    responses:
+      "200":
+        description: Delivery status returned
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: true
+                data:
+                  type: object
+                  properties:
+                    messageId:
+                      type: string
+                    deliveryStatus:
+                      type: string
+                      example: pending
+      "400":
+        description: Bad Request
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ErrorResponse"
+      "401":
+        description: Unauthorized
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ErrorResponse"
+      "403":
+        description: Forbidden
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ErrorResponse"
+      "404":
+        description: Message ID not found
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ErrorResponse"
+            example:
+              success: false
+              message: "Message ID not found"
+
+/logs:
+  get:
+    summary: Get notification logs
+    tags: [Logs]
+    security:
+      - bearerAuth: []
+    parameters:
+      - $ref: "#/components/parameters/ClientIdHeader"
+      - name: status
+        in: query
+        schema:
+          type: string
+          enum: [pending, processing, failed, sent]
+      - name: service
+        in: query
+        schema:
+          type: string
+          enum: [slack, email, sms, whatsapp]
+      - name: page
+        in: query
+        schema:
+          type: integer
+          minimum: 0
+      - name: limit
+        in: query
+        schema:
+          type: integer
+          minimum: 0
+    responses:
+      "200":
+        description: Logs fetched successfully
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: true
+                message:
+                  type: string
+                  example: Data fetched successfully
+                data:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      id:
+                        type: number
+                      messageId:
+                        type: string
+                      service:
+                        type: string
+                      destination:
+                        type: string
+                      status:
+                        type: string
+                      attempts:
+                        type: number
+                      messageDate:
+                        type: string
+                        format: date-time
+                      referenceId:
+                        type: string
+                pagination:
+                  type: object
+                  properties:
+                    page:
+                      type: number
+                    limit:
+                      type: number
+                    totalPages:
+                      type: number
+      "400":
+        description: Bad Request
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ErrorResponse"
+      "401":
+        description: Unauthorized
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ErrorResponse"
+      "403":
+        description: Forbidden
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ErrorResponse"
+
+/slack-logs:
+  get:
+    summary: Get Slack notification logs including reply messages
+    tags: [Logs]
+    security:
+      - bearerAuth: []
+    parameters:
+      - $ref: "#/components/parameters/ClientIdHeader"
+      - name: status
+        in: query
+        schema:
+          type: string
+          enum: [pending, processing, failed, sent]
+      - name: service
+        in: query
+        schema:
+          type: string
+          enum: [slack]
+      - name: page
+        in: query
+        schema:
+          type: integer
+          minimum: 0
+      - name: limit
+        in: query
+        schema:
+          type: integer
+          minimum: 0
+    responses:
+      "200":
+        description: Slack logs fetched successfully
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: true
+                message:
+                  type: string
+                  example: Data fetched successfully
+                data:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      id:
+                        type: number
+                      messageId:
+                        type: string
+                      service:
+                        type: string
+                      destination:
+                        type: string
+                      status:
+                        type: string
+                      attempts:
+                        type: number
+                      messageDate:
+                        type: string
+                        format: date-time
+                      referenceId:
+                        type: string
+                      userReplyedMessages:
+                        type: object
+                        properties:
+                          username:
+                            type: string
+                            example: "john_doe"
+                          message:
+                            type: string
+                            example: "Thanks for the reply!"
+                          reactions:
+                            type: array
+                            items:
+                              type: string
+                            example: ["+1", "white_check_mark"]
+                pagination:
+                  type: object
+                  properties:
+                    page:
+                      type: number
+                    limit:
+                      type: number
+                    totalPages:
+                      type: number
+      "400":
+        description: Bad Request
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ErrorResponse"
+      "401":
+        description: Unauthorized
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ErrorResponse"
+      "403":
+        description: Forbidden
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ErrorResponse"

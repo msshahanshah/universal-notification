@@ -108,7 +108,7 @@ if (cluster.isMaster) {
         const proxy = httpProxy.createProxyServer({});
         const YAML = require("yamljs");
         const swaggerUi = require("swagger-ui-express");
-        const swaggerDoc = YAML.load(path.join(__dirname, "swagger.yaml"));
+        const swaggerDoc = YAML.load(path.join(__dirname, "openapi", "index.yaml"));
         const masterApp = express();
 
         // cors setting

@@ -1,0 +1,14 @@
+ErrorResponse:
+  type: object
+  description: |
+    Standard error response.
+
+    ⚠️ If the error is related to headers, ensure:
+    - `X-Client-Id` header is present and matches the authenticated user's client ID.
+  properties:
+    success:
+      type: boolean
+      example: false
+    message:
+      type: string
+      example: "error details"

@@ -1,0 +1,139 @@
+/balance:
+  get:
+    summary: Get real-time provider balance
+    tags: [Balance]
+    security:
+      - bearerAuth: []
+    parameters:
+      - $ref: "#/components/parameters/ClientIdHeader"
+      - name: service
+        in: query
+        required: true
+        schema:
+          type: string
+        description: Notification service type (sms, email, slack, etc.)
+      - name: provider
+        in: query
+        required: true
+        schema:
+          type: string
+        description: Provider name (MSG91, Twilio, AWS_SES, etc.)
+    responses:
+      "200":
+        description: Balance fetched successfully
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: true
+                message:
+                  type: string
+                  example: Balance fetched successfully
+                data:
+                  type: object
+                  properties:
+                    provider:
+                      type: string
+                    label:
+                      type: string
+                    balance:
+                      type: number
+                    currency:
+                      type: string
+      "400":
+        description: Missing service or provider query parameter
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ErrorResponse"
+      "401":
+        description: Unauthorized
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ErrorResponse"
+      "403":
+        description: Forbidden
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ErrorResponse"
+      "500":
+        description: Internal Server Error
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ErrorResponse"
+
+/refresh-balance:
+  post:
+    summary: Force-refresh cached provider balance
+    tags: [Balance]
+    security:
+      - bearerAuth: []
+    parameters:
+      - $ref: "#/components/parameters/ClientIdHeader"
+      - name: service
+        in: query
+        required: true
+        schema:
+          type: string
+        description: Notification service type (sms, email, slack, etc.)
+      - name: provider
+        in: query
+        required: true
+        schema:
+          type: string
+        description: Provider name (MSG91, Twilio, AWS_SES, etc.)
+    responses:
+      "200":
+        description: Balance refreshed successfully
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: true
+                message:
+                  type: string
+                  example: Balance fetched successfully
+                data:
+                  type: object
+                  properties:
+                    provider:
+                      type: string
+                    label:
+                      type: string
+                    balance:
+                      type: number
+                    currency:
+                      type: string
+      "400":
+        description: Missing service or provider query parameter
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ErrorResponse"
+      "401":
+        description: Unauthorized
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ErrorResponse"
+      "403":
+        description: Forbidden
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ErrorResponse"
+      "500":
+        description: Internal Server Error
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ErrorResponse"

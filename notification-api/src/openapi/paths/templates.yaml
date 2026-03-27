@@ -1,0 +1,249 @@
+/templates:
+  post:
+    summary: Create a new template
+    tags: [Template]
+    security:
+      - bearerAuth: []
+    parameters:
+      - $ref: "#/components/parameters/ClientIdHeader"
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/TemplateRequest"
+    responses:
+      "201":
+        description: Template created successfully
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: true
+                message:
+                  type: string
+                  example: Template created successfully
+                data:
+                  $ref: "#/components/schemas/TemplateResponse"
+      "400":
+        description: Validation error
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ErrorResponse"
+      "401":
+        description: Unauthorized
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ErrorResponse"
+      "403":
+        description: Forbidden
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ErrorResponse"
+      "409":
+        description: Conflict — template name or templateId already exists
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ErrorResponse"
+
+  get:
+    summary: List / search templates
+    tags: [Template]
+    security:
+      - bearerAuth: []
+    parameters:
+      - $ref: "#/components/parameters/ClientIdHeader"
+      - name: service
+        in: query
+        schema:
+          type: string
+          enum: [email, slack, sms, whatsapp]
+      - name: name
+        in: query
+        schema:
+          type: string
+      - name: templateId
+        in: query
+        schema:
+          type: string
+      - name: page
+        in: query
+        schema:
+          type: integer
+          default: 1
+      - name: limit
+        in: query
+        schema:
+          type: integer
+          default: 10
+    responses:
+      "200":
+        description: Templates fetched successfully
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: true
+                message:
+                  type: string
+                  example: Templates fetched successfully
+                data:
+                  type: array
+                  items:
+                    $ref: "#/components/schemas/TemplateResponse"
+                pagination:
+                  type: object
+                  properties:
+                    total:
+                      type: integer
+                    currentPage:
+                      type: integer
+                    totalPages:
+                      type: integer
+      "401":
+        description: Unauthorized
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ErrorResponse"
+      "403":
+        description: Forbidden
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ErrorResponse"
+
+/templates/{id}:
+  parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: integer
+      description: Internal database ID of the template
+
+  patch:
+    summary: Partially update a template
+    tags: [Template]
+    security:
+      - bearerAuth: []
+    parameters:
+      - $ref: "#/components/parameters/ClientIdHeader"
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            minProperties: 1
+            properties:
+              service:
+                type: string
+                enum: [slack, sms, email, whatsapp]
+              name:
+                type: string
+                minLength: 3
+                maxLength: 20
+              messageContent:
+                type: string
+              variables:
+                type: array
+                items:
+                  type: object
+                  required:
+                    - name
+                  properties:
+                    name:
+                      type: string
+                    constraints:
+                      type: object
+    responses:
+      "200":
+        description: Template updated successfully
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: true
+                message:
+                  type: string
+                  example: Template updated successfully
+                data:
+                  $ref: "#/components/schemas/TemplateResponse"
+      "400":
+        description: Validation error
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ErrorResponse"
+      "401":
+        description: Unauthorized
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ErrorResponse"
+      "403":
+        description: Forbidden
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ErrorResponse"
+      "404":
+        description: Template not found
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ErrorResponse"
+
+  delete:
+    summary: Delete a template
+    tags: [Template]
+    security:
+      - bearerAuth: []
+    parameters:
+      - $ref: "#/components/parameters/ClientIdHeader"
+    responses:
+      "200":
+        description: Template deleted successfully
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: true
+                message:
+                  type: string
+                  example: Template deleted successfully
+      "401":
+        description: Unauthorized
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ErrorResponse"
+      "403":
+        description: Forbidden
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ErrorResponse"
+      "404":
+        description: Template not found
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ErrorResponse"

@@ -1,0 +1,189 @@
+WebhookRequest:
+  type: object
+  required:
+    - webhookUrl
+    - apiKey
+    - serviceTrigger
+    - retryEnabled
+  properties:
+    webhookUrl:
+      type: string
+      format: uri
+      example: "https://example.com/webhook"
+      description: Destination HTTPS URL for webhook delivery.
+    apiKey:
+      type: string
+      example: "my-secret-api-key"
+      description: Secret API key sent with each webhook call for authentication.
+    serviceTrigger:
+      type: object
+      description: |
+        Map of service name → list of event statuses that should trigger the webhook.
+        Allowed statuses: `success`, `failed`, `pending`.
+      additionalProperties:
+        type: array
+        items:
+          type: string
+      example:
+        email: [success, failed]
+        sms: [failed]
+    retryEnabled:
+      type: boolean
+      example: true
+      description: Whether failed webhook deliveries should be retried automatically.
+
+WebhookUpdateRequest:
+  type: object
+  description: |
+    Partial update — at least one field must be provided.
+    Unknown fields are rejected.
+  minProperties: 1
+  properties:
+    webhookUrl:
+      type: string
+      format: uri
+      example: "https://example.com/webhook"
+    apiKey:
+      type: string
+      example: "new-secret-key"
+    serviceTrigger:
+      type: object
+      additionalProperties:
+        type: array
+        items:
+          type: string
+      example:
+        email: [success]
+    retryEnabled:
+      type: boolean
+      example: false
+    isActive:
+      type: boolean
+      example: true
+      description: Activate or deactivate this webhook configuration.
+
+WebhookResponse:
+  type: object
+  properties:
+    id:
+      type: integer
+      example: 1
+    clientId:
+      type: string
+      example: "client-abc"
+    webhookUrl:
+      type: string
+      format: uri
+      example: "https://example.com/webhook"
+    serviceTrigger:
+      type: object
+      additionalProperties:
+        type: array
+        items:
+          type: string
+      example:
+        email: [success, failed]
+    retryEnabled:
+      type: boolean
+      example: true
+    isActive:
+      type: boolean
+      example: true
+    createdAt:
+      type: string
+      format: date-time
+    updatedAt:
+      type: string
+      format: date-time
+
+WebhookLogEntry:
+  type: object
+  properties:
+    _id:
+      type: string
+      example: "69c49c81efae382a523537da"
+      description: MongoDB document ID.
+    clientId:
+      type: string
+      example: "ACCEL"
+    webhookUrl:
+      type: string
+      format: uri
+      example: "https://webhook-api.free.beeceptor.com"
+    serviceTrigger:
+      type: object
+      description: Map of service name to the event status that triggered this delivery.
+      additionalProperties:
+        type: string
+      example:
+        email: sent
+    status:
+      type: string
+      enum: [success, failed, pending, sent]
+      description: |
+        Delivery status. `sent` is a delivery-only status indicating the webhook
+        was dispatched but no confirmation has been received yet.
+      example: "success"
+    retryAttempts:
+      type: integer
+      example: 2
+      description: Number of retry attempts made for this delivery.
+    webhookPayload:
+      type: object
+      description: The payload that was dispatched to the webhook URL.
+      properties:
+        clientId:
+          type: string
+          example: "ACCEL"
+        service:
+          type: string
+          example: "email"
+        status:
+          type: string
+          example: "sent"
+        details:
+          type: object
+          additionalProperties: true
+          description: Service-specific delivery details (e.g. messageId, connectorResponse).
+    webhookResponse:
+      type: object
+      description: Response received from the registered webhook URL.
+      properties:
+        statusCode:
+          type: integer
+          example: 200
+        body:
+          type: string
+          example: "OK"
+    createdAt:
+      type: string
+      format: date-time
+    updatedAt:
+      type: string
+      format: date-time
+
+WebhookLogListResponse:
+  type: object
+  properties:
+    success:
+      type: boolean
+      example: true
+    message:
+      type: string
+      example: "webhook logs fetched successfully."
+    data:
+      type: array
+      items:
+        $ref: "#/components/schemas/WebhookLogEntry"
+    pagination:
+      type: object
+      properties:
+        page:
+          type: integer
+          example: 1
+        limit:
+          type: integer
+          example: 10
+        totalPages:
+          type: integer
+          example: 5

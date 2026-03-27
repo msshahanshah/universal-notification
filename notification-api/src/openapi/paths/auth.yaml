@@ -1,0 +1,106 @@
+/login:
+  post:
+    summary: User login
+    tags: [Auth]
+    parameters:
+      - $ref: "#/components/parameters/ClientIdHeader"
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/LoginRequest"
+    responses:
+      "200":
+        description: Login successful
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: true
+                message:
+                  type: string
+                  example: login successful
+                data:
+                  type: object
+                  properties:
+                    refreshToken:
+                      type: string
+                    accessToken:
+                      type: string
+      "400":
+        description: Invalid credentials
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ErrorResponse"
+
+/refresh:
+  post:
+    summary: Refresh access token
+    tags: [Auth]
+    parameters:
+      - $ref: "#/components/parameters/ClientIdHeader"
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/RefreshRequest"
+    responses:
+      "200":
+        description: Token refreshed successfully
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: true
+                message:
+                  type: string
+                  example: refresh successful
+                data:
+                  type: object
+                  properties:
+                    accessToken:
+                      type: string
+      "401":
+        description: Invalid or expired refresh token
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ErrorResponse"
+
+/logout:
+  post:
+    summary: Logout
+    tags: [Auth]
+    security:
+      - bearerAuth: []
+    parameters:
+      - $ref: "#/components/parameters/ClientIdHeader"
+    responses:
+      "200":
+        description: Logged out successfully
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: true
+                message:
+                  type: string
+                  example: Logout successfully
+      "401":
+        description: Unauthorized
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ErrorResponse"

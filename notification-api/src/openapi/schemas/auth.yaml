@@ -1,0 +1,23 @@
+LoginRequest:
+  type: object
+  required:
+    - username
+    - password
+  properties:
+    username:
+      type: string
+      example: abcdef@xyz
+    password:
+      type: string
+      minLength: 8
+      example: Pass1234
+
+RefreshRequest:
+  type: object
+  required:
+    - refreshToken
+  properties:
+    refreshToken:
+      type: string
+      example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+      description: Refresh token must be a non-empty string
