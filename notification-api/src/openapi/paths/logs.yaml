@@ -1,4 +1,4 @@
-/delivery-status/{messageId}:
+/delivery-status/{id}:
   get:
     summary: Get delivery status of a message
     tags: [Status]
@@ -6,12 +6,12 @@
       - bearerAuth: []
     parameters:
       - $ref: "#/components/parameters/ClientIdHeader"
-      - name: messageId
+      - name: id
         in: path
         required: true
         schema:
           type: string
-          format: uuid
+        description: Message ID (UUID) of the notification
     responses:
       "200":
         description: Delivery status returned
@@ -58,6 +58,12 @@
             example:
               success: false
               message: "Message ID not found"
+      "500":
+        description: Internal Server Error
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ErrorResponse"
 
 /logs:
   get:
@@ -87,6 +93,60 @@
         schema:
           type: integer
           minimum: 0
+      - name: order
+        in: query
+        schema:
+          type: string
+          enum: [asc, desc]
+          default: desc
+        description: Sort order for results
+      - name: sort
+        in: query
+        schema:
+          type: string
+        description: Field to sort by
+      - name: message
+        in: query
+        schema:
+          type: string
+        description: Filter by message content
+      - name: destination
+        in: query
+        schema:
+          type: string
+        description: Filter by destination
+      - name: attempts
+        in: query
+        schema:
+          type: integer
+        description: Filter by number of delivery attempts
+      - name: cc
+        in: query
+        schema:
+          type: string
+        description: Filter by CC email address
+      - name: bcc
+        in: query
+        schema:
+          type: string
+        description: Filter by BCC email address
+      - name: fromEmail
+        in: query
+        schema:
+          type: string
+        description: Filter by sender email address
+      - name: from-date
+        in: query
+        schema:
+          type: string
+          format: date-time
+        description: Filter logs from this date (ISO 8601)
+      - name: to-date
+        in: query
+        schema:
+          type: string
+          format: date-time
+        description: Filter logs up to this date (ISO 8601)
     responses:
       "200":
         description: Logs fetched successfully
@@ -164,11 +224,6 @@
         schema:
           type: string
           enum: [pending, processing, failed, sent]
-      - name: service
-        in: query
-        schema:
-          type: string
-          enum: [slack]
       - name: page
         in: query
         schema:
@@ -179,6 +234,45 @@
         schema:
           type: integer
           minimum: 0
+      - name: order
+        in: query
+        schema:
+          type: string
+          enum: [asc, desc]
+          default: desc
+        description: Sort order for results
+      - name: sort
+        in: query
+        schema:
+          type: string
+        description: Field to sort by
+      - name: message
+        in: query
+        schema:
+          type: string
+        description: Filter by message content
+      - name: destination
+        in: query
+        schema:
+          type: string
+        description: Filter by destination
+      - name: attempts
+        in: query
+        schema:
+          type: integer
+        description: Filter by number of delivery attempts
+      - name: from-date
+        in: query
+        schema:
+          type: string
+          format: date-time
+        description: Filter logs from this date (ISO 8601)
+      - name: to-date
+        in: query
+        schema:
+          type: string
+          format: date-time
+        description: Filter logs up to this date (ISO 8601)
     responses:
       "200":
         description: Slack logs fetched successfully

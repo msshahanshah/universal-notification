@@ -80,8 +80,6 @@
   post:
     summary: Send an email notification with file attachment (pre-signed S3 upload)
     tags: [Notification]
-    security:
-      - bearerAuth: []
     parameters:
       - $ref: "#/components/parameters/ClientIdHeader"
     requestBody:
@@ -91,12 +89,25 @@
           schema:
             $ref: "#/components/schemas/NotifyEmailWithFileAttachment"
     responses:
-      "200":
-        description: Pre-signed upload URL returned
+      "202":
+        description: Notification accepted and queued
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/PreSignedUrlResponse"
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: true
+                status:
+                  type: string
+                  example: accepted
+                message:
+                  type: string
+                  example: Notification request accepted and queued.
+                messageId:
+                  type: string
+                  example: "7ec67efd-21e1-4189-aa8e-25686a6f8845"
       "400":
         description: Validation error
         content:

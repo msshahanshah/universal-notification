@@ -118,8 +118,8 @@ paths:
     $ref: "./paths/notify.yaml#/~1v2~1notify"
 
   # ── Delivery Status & Logs ─────────────────────────────────────────────────
-  /delivery-status/{messageId}:
-    $ref: "./paths/logs.yaml#/~1delivery-status~1{messageId}"
+  /delivery-status/{id}:
+    $ref: "./paths/logs.yaml#/~1delivery-status~1{id}"
   /logs:
     $ref: "./paths/logs.yaml#/~1logs"
   /slack-logs:
