@@ -4,7 +4,8 @@ const { verifyToken, generateTokens } = require("./jwt.helper");
 const access_token_expire = process.env.ACCESS_TOKEN_TIME || "15M";
 const refresh_token_expire = process.env.REFRESH_TOKEN_TIME || "7D";
 const template_expire = process.env.TEMPLATE_TIME || "1D";
-const globalDatabaseManager = require("../src/utillity/mainDatabase")
+const globalDatabaseManager = require("../src/utillity/mainDatabase");
+const logger = require("../src/logger");
 
 function parseExpiryToSeconds(expiry) {
   const value = parseInt(expiry.slice(0, -1), 10);
@@ -29,22 +30,22 @@ class RedisHelper {
     await redisClient.set(
       `refresh:${refreshToken}`,
       accessToken,
-      "EX",
-      60 * 60 * 24 * 7 // 7 days
+      {
+        EX: parseExpiryToSeconds(refresh_token_expire),
+      }
     );
 
-    // Store access -> client (short TTL)
     await redisClient.set(
       `access:${accessToken}`,
       clientId,
-      "EX",
-      60 * 15 // 15 min
+      {
+        EX: parseExpiryToSeconds(access_token_expire),
+      }
     );
 
-    // Track all refresh tokens per client
     await redisClient.sAdd(`client:${clientId}:refreshTokens`, refreshToken);
 
-    console.log("Login stored");
+    logger.info("Login stored");
   }
 
   static async logout(clientId, refreshToken) {
@@ -69,7 +70,7 @@ class RedisHelper {
     // Step 4: remove from client set
     await redisClient.sRem(`client:${clientId}:refreshTokens`, refreshToken);
 
-    console.log("Logout successful");
+    logger.info("Logout successfully")
   }
 
   static async refreshAccess(clientId, refreshToken) {
@@ -91,23 +92,26 @@ class RedisHelper {
     await redisClient.set(
       `access:${newAccess}`,
       clientId,
-      "EX",
-      60 * 15
+      {
+        EX: parseExpiryToSeconds(access_token_expire),
+      }
     );
 
     // Step 5: update refresh -> new access
     await redisClient.set(
       `refresh:${refreshToken}`,
       newAccess,
-      "EX",
-      60 * 60 * 24 * 7
+      {
+        EX: parseExpiryToSeconds(refresh_token_expire),
+      }
     );
 
     // Step 6: delete old access token 
     // if request is send before access expire
     await redisClient.del(`access:${oldAccess}`);
-
+    logger.info("access token refreshed successfully")
     return newAccess;
+
   }
 
   static async setKey(key, value, type) {
