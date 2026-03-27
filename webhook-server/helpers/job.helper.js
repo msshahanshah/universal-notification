@@ -72,7 +72,15 @@ const processNotifications = async (messages, maxRetryAttempts = 4) => {
             "Content-Type": "application/json",
             "X-API-KEY": decrypt(msg.apiKey),
           },
-          body: JSON.stringify(msg.webhookPayload),
+          body: JSON.stringify({
+            webhookUrl: msg.webhookUrl,
+            status: msg.status,
+            serviceTrigger: msg.serviceTrigger,
+            retryAttempts: msg.retryAttempts,
+            webhookPayload: msg.webhookPayload,
+            webhookResponse: msg.webhookResponse,
+            apiKey: msg?.apiKey,
+          }),
         });
       }),
     );

@@ -5,7 +5,7 @@ const rabbitConfigSchema = new mongoose.Schema(
     clientId: {
       type: String,
       required: true,
-      unique: true, // 🔥clientId Ensures only one config per client
+      unique: true, // clientId Ensures only one config per client
     },
 
     url: { type: String, required: true },
@@ -18,7 +18,7 @@ const rabbitConfigSchema = new mongoose.Schema(
       default: true,
     },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 module.exports = mongoose.model("RabbitConfig", rabbitConfigSchema);

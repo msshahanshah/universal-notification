@@ -2,16 +2,12 @@ require("dotenv").config();
 
 const WebhookConfig = require("../models/webhook");
 const WebhookCronScheduler = require("../models/webhookCronSchedulerModel");
-const WebhookLog = require("../models/webhookLogsModel");
 
-const {
-  processNotifications,
-  findAllEligibleNotifications,
-} = require("../helpers/job.helper");
+const { processNotifications } = require("../helpers/job.helper");
 
 const logger = require("./logger");
 
-const consumeNotification = async (payload, messageId) => {
+const consumer = async (payload, messageId) => {
   try {
     logger.info(`Webhook consume start: messageId=${messageId}`);
 
@@ -69,4 +65,4 @@ const consumeNotification = async (payload, messageId) => {
   }
 };
 
-module.exports = { consumeNotification };
+module.exports = { consumer };

@@ -294,7 +294,7 @@ const allWebhook = async (call, callback) => {
           .lean();
       }
 
-      if (fields.includes("enabledServices")) {
+      if (fieldsArr.includes("enabledServices")) {
         response["enabledServices"] =
           await findAllEnabledServicesForClient(clientId);
       }
@@ -354,7 +354,7 @@ const getAllWebhookLogs = async (call, callback) => {
     }
 
     // destructure query params
-    const { fields, page = 1, limit = 10 } = query;
+    const { page = 1, limit = 10 } = query;
     const skip = (page - 1) * limit;
 
     // fetch all logs
@@ -380,42 +380,6 @@ const getAllWebhookLogs = async (call, callback) => {
       code: error.statusCode || grpc.status.INTERNAL,
       message: error.message || "Internal server error",
     });
-  }
-};
-
-const startGrpcServer = () => {
-  try {
-    const packageDef = protoLoader.loadSync(PROTO_PATH);
-    const grpcObj = grpc.loadPackageDefinition(packageDef);
-
-    const webhookPackage = grpcObj.webhook;
-
-    const server = new grpc.Server();
-
-    server.addService(webhookPackage.WebhookService.service, {
-      AddWebhookConfig: addWebhook,
-      UpdateWebhookConfig: updateWebhook,
-      DeleteWebhookConfig: deleteWebhook,
-      AllWebhookConfig: allWebhook,
-    });
-
-    const GRPC_HOST = process.env.GRPC_HOST;
-    const GRPC_PORT = process.env.GRPC_PORT;
-
-    server.bindAsync(
-      `${GRPC_HOST}:${GRPC_PORT}`,
-      grpc.ServerCredentials.createInsecure(),
-      (err, port) => {
-        if (err) {
-          logger.error(`Failed to bind gRPC server: ${err.message}`);
-          return;
-        }
-
-        logger.info(`Webhook gRPC server running on ${GRPC_HOST}:${port}`);
-      },
-    );
-  } catch (err) {
-    logger.error(`Failed to start GRPC server ${err}`);
   }
 };
 

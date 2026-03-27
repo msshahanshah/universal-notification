@@ -11,8 +11,8 @@ const webhookCronSchedulerSchema = new mongoose.Schema(
       required: true,
     },
 
+    // {sms: ["success"]}
     serviceTrigger: {
-      // {sms: ["success"]}
       type: Object,
       required: true,
     },
@@ -33,8 +33,8 @@ const webhookCronSchedulerSchema = new mongoose.Schema(
       required: true,
     },
 
+    // {messageId, service, status, message }
     webhookPayload: {
-      //messageId, service, status, message, clientId etc.
       type: Object,
       required: true,
     },

@@ -3,7 +3,7 @@ require("dotenv").config();
 const logger = require("./utils/logger");
 const { connectMongoose } = require("./helpers/mongoose.helper");
 const connectionManager = require("./utils/connectionManager");
-const { consumeNotification } = require("./utils/consumer");
+const { consumer } = require("./utils/consumer");
 const {
   addWebhook,
   updateWebhook,
@@ -44,7 +44,7 @@ async function connectAndConsume() {
 
         await rabbitClient.consume({
           service: "webhook",
-          sender: consumeNotification,
+          sender: consumer,
           db: null,
           maxProcessAttemptCount: 3,
         });
