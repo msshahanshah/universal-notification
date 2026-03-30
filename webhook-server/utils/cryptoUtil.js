@@ -1,4 +1,5 @@
 const crypto = require("crypto");
+const logger = require("./logger");
 
 const ALGORITHM = "aes-256-gcm";
 const MASTER_KEY = process.env.MASTER_ENCRYPTION_KEY;
@@ -7,41 +8,57 @@ const MASTER_KEY = process.env.MASTER_ENCRYPTION_KEY;
 const getKey = (key) => crypto.createHash("sha256").update(key).digest();
 
 const encrypt = (text, key = MASTER_KEY) => {
-  if (!text) return "";
+  if (!text) {
+    logger.warn("encrypt: called with empty/null text, returning empty string");
+    return "";
+  }
 
-  const iv = crypto.randomBytes(12);
-  const cipher = crypto.createCipheriv(ALGORITHM, getKey(key), iv);
+  try {
+    const iv = crypto.randomBytes(12);
+    const cipher = crypto.createCipheriv(ALGORITHM, getKey(key), iv);
 
-  const encrypted = Buffer.concat([
-    cipher.update(text, "utf8"),
-    cipher.final(),
-  ]);
+    const encrypted = Buffer.concat([
+      cipher.update(text, "utf8"),
+      cipher.final(),
+    ]);
 
-  const authTag = cipher.getAuthTag();
+    const authTag = cipher.getAuthTag();
 
-  // return everything in one string
-  return `${iv.toString("hex")}:${encrypted.toString("hex")}:${authTag.toString("hex")}`;
+    // return everything in one string
+    return `${iv.toString("hex")}:${encrypted.toString("hex")}:${authTag.toString("hex")}`;
+  } catch (err) {
+    logger.error(`encrypt: encryption failed, ${JSON.stringify({ error: err.message, stack: err.stack })}`);
+    throw err;
+  }
 };
 
 const decrypt = (data, key = MASTER_KEY) => {
-  if (!data) return "";
+  if (!data) {
+    logger.warn("decrypt: called with empty/null data, returning empty string");
+    return "";
+  }
 
-  const [ivHex, encryptedHex, authTagHex] = data.split(":");
+  try {
+    const [ivHex, encryptedHex, authTagHex] = data.split(":");
 
-  const decipher = crypto.createDecipheriv(
-    ALGORITHM,
-    getKey(key),
-    Buffer.from(ivHex, "hex"),
-  );
+    const decipher = crypto.createDecipheriv(
+      ALGORITHM,
+      getKey(key),
+      Buffer.from(ivHex, "hex"),
+    );
 
-  decipher.setAuthTag(Buffer.from(authTagHex, "hex"));
+    decipher.setAuthTag(Buffer.from(authTagHex, "hex"));
 
-  const decrypted = Buffer.concat([
-    decipher.update(Buffer.from(encryptedHex, "hex")),
-    decipher.final(),
-  ]);
+    const decrypted = Buffer.concat([
+      decipher.update(Buffer.from(encryptedHex, "hex")),
+      decipher.final(),
+    ]);
 
-  return decrypted.toString("utf8");
+    return decrypted.toString("utf8");
+  } catch (err) {
+    logger.error(`decrypt: decryption failed, ${JSON.stringify({ error: err.message, stack: err.stack })}`);
+    throw err;
+  }
 };
 
 module.exports = { encrypt, decrypt };

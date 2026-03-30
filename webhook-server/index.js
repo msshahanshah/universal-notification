@@ -56,10 +56,7 @@ async function connectAndConsume() {
     const failed = results.filter((r) => r.status === "rejected");
     if (failed.length > 0) {
       failed.forEach((f) => {
-        logger.error("Failed to start one of the consumers:", {
-          error: f.reason?.message || f.reason,
-          stack: f.reason?.stack,
-        });
+        logger.error(`Failed to start one of the consumers: ${JSON.stringify({ error: f.reason?.message || f.reason, stack: f.reason?.stack })}`);
       });
       logger.error(`Failed to start ${failed.length} RabbitMQ consumer(s)`);
       return;
@@ -113,10 +110,7 @@ function startGrpcServer() {
         grpc.ServerCredentials.createInsecure(),
         (err, port) => {
           if (err) {
-            logger.error("Failed to bind gRPC server:", {
-              error: err.message,
-              stack: err.stack,
-            });
+            logger.error(`Failed to bind gRPC server: ${JSON.stringify({ error: err.message, stack: err.stack })}`);
             return reject(err);
           }
 
@@ -126,10 +120,7 @@ function startGrpcServer() {
         },
       );
     } catch (err) {
-      logger.error("Failed to start gRPC server:", {
-        error: err.message,
-        stack: err.stack,
-      });
+      logger.error(`Failed to start gRPC server: ${JSON.stringify({ error: err.message, stack: err.stack })}`);
       reject(err);
     }
   });
@@ -153,10 +144,7 @@ async function start() {
 
     logger.info("[WEBHOOK SERVICE] Server started successfully.");
   } catch (err) {
-    logger.error("[WEBHOOK SERVICE] Failed to start:", {
-      error: err.message,
-      stack: err.stack,
-    });
+    logger.error(`[WEBHOOK SERVICE] Failed to start: ${JSON.stringify({ error: err.message, stack: err.stack })}`);
   }
 }
 
