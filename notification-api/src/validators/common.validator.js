@@ -54,7 +54,7 @@ const commonValidation = {
     .valid("email", "slack", "sms", "whatsapp")
     .messages({
       "string.base": "Service must be a string",
-      "any.only": "Service must be one of: email, slack, sms",
+      "any.only": "Service must be one of: email, slack, sms, whatsapp",
       "string.empty": "Service cannot be empty",
     }),
   message: Joi.string()
