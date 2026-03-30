@@ -46,7 +46,30 @@ const messageObject = Joi.object({
       "object.unknown": "message is not allowed when templateId is provided",
       "any.forbidden": "message is not allowed when templateId is provided",
     }),
-    otherwise: commonValidation.message,
+    otherwise: Joi.string()
+      .trim()
+      .when("service", {
+        switch: [
+          {
+            is: "email",
+            then: Joi.forbidden().messages({
+              "any.unknown": "Message is not allowed for email service",
+              "string.empty": "please provide message or commonMessage",
+            }),
+          },
+          {
+            is: "whatsapp",
+            then: Joi.optional().messages({
+              "string.base": "Message must be a string",
+              "string.empty": "please provide message or commonMessage",
+            }),
+          },
+        ],
+        otherwise: Joi.required().messages({
+          "any.required": "Message is required for this service",
+          "string.empty": "please provide message or commonMessage",
+        }),
+      }),
   }),
 
   body: Joi.when("templateId", {
@@ -91,7 +114,7 @@ const messageObject = Joi.object({
         then: Joi.object({
           message: Joi.string().allow("").optional(), // ✅ allow empty string
         }),
-      }
+      },
     ),
   })
 
@@ -183,11 +206,19 @@ const validateRequest = async (req, res, next) => {
       const uniqueKeySet = new Set();
 
       const enrichedBody = body.map((item) => {
-        if (!item.templateId && !item.message && service !== "email") {
+        if (
+          !item.templateId &&
+          !Object.keys(item).includes("message") &&
+          service !== "email"
+        ) {
           item.message = commonMessage;
         }
 
-        if (!item.templateId && !item.body && service == "email") {
+        if (
+          !item.templateId &&
+          !Object.keys(item).includes("body") &&
+          service == "email"
+        ) {
           item.body = commonMessage;
         }
 
@@ -209,6 +240,8 @@ const validateRequest = async (req, res, next) => {
         enrichedBody,
         baseOptions,
       );
+      console.log(value);
+      console.log(error);
       // checking for uniqueKey for messages with attachments when there are file attachment
       if (
         messageWithFileAttachmentCount !== 0 &&
