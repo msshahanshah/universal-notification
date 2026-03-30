@@ -10,6 +10,7 @@ const smsValidation = require("../../validators/sms.validator");
 const whatsAppValidation = require("../../validators/whatsapp.validator");
 const logger = require("../../logger");
 const cleanJoiMessage = require("../../../helpers/cleanJoiMessage");
+const { validPublicURL } = require("../../../helpers/regex.helper");
 const { SERVICES } = require("../../../constants");
 
 const destinationSchema = Joi.alternatives()
@@ -45,7 +46,30 @@ const messageObject = Joi.object({
       "object.unknown": "message is not allowed when templateId is provided",
       "any.forbidden": "message is not allowed when templateId is provided",
     }),
-    otherwise: commonValidation.message,
+    otherwise: Joi.string()
+      .trim()
+      .when("service", {
+        switch: [
+          {
+            is: "email",
+            then: Joi.forbidden().messages({
+              "any.unknown": "Message is not allowed for email service",
+              "string.empty": "please provide message or commonMessage",
+            }),
+          },
+          {
+            is: "whatsapp",
+            then: Joi.optional().messages({
+              "string.base": "Message must be a string",
+              "string.empty": "please provide message or commonMessage",
+            }),
+          },
+        ],
+        otherwise: Joi.required().messages({
+          "any.required": "Message is required for this service",
+          "string.empty": "please provide message or commonMessage",
+        }),
+      }),
   }),
 
   body: Joi.when("templateId", {
@@ -76,14 +100,22 @@ const messageObject = Joi.object({
     then: Joi.object({
       message: Joi.forbidden().messages({
         "any.forbidden": "message is not allowed when templateId is provided",
-        "any.unknown": "message is not allowed when templateId is provided",
       }),
-
       body: Joi.forbidden().messages({
         "any.forbidden": "body is not allowed when templateId is provided",
-        "any.unknown": "message is not allowed when templateId is provided",
       }),
     }),
+    otherwise: Joi.when(
+      Joi.object({
+        service: Joi.valid("whatsapp"),
+        attachments: Joi.exist(),
+      }).unknown(),
+      {
+        then: Joi.object({
+          message: Joi.string().allow("").optional(), // ✅ allow empty string
+        }),
+      },
+    ),
   })
 
   .when(Joi.object({ variableValues: Joi.exist() }).unknown(), {
@@ -153,7 +185,9 @@ const validateRequest = async (req, res, next) => {
         throw {
           service,
           statusCode: 400,
-          message: SERVICES.service ? `${service} is not enabled` : "Invalid service",
+          message: SERVICES.service
+            ? `${service} is not enabled`
+            : "Invalid service",
         };
       }
     });
@@ -172,15 +206,27 @@ const validateRequest = async (req, res, next) => {
       const uniqueKeySet = new Set();
 
       const enrichedBody = body.map((item) => {
-        if (!item.templateId && !item.message && service !== "email") {
+        if (
+          !item.templateId &&
+          !Object.keys(item).includes("message") &&
+          service !== "email"
+        ) {
           item.message = commonMessage;
         }
 
-        if (!item.templateId && !item.body && service == "email") {
+        if (
+          !item.templateId &&
+          !Object.keys(item).includes("body") &&
+          service == "email"
+        ) {
           item.body = commonMessage;
         }
 
-        if (item.attachments && typeof item.attachments[0] === "string") {
+        if (
+          item.attachments &&
+          typeof item.attachments[0] === "string" &&
+          !validPublicURL(item.attachments[0])
+        ) {
           messageWithFileAttachmentCount += 1;
         }
 
@@ -194,6 +240,8 @@ const validateRequest = async (req, res, next) => {
         enrichedBody,
         baseOptions,
       );
+      console.log(value);
+      console.log(error);
       // checking for uniqueKey for messages with attachments when there are file attachment
       if (
         messageWithFileAttachmentCount !== 0 &&
@@ -205,7 +253,6 @@ const validateRequest = async (req, res, next) => {
           message: `distinct uniqueKey is required to sent message with attachment.`,
         };
       }
-
       if (error) {
         throw {
           service,
@@ -233,7 +280,6 @@ const validateRequest = async (req, res, next) => {
     req.body = sanitizeBody;
     next();
   } catch (error) {
-    console.log(error);
     if (error.service) {
       return res.status(error.statusCode || 500).json({
         data: {
