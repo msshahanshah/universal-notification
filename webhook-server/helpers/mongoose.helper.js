@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 const webhook = require("../models/webhook");
+const logger = require("../utils/logger");
 
 let mongooseInstance = null;
 
@@ -10,10 +11,10 @@ const connectMongoose = async () => {
 
   try {
     mongooseInstance = await mongoose.connect(process.env.MONGO_URI);
-    console.log("MongoDB Connected");
+    logger.info("MongoDB connected successfully");
     return mongooseInstance;
   } catch (err) {
-    console.error("MongoDB Connection Error:", err);
+    logger.error(`MongoDB connection error: ${JSON.stringify({ error: err.message, stack: err.stack })}`);
     throw err; // Rethrow error to handle it in the calling function
   }
 };

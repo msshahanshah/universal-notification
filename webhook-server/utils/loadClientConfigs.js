@@ -30,10 +30,7 @@ async function loadClientConfigs() {
       };
     });
   } catch (error) {
-    logger.error("Failed to load client configurations:", {
-      message: error.message,
-      stack: error?.stack,
-    });
+    logger.error(`Failed to load client configurations: ${JSON.stringify({ error: error.message, stack: error?.stack })}`);
     throw error;
   }
 }

@@ -56,7 +56,7 @@ const consumer = async (payload, messageId) => {
     });
     // initial processing
     processNotifications(enrichedRecords).catch((err) => {
-      logger.error("Immediate notification processing failed", err);
+      logger.error(`Immediate notification processing failed: ${JSON.stringify({ error: err.message, stack: err.stack })}`);
     });
 
     logger.info(`Webhook processing completed for messageId=${messageId}`);
