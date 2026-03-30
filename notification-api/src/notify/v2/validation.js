@@ -77,14 +77,22 @@ const messageObject = Joi.object({
     then: Joi.object({
       message: Joi.forbidden().messages({
         "any.forbidden": "message is not allowed when templateId is provided",
-        "any.unknown": "message is not allowed when templateId is provided",
       }),
-
       body: Joi.forbidden().messages({
         "any.forbidden": "body is not allowed when templateId is provided",
-        "any.unknown": "message is not allowed when templateId is provided",
       }),
     }),
+    otherwise: Joi.when(
+      Joi.object({
+        service: Joi.valid("whatsapp"),
+        attachments: Joi.exist(),
+      }).unknown(),
+      {
+        then: Joi.object({
+          message: Joi.string().allow("").optional(), // ✅ allow empty string
+        }),
+      }
+    ),
   })
 
   .when(Joi.object({ variableValues: Joi.exist() }).unknown(), {
@@ -212,7 +220,6 @@ const validateRequest = async (req, res, next) => {
           message: `distinct uniqueKey is required to sent message with attachment.`,
         };
       }
-
       if (error) {
         throw {
           service,
@@ -240,7 +247,6 @@ const validateRequest = async (req, res, next) => {
     req.body = sanitizeBody;
     next();
   } catch (error) {
-    console.log(error);
     if (error.service) {
       return res.status(error.statusCode || 500).json({
         data: {
