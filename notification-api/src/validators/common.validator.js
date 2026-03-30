@@ -1,11 +1,11 @@
-const Joi = require('joi');
+const Joi = require("joi");
 const baseOptions = { abortEarly: false, stripUnknown: false };
 const {
   fileNameRegex,
   urlRegex,
   validPublicURL,
   fileNameRegexWithExtension,
-} = require('../../helpers/regex.helper');
+} = require("../../helpers/regex.helper");
 
 // --------------------COMMON  VALIDATION----------------------------
 const commonValidation = {
@@ -23,7 +23,7 @@ const commonValidation = {
     .optional()
     .messages({
       "number.base": "Page must be a number",
-      "number.integer": "Page must be an integer",
+      "number.integer": "Page must be a positive integer",
       "number.min": "Page must be at least 1",
       "number.unsafe": "Page must be a valid integer",
     }),
@@ -42,7 +42,7 @@ const commonValidation = {
     .optional()
     .messages({
       "number.base": "Limit must be a number",
-      "number.integer": "Limit must be an integer",
+      "number.integer": "Limit must be a positive integer",
       "number.min": "Limit must be at least 1",
       "number.max": "Limit cannot exceed 100",
       "number.unsafe": "Limit must be a valid integer",
@@ -59,19 +59,19 @@ const commonValidation = {
     }),
   message: Joi.string()
     .trim()
-    .when('service', {
+    .when("service", {
       switch: [
         {
-          is: 'email',
+          is: "email",
           then: Joi.forbidden().messages({
-            'any.unknown': 'Message is not allowed for email service',
+            "any.unknown": "Message is not allowed for email service",
           }),
         },
         {
-          is: 'whatsapp',
+          is: "whatsapp",
           then: Joi.optional().messages({
-            'string.base': 'Message must be a string',
-            'string.empty': 'Message cannot be empty',
+            "string.base": "Message must be a string",
+            "string.empty": "Message cannot be empty",
           }),
         },
       ],
@@ -91,7 +91,7 @@ function changeDuplicateFileName(fileName, map) {
   if (map.has(fileName)) {
     let cnt = map.get(fileName);
 
-    let idx = fileName.lastIndexOf('.');
+    let idx = fileName.lastIndexOf(".");
     if (idx == -1) idx = fileName.length;
 
     const newFileName =
@@ -106,20 +106,21 @@ function changeDuplicateFileName(fileName, map) {
 }
 
 function validateFileName(fileName) {
-  if (!fileName?.length) return 'FileName cannot be empty';
-  if (!fileNameRegex.test(fileName)) return 'FileName is not valid';
+  if (!fileName?.length) return "FileName cannot be empty";
+  if (!fileNameRegex.test(fileName)) return "FileName is not valid";
   return null;
 }
 
 function validateFileNameWithExtension(fileName) {
-  if (!fileName?.length) return 'FileName cannot be empty';
-  if (!fileNameRegexWithExtension.test(fileName)) return 'FileName is not valid';
+  if (!fileName?.length) return "FileName cannot be empty";
+  if (!fileNameRegexWithExtension.test(fileName))
+    return "FileName is not valid";
   return null;
 }
 
 function validateUrl(url) {
-  if (!url?.length) return 'Url cannot be empty';
-  if (!urlRegex.test(url)) return 'Url is not valid';
+  if (!url?.length) return "Url cannot be empty";
+  if (!urlRegex.test(url)) return "Url is not valid";
   return null;
 }
 
@@ -130,11 +131,11 @@ const validateAttachments = (values, helpers) => {
     if (values.length > 10)
       return helpers.message("Attachments can't exceed 10.");
     //checking for array of filenames
-    if (typeof values[0] === 'string') {
+    if (typeof values[0] === "string") {
       for (let idx = 0; idx < values.length; idx++) {
         const item = values[idx];
 
-        if (typeof item === 'string') {
+        if (typeof item === "string") {
           const clearedFileName = item.trim();
           const message = validateFileName(clearedFileName);
           if (message) return helpers.message(message);
@@ -142,24 +143,24 @@ const validateAttachments = (values, helpers) => {
           //changin the name of duplicate files
           values[idx] = changeDuplicateFileName(clearedFileName, map);
         } else {
-          return helpers.message('Attachments must be array of filenames');
+          return helpers.message("Attachments must be array of filenames");
         }
       }
-    } else if (typeof values[0] === 'object') {
-      const allowedKeys = ['fileName', 'url']; // only this keys is allowed in attachemnts
+    } else if (typeof values[0] === "object") {
+      const allowedKeys = ["fileName", "url"]; // only this keys is allowed in attachemnts
       for (let idx = 0; idx < values.length; idx++) {
         const item = values[idx];
 
-        if (typeof item == 'object') {
+        if (typeof item == "object") {
           const keys = Object.keys(item);
 
           if (
             !(keys.length === allowedKeys.length) ||
-            !('fileName' in item) ||
-            !('url' in item)
+            !("fileName" in item) ||
+            !("url" in item)
           ) {
             return helpers.message(
-              'Attachments must contain only fileName and url',
+              "Attachments must contain only fileName and url",
             );
           }
           const { fileName, url } = item;
@@ -183,13 +184,13 @@ const validateAttachments = (values, helpers) => {
           values[idx].fileName = changeDuplicateFileName(clearedFileName, map);
         } else {
           return helpers.message(
-            'Attachments must be array of objects with (fileName and url) fields',
+            "Attachments must be array of objects with (fileName and url) fields",
           );
         }
       }
     } else {
       return helpers.message(
-        'Attachments must be array of filenames or array of objects with (fileName and url) fields',
+        "Attachments must be array of filenames or array of objects with (fileName and url) fields",
       );
     }
   }
@@ -199,34 +200,37 @@ const validateAttachments = (values, helpers) => {
 
 const validateWhatsAppAttachements = (values, helpers) => {
   if (values.length == 0) {
-    return helpers.message(
-      'Attachments can not be empty',
-    );
-  } 
+    return helpers.message("Attachments can not be empty");
+  }
   if (values.length) {
     if (values.length > 10)
       return helpers.message(
-        'Attachments array can not have more than 10 length',
+        "Attachments array can not have more than 10 length",
       );
 
     //checking for array of filenames
-    if (Array.isArray(values) && typeof values[0] === 'string') {
+    if (Array.isArray(values) && typeof values[0] === "string") {
       const firstIsUrl = validPublicURL(values[0]);
-      const firstIsFile = validateFileNameWithExtension(values[0]) === null ? true : false;
+      const firstIsFile =
+        validateFileNameWithExtension(values[0]) === null ? true : false;
 
       if (!firstIsUrl && !firstIsFile) {
         return helpers.message(
-          'Attachments must be a valid public URL or a valid file name',
+          "Attachments must be a valid public URL or a valid file name",
         );
       }
 
       for (const item of values) {
         if (firstIsUrl && !validPublicURL(item)) {
-          return helpers.message('All attachments must be either public URLs or valid file names.');
+          return helpers.message(
+            "All attachments must be either public URLs or valid file names.",
+          );
         }
 
         if (firstIsFile && validateFileNameWithExtension(item) !== null) {
-          return helpers.message('All attachments must be either public URLs or valid file names.');
+          return helpers.message(
+            "All attachments must be either public URLs or valid file names.",
+          );
         }
       }
 
@@ -244,7 +248,7 @@ const validateWhatsAppAttachements = (values, helpers) => {
       }
     } else {
       return helpers.message(
-        'Attachments must be array of filenames or array of valid urls.',
+        "Attachments must be array of filenames or array of valid urls.",
       );
     }
   }
@@ -257,5 +261,5 @@ module.exports = {
   baseOptions,
   validateAttachments,
   validateWhatsAppAttachements,
-  validateFileNameWithExtension
+  validateFileNameWithExtension,
 };

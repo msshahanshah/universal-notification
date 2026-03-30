@@ -94,6 +94,8 @@ const updateWebhook = async (call, callback) => {
       serviceTrigger,
       webhookId,
       clientId,
+      retryEnabled,
+      retryCount,
     } = payload;
 
     if (!webhookId || !clientId) {
@@ -125,6 +127,14 @@ const updateWebhook = async (call, callback) => {
 
     if (isActive !== undefined) {
       setFields.isActive = isActive;
+    }
+
+    if (retryEnabled) {
+      setFields.retryEnabled = retryEnabled;
+    }
+
+    if (retryCount) {
+      setFields.retryCount = retryCount;
     }
 
     // serviceTrigger logic
