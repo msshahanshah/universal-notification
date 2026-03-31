@@ -1,5 +1,4 @@
 const grpc = require("@grpc/grpc-js");
-const path = require("path");
 const logger = require("../utils/logger");
 const WebhookConfig = require("../models/webhook");
 const WebhookCronScheduler = require("../models/webhookCronSchedulerModel");
@@ -9,7 +8,7 @@ const {
   webhookLogsSerializer,
 } = require("../serializer");
 
-const { encrypt } = require("../utils/cryptoUtil");
+const { encrypt, decrypt } = require("../utils/cryptoUtil");
 
 const {
   isUniqueConstraintError,
@@ -59,7 +58,9 @@ const addWebhook = async (call, callback) => {
       }),
     });
   } catch (err) {
-    logger.error(`Error in adding webhook configuration: ${JSON.stringify({ error: err.message, stack: err.stack })}`);
+    logger.error(
+      `Error in adding webhook configuration: ${JSON.stringify({ error: err.message, stack: err.stack })}`,
+    );
     if (isUniqueConstraintError(err)) {
       return callback({
         code: 6,
@@ -193,7 +194,9 @@ const updateWebhook = async (call, callback) => {
       }),
     });
   } catch (error) {
-    logger.error(`Error in updating webhook configuration: ${JSON.stringify({ error: error.message, stack: error.stack })}`);
+    logger.error(
+      `Error in updating webhook configuration: ${JSON.stringify({ error: error.message, stack: error.stack })}`,
+    );
     if (isUniqueConstraintError(error)) {
       return callback({
         code: grpc.status.ALREADY_EXISTS,
@@ -256,7 +259,9 @@ const deleteWebhook = async (call, callback) => {
       }),
     });
   } catch (error) {
-    logger.error(`Error in deleting webhook: ${JSON.stringify({ error: error.message, stack: error.stack })}`);
+    logger.error(
+      `Error in deleting webhook: ${JSON.stringify({ error: error.message, stack: error.stack })}`,
+    );
     callback({
       code: error.statusCode || grpc.status.INTERNAL,
       message: error.message || "Internal server error",
@@ -330,7 +335,10 @@ const allWebhook = async (call, callback) => {
 
     // serialize config
     response["configurations"] = webhookConfigSerializer(
-      response.configurations,
+      response.configurations.map((conf) => {
+        const t = { ...conf, apiKey: decrypt(conf.apiKey) };
+        return t;
+      }),
     );
 
     callback(null, {
@@ -341,7 +349,9 @@ const allWebhook = async (call, callback) => {
       }),
     });
   } catch (error) {
-    logger.error(`Error in fetching all webhooks: ${JSON.stringify({ error: error.message, stack: error.stack })}`);
+    logger.error(
+      `Error in fetching all webhooks: ${JSON.stringify({ error: error.message, stack: error.stack })}`,
+    );
     callback({
       code: error.statusCode || grpc.status.INTERNAL,
       message: error.message || "Internal server error",
@@ -397,7 +407,9 @@ const getAllWebhookLogs = async (call, callback) => {
       }),
     });
   } catch (error) {
-    logger.error(`Error in fetching webhook logs: ${JSON.stringify({ error: error.message, stack: error.stack })}`);
+    logger.error(
+      `Error in fetching webhook logs: ${JSON.stringify({ error: error.message, stack: error.stack })}`,
+    );
     callback({
       code: error.statusCode || grpc.status.INTERNAL,
       message: error.message || "Internal server error",
