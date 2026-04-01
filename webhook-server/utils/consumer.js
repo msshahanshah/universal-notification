@@ -7,11 +7,11 @@ const { processNotifications } = require("../helpers/job.helper");
 
 const logger = require("./logger");
 
-const consumer = async (payload, messageId) => {
+const consumer = async (payload) => {
   try {
+    const { service, status, clientId, details } = payload;
+    const { messageId } = details;
     logger.info(`Webhook consume start: messageId=${messageId}`);
-
-    const { service, status, clientId } = payload;
 
     const query = {
       clientId,
@@ -56,7 +56,9 @@ const consumer = async (payload, messageId) => {
     });
     // initial processing
     processNotifications(enrichedRecords).catch((err) => {
-      logger.error(`Immediate notification processing failed: ${JSON.stringify({ error: err.message, stack: err.stack })}`);
+      logger.error(
+        `Immediate notification processing failed: ${JSON.stringify({ error: err.message, stack: err.stack })}`,
+      );
     });
 
     logger.info(`Webhook processing completed for messageId=${messageId}`);
