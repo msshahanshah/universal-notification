@@ -292,8 +292,18 @@ const allWebhook = async (call, callback) => {
     }
 
     // destructure query params
-    const { fields, page = 1, limit = 10 } = query;
+    const {
+      fields,
+      page = 1,
+      limit = 10,
+      sort = "updatedAt",
+      order = "desc",
+    } = query;
+    console.log(order, sort);
     const skip = (page - 1) * limit;
+    const sortOrderValue = order === "desc" ? -1 : 1;
+    const allowedSortFields = ["createdAt", "updatedAt"];
+    const sortField = allowedSortFields.includes(sort) ? sort : "createdAt";
     // response body
     const response = {};
 
@@ -306,6 +316,7 @@ const allWebhook = async (call, callback) => {
           deletedAt: null,
         })
           .select("-__v")
+          .sort({ [sortField]: sortOrderValue })
           .skip(skip)
           .limit(limit)
           .lean();
@@ -321,6 +332,7 @@ const allWebhook = async (call, callback) => {
         deletedAt: null,
       })
         .select("-__v")
+        .sort({ [sortField]: sortOrderValue })
         .skip(skip)
         .limit(limit)
         .lean();
@@ -382,19 +394,24 @@ const getAllWebhookLogs = async (call, callback) => {
     }
 
     // destructure query params
-    const { page = 1, limit = 10 } = query;
+    const { page = 1, limit = 10, sort = "createdAt", order = "desc" } = query;
     const skip = (page - 1) * limit;
+    const allowedSortFields = ["createdAt", "updatedAt"];
+    const sortField = allowedSortFields.includes(sort) ? sort : "createdAt";
+    const sortOrderValue = order === "desc" ? -1 : 1;
 
     // fetch all logs
     const schedulerLogs = await WebhookCronScheduler.find({
       clientId,
     })
       .select("-__v")
+      .sort({ [sortField]: sortOrderValue })
       .skip(skip)
       .limit(limit)
       .lean();
     const completedLogs = await WebhookLogs.find({ clientId })
       .select("-__v")
+      .sort({ [sortField]: sortOrderValue })
       .skip(skip)
       .limit(limit)
       .lean();
