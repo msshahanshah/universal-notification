@@ -170,6 +170,13 @@ const queryValidationSchema = Joi.object({
       "number.unsafe": "Limit must be a valid integer",
     }),
   fields: Joi.string(),
+  sort: Joi.string().valid("createdAt", "updatedAt").messages({
+    "any.only": "Sort must be either 'createdAt' or 'updatedAt'.",
+  }),
+
+  order: Joi.string().valid("asc", "desc").messages({
+    "any.only": "Order must be either 'asc' or 'desc'.",
+  }),
 });
 
 const webhookValidation = async (req, res, next) => {
