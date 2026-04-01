@@ -4,7 +4,7 @@ function cleanJoiMessage(message) {
   return message
     .replace(/\\\"/g, "")     // remove \"
     .replace(/"/g, "")        // remove "
-    .replace(/\[\d+\]\./g, "") // remove [0]. [1]. etc
+    .replace(/\[\d+\]\.?/g, "") // remove [0]. [1]. etc
     .trim();
 }
 
