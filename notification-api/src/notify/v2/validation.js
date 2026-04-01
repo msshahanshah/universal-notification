@@ -240,8 +240,6 @@ const validateRequest = async (req, res, next) => {
         enrichedBody,
         baseOptions,
       );
-      console.log(value);
-      console.log(error);
       // checking for uniqueKey for messages with attachments when there are file attachment
       if (
         messageWithFileAttachmentCount !== 0 &&
