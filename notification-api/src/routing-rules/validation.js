@@ -31,25 +31,37 @@ const createSchema = Joi.object({
         is: "sms",
         then: Joi.string()
           .valid(...SERVICE_PROVIDERS.SMS)
-          .required(),
+          .messages({
+            "any.only": "provider is not valid.",
+            "string.base": "provider must be a string",
+          }),
       },
       {
         is: "email",
         then: Joi.string()
           .valid(...SERVICE_PROVIDERS.EMAIL)
-          .required(),
+          .messages({
+            "any.only": "provider is not valid.",
+            "string.base": "provider must be a string",
+          }),
       },
       {
         is: "slack",
         then: Joi.string()
           .valid(...SERVICE_PROVIDERS.SLACK)
-          .required(),
+          .messages({
+            "any.only": "provider is not valid.",
+            "string.base": "provider must be a string",
+          }),
       },
       {
         is: "whatsapp",
         then: Joi.string()
           .valid(...SERVICE_PROVIDERS.WHATSAPP)
-          .required(),
+          .messages({
+            "any.only": "provider is not valid.",
+            "string.base": "provider must be a string",
+          }),
       },
     ],
   }).required(),
@@ -60,25 +72,37 @@ const createSchema = Joi.object({
         is: "sms",
         then: Joi.string()
           .valid(...SERVICE_MATCH_KEYS.SMS)
-          .required(),
+          .messages({
+            "any.only": "matchKey is not valid.",
+            "string.base": "matchKey must be a string",
+          }),
       },
       {
         is: "email",
         then: Joi.string()
           .valid(...SERVICE_MATCH_KEYS.EMAIL)
-          .required(),
+          .messages({
+            "any.only": "matchKey is not valid.",
+            "string.base": "matchKey must be a string",
+          }),
       },
       {
         is: "slack",
         then: Joi.string()
           .valid(...SERVICE_MATCH_KEYS.SLACK)
-          .required(),
+          .messages({
+            "any.only": "matchKey is not valid.",
+            "string.base": "matchKey must be a string",
+          }),
       },
       {
         is: "whatsapp",
         then: Joi.string()
           .valid(...SERVICE_MATCH_KEYS.WHATSAPP)
-          .required(),
+          .messages({
+            "any.only": "matchKey is not valid.",
+            "string.base": "matchKey must be a string",
+          }),
       },
     ],
   }).required(),
@@ -118,6 +142,11 @@ const createSchema = Joi.object({
               return value;
             }
             return helpers.error("any.invalid");
+          })
+          .messages({
+            "any.invalid": "matchValue must be a valid email or domain",
+            "string.empty": "matchValue cannot be empty",
+            "any.required": "matchValue is required",
           }),
       },
       {
@@ -125,10 +154,19 @@ const createSchema = Joi.object({
         then: Joi.string()
           .trim()
           .required()
-          .pattern(slackChannelIdRegex),
+          .pattern(slackChannelIdRegex)
+          .messages({
+            "string.pattern.base":
+              "matchValue must be a valid Slack channel, group, or DM ID",
+            "string.empty": "matchValue cannot be empty",
+            "any.required": "matchValue is required",
+          }),
       },
     ],
-    otherwise: Joi.string().trim().required(),
+    otherwise: Joi.string().trim().required().messages({
+      "string.empty": "matchValue cannot be empty",
+      "any.required": "matchValue is required",
+    }),
   }).required(),
 });
 
