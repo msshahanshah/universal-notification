@@ -15,7 +15,6 @@ const slackChannelIdRegex = /^[CGD][A-Z0-9]{8,10}$/;
 
 const createSchema = Joi.object({
   service: Joi.string()
-    .trim()
     .required()
     .valid(...Object.values(SERVICES))
     .messages({
