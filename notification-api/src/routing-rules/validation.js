@@ -6,6 +6,8 @@ const {
   SERVICE_MATCH_KEYS,
   SERVICES,
 } = require("../../constants");
+const cleanJoiMessage = require("../../helpers/cleanJoiMessage");
+const { TagResource$ } = require("@aws-sdk/client-secrets-manager");
 
 const emailRegex = /^[^\s@]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 const domainRegex = /^[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
@@ -13,13 +15,12 @@ const slackChannelIdRegex = /^[CGD][A-Z0-9]{8,10}$/;
 
 const createSchema = Joi.object({
   service: Joi.string()
-    .trim()
     .required()
     .valid(...Object.values(SERVICES))
     .messages({
       "string.base": "Service must be a string",
       "string.empty": "Service cannot be empty",
-      "any.required": "Service cannot be empty",
+      "any.required": "Service is required",
       "any.only": "Service value is not acceptable",
     }),
 
@@ -62,7 +63,7 @@ const createSchema = Joi.object({
           }),
       },
     ],
-  }),
+  }).required(),
 
   matchKey: Joi.when("service", {
     switch: [
@@ -103,7 +104,7 @@ const createSchema = Joi.object({
           }),
       },
     ],
-  }),
+  }).required(),
 
   matchValue: Joi.when("service", {
     switch: [
@@ -128,11 +129,6 @@ const createSchema = Joi.object({
             } catch (err) {
               return helpers.error("any.invalid");
             }
-          })
-          .messages({
-            "any.invalid": "matchValue must be a valid country calling code",
-            "string.empty": "matchValue cannot be empty",
-            "any.required": "matchValue is required",
           }),
       },
       {
@@ -144,7 +140,6 @@ const createSchema = Joi.object({
             if (emailRegex.test(value) || domainRegex.test(value)) {
               return value;
             }
-
             return helpers.error("any.invalid");
           })
           .messages({
@@ -171,12 +166,11 @@ const createSchema = Joi.object({
       "string.empty": "matchValue cannot be empty",
       "any.required": "matchValue is required",
     }),
-  }),
+  }).required(),
 });
 
 const querySchema = Joi.object({
   service: Joi.string()
-    .trim()
     .valid("email", "slack", "sms", "whatsapp")
     .messages({
       "string.base": "Service must be a string",
@@ -193,7 +187,7 @@ const querySchema = Joi.object({
   }),
   page: commonValidation.page,
   limit: commonValidation.limit,
-});
+}).unknown(false);
 
 const validateCreateRequest = (req, res, next) => {
   try {
@@ -209,7 +203,7 @@ const validateCreateRequest = (req, res, next) => {
     if (error) {
       return res.status(400).json({
         success: false,
-        message: error.details[0].message,
+        message: cleanJoiMessage(error.details[0].message),
       });
     }
 
@@ -237,7 +231,7 @@ const validateUpdateRequest = (req, res, next) => {
     if (error) {
       return res.status(400).json({
         success: false,
-        message: error.details[0].message,
+        message: cleanJoiMessage(error.details[0].message),
       });
     }
 
@@ -246,7 +240,7 @@ const validateUpdateRequest = (req, res, next) => {
   } catch (error) {
     return res.status(error.statusCode || 500).json({
       success: false,
-      message: error.message || "Internal server error",
+      message: cleanJoiMessage(error.message) || "Internal server error",
     });
   }
 };
@@ -256,21 +250,20 @@ const validateQueryRequest = (req, res, next) => {
     const { error, value } = querySchema.validate(req.query, {
       abortEarly: false,
       stripUnknown: true,
+      convert: true
     });
 
     if (error) {
       return res.status(400).json({
         success: false,
-        message: error.details[0].message,
+        message: cleanJoiMessage(error.details[0].message),
       });
     }
-
-    req.query = value;
     next();
   } catch (error) {
     return res.status(error.statusCode || 500).json({
       success: false,
-      message: error.message || "Internal server error",
+      message: cleanJoiMessage(error.message) || "Internal server error",
     });
   }
 };

@@ -71,7 +71,6 @@ const registerTemplateSchema = Joi.object({
 
 const queryTemplateSchema = Joi.object({
   service: Joi.string()
-    .trim()
     .valid("email", "slack", "sms", "whatsapp")
     .messages({
       "string.base": "Service must be a string",

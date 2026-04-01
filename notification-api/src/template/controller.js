@@ -7,7 +7,7 @@ const createTemplate = async (req, res, next) => {
 
         const result = await registerTemplate(clientId, req.body);
 
-        return res.status(200).json({
+        return res.status(201).json({
             success: true,
             message: "Template created successfully",
             data: result

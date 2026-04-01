@@ -15,7 +15,7 @@ const createRouting = async (req, res, next) => {
 
         const result = await createRoutingRule(clientId, { service, provider, matchKey, matchValue });
 
-        return res.status(200).json({
+        return res.status(201).json({
             success: true,
             message: "Routing rule added successfully",
             data: result
@@ -90,7 +90,7 @@ const updateRouting = async (req, res, next) => {
 
         return res.status(200).json({
             success: true,
-            message: "Data updated successfully",
+            message: "Routing rule updated successfully",
             data: result
         });
     } catch (error) {
