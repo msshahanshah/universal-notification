@@ -1,16 +1,16 @@
-const logger = require("./logger");
-const connectionManager = require("./utillity/connectionManager");
+const logger = require('./logger');
+const connectionManager = require('./utillity/connectionManager');
 
 async function connectAndConsume(clientConfigList) {
   try {
     await Promise.all(
       clientConfigList.map(async (clientItem) => {
         if (!clientItem) {
-          logger.error("Client configuration is undefined or null.");
+          logger.error('Client configuration is undefined or null.');
           return;
         }
         if (!clientItem.ID) {
-          logger.error("Client ID is missing in the configuration.");
+          logger.error('Client ID is missing in the configuration.');
           return;
         }
         if (!clientItem.SERVER_PORT) {
@@ -28,52 +28,43 @@ async function connectAndConsume(clientConfigList) {
 
         // Start consuming with package consumer
         await rabbitClient.consume({
-          service: "sms",
+          service: 'sms',
           sender: async (payload, messageId) => {
             const { content, destination, provider } = payload;
-            
+
             const msgData = {
               to: destination,
               message: content.message,
               provider: provider,
             };
-            if (process.env.NODE_ENV === "testing") {
+            if (process.env.NODE_ENV === 'testing') {
               const message = await db.Notification.findOne({
                 where: { messageId },
               });
               if (!message) {
-                logger.error("Message Not Found");
+                logger.error('Message Not Found');
                 return;
               }
-              await db.Notification.update(
-                { status: "sent" },
-                { where: { messageId } },
-              );
+              await db.Notification.update({ status: 'sent' }, { where: { messageId } });
             }
-            const fn = await connectionManager.getSMSSender(
-              clientItem.ID,
-              provider,
-            );
+            const fn = await connectionManager.getSMSSender(clientItem.ID, provider);
             return await fn.sendSms({ to: msgData.to, message: msgData.message, templateId: payload.templateId });
           },
           db,
           maxProcessAttemptCount: 3,
         });
-      }),
+      })
     );
 
     // Make connectionManager available globally for rabbitMQClient
     global.connectionManager = connectionManager;
-    logger.info("All connections initialized successfully.");
+    logger.info('All connections initialized successfully.');
   } catch (error) {
     logger.error({
       message: error.message,
       stack: error?.stack,
     });
-    logger.error(
-      "Failed to connect or consume from RabbitMQ / DB check failed:",
-      { error: error.message, stack: error.stack },
-    );
+    logger.error('Failed to connect or consume from RabbitMQ / DB check failed:', { error: error.message, stack: error.stack });
     throw error; // Re-throw to let caller handle
   }
 }
@@ -84,14 +75,14 @@ async function closeConnections(clientId) {
       logger.info(`Closed all connections for client ${clientId}`);
     } else {
       await connectionManager.closeAll();
-      logger.info("Closed all connections");
+      logger.info('Closed all connections');
     }
   } catch (error) {
     logger.error({
       message: error.message,
       stack: error?.stack,
     });
-    logger.error("Failed to close connections:", { error: error.message });
+    logger.error('Failed to close connections:', { error: error.message });
   }
 }
 module.exports = {

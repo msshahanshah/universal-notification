@@ -1,6 +1,6 @@
-"use strict";
+'use strict';
 
-const { Model, DataTypes } = require("sequelize");
+const { Model, DataTypes } = require('sequelize');
 
 module.exports = (sequelize, schemaName) => {
   /**
@@ -68,13 +68,13 @@ module.exports = (sequelize, schemaName) => {
     },
     {
       sequelize,
-      modelName: "SlackReplyMessage",
-      tableName: "slack_reply_messages",
+      modelName: 'SlackReplyMessage',
+      tableName: 'slack_reply_messages',
       schema: schemaName.toLowerCase(),
       timestamps: true,
       paranoid: true, //perform sodt delete
       underscored: true, //It tells Sequelize to use snake_case column names in the database instead of camelCase.
-    },
+    }
   );
 
   return SlackReplyMessage;

@@ -1,7 +1,7 @@
-const logger = require("./logger");
-const { Sequelize } = require("sequelize");
-const rabbitManager = require("./rabbit");
-const { sendSlackMessage } = require("./slackSender");
+const logger = require('./logger');
+const { Sequelize } = require('sequelize');
+const rabbitManager = require('./rabbit');
+const { sendSlackMessage } = require('./slackSender');
 
 let sequelize = null;
 
@@ -14,7 +14,7 @@ let sequelize = null;
 
 function initializeSequelize(dbConfig, clientId) {
   return new Sequelize({
-    dialect: "postgres",
+    dialect: 'postgres',
     host: dbConfig.HOST,
     port: dbConfig.PORT,
     database: dbConfig.NAME,
@@ -52,39 +52,27 @@ async function connectAndConsume(client) {
     logger.info(`[${clientId}] Database connection successful. \n`);
 
     // Define models (assuming models are defined similarly to the original code)
-    const database = require("../models")(sequelize, clientId); // Initialize models for this client's Sequelize instance
+    const database = require('../models')(sequelize, clientId); // Initialize models for this client's Sequelize instance
 
     // consume rabbitmq
 
     await rabbitClient.consume({
-      service: "slackbot",
+      service: 'slackbot',
       sender: async (payload, messageId) => {
         const { content, destination, provider } = payload;
         const msgData = { to: destination, message: content.message };
-        if (process.env.NODE_ENV === "testing") {
+        if (process.env.NODE_ENV === 'testing') {
           const message = await database.Notification.findOne({
             where: { messageId: messageId },
           });
 
           if (!message) {
-            logger.error(
-              `Message not found for messageId :${messageId} in slack service`,
-            );
+            logger.error(`Message not found for messageId :${messageId} in slack service`);
             return;
           }
-          await database.Notification.update(
-            { status: "sent" },
-            { where: { messageId: messageId } },
-          );
+          await database.Notification.update({ status: 'sent' }, { where: { messageId: messageId } });
         }
-        await sendSlackMessage(
-          client.SLACKBOT.TOKEN,
-          msgData.to,
-          msgData.message,
-          messageId,
-          clientId,
-         
-        );
+        await sendSlackMessage(client.SLACKBOT.TOKEN, msgData.to, msgData.message, messageId, clientId);
       },
       db: database,
       maxProcessAttemptCount: 3,

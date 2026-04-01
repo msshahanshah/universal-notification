@@ -1,6 +1,6 @@
-const Joi = require("joi");
-const authValidation = require("../validators/auth.validation");
-const { baseOptions } = require("../validators/common.validator");
+const Joi = require('joi');
+const authValidation = require('../validators/auth.validation');
+const { baseOptions } = require('../validators/common.validator');
 
 const loginSchema = Joi.object({
   username: authValidation.username,
@@ -11,8 +11,8 @@ const loginSchema = Joi.object({
 
 const refreshSchema = Joi.object({
   refreshToken: Joi.string().trim().required().messages({
-    "string.empty": "Refresh token cannot be empty",
-    "any.required": "Refresh token is required",
+    'string.empty': 'Refresh token cannot be empty',
+    'any.required': 'Refresh token is required',
   }),
 })
   .required()
@@ -23,7 +23,7 @@ const validateRequest = (schema) => (req, res, next) => {
     if (!req.body) {
       throw {
         statusCode: 422,
-        message: "Invalid Content-Type or Request Body",
+        message: 'Invalid Content-Type or Request Body',
       };
     }
     const { error, value } = schema.validate(req.body, baseOptions);
@@ -40,7 +40,7 @@ const validateRequest = (schema) => (req, res, next) => {
   } catch (error) {
     return res.status(error.statusCode || 500).json({
       success: false,
-      message: error.message || "internal server error",
+      message: error.message || 'internal server error',
     });
   }
 };

@@ -19,7 +19,7 @@ module.exports = (sequelize, schemaName) => {
       templateId: {
         type: DataTypes.STRING(50),
         allowNull: false,
-        field: "template_id",
+        field: 'template_id',
       },
 
       name: {
@@ -28,45 +28,45 @@ module.exports = (sequelize, schemaName) => {
       },
 
       service: {
-        type: DataTypes.ENUM("slack", "sms", "email", "whatsapp"),
+        type: DataTypes.ENUM('slack', 'sms', 'email', 'whatsapp'),
         allowNull: false,
       },
 
       messageContent: {
         type: DataTypes.STRING(255),
         allowNull: false,
-        field: "message_content",
+        field: 'message_content',
       },
 
       requiredFields: {
         type: DataTypes.JSON,
         allowNull: true,
         defaultValue: [],
-        field: "required_fields",
+        field: 'required_fields',
       },
 
       createdAt: {
         type: DataTypes.DATE,
         allowNull: false,
-        field: "created_at",
+        field: 'created_at',
       },
 
       updatedAt: {
         type: DataTypes.DATE,
         allowNull: false,
-        field: "updated_at",
+        field: 'updated_at',
       },
 
       deletedAt: {
         type: DataTypes.DATE,
         allowNull: true,
-        field: "deleted_at",
+        field: 'deleted_at',
       },
     },
     {
       sequelize,
-      modelName: "Template",
-      tableName: "templates",
+      modelName: 'Template',
+      tableName: 'templates',
       schema: schemaName.toLowerCase(),
       timestamps: true,
       underscored: true,
@@ -75,14 +75,13 @@ module.exports = (sequelize, schemaName) => {
       indexes: [
         {
           unique: true,
-          fields: ['service', 'name', 'deletedAt']
+          fields: ['service', 'name', 'deletedAt'],
         },
         {
           unique: true,
-          fields: ['templateId', 'deletedAt']
+          fields: ['templateId', 'deletedAt'],
         },
-
-      ]
+      ],
     }
   );
 

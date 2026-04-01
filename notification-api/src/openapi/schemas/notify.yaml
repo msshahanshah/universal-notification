@@ -19,7 +19,7 @@ NotifySms:
     destination:
       type: string
       pattern: '^\+[0-9]+(,\+[0-9]+)*$'
-      example: "+919103324482,+919109224482"
+      example: '+919103324482,+919109224482'
       description: |
         Comma-separated list of phone numbers in E.164 format (+<countryCode><number>).
         Duplicate numbers are not allowed.
@@ -82,11 +82,11 @@ NotifyEmail:
       example: Good Morning Dikshant, Please look into this email.
     cc:
       type: string
-      example: "test@gmail.com, test2@gmail.com"
+      example: 'test@gmail.com, test2@gmail.com'
       description: (Optional) Comma-separated CC email addresses.
     bcc:
       type: string
-      example: "test@gmail.com, test2@gmail.com"
+      example: 'test@gmail.com, test2@gmail.com'
       description: (Optional) Comma-separated BCC email addresses.
     attachments:
       type: array
@@ -124,13 +124,13 @@ NotifyEmailWithFileAttachment:
       example: Good Morning Dikshant, Please look into this email.
     cc:
       type: string
-      example: "test@gmail.com, test2@gmail.com"
+      example: 'test@gmail.com, test2@gmail.com'
     bcc:
       type: string
-      example: "test@gmail.com, test2@gmail.com"
+      example: 'test@gmail.com, test2@gmail.com'
     attachments:
       type: array
-      example: ["file1.png", "file2.pdf"]
+      example: ['file1.png', 'file2.pdf']
       description: Array of file names. Max 10 items.
       items:
         type: string
@@ -165,16 +165,16 @@ NotifyEmailWithS3FileAttachment:
       example: Good Morning Dikshant, Please look into this email.
     cc:
       type: string
-      example: "test@gmail.com, test2@gmail.com"
+      example: 'test@gmail.com, test2@gmail.com'
     bcc:
       type: string
-      example: "test@gmail.com, test2@gmail.com"
+      example: 'test@gmail.com, test2@gmail.com'
     attachments:
       type: array
       description: Array of objects with filename and url. Max 10 items.
       example:
-        - { filename: "file_1.png", url: "https://aws_url_1.com" }
-        - { filename: "file_2.png", url: "https://aws_url_2.com" }
+        - { filename: 'file_1.png', url: 'https://aws_url_1.com' }
+        - { filename: 'file_2.png', url: 'https://aws_url_2.com' }
       items:
         type: object
         required: [filename, url]
@@ -204,7 +204,7 @@ NotifyV2Request:
     commonMessage:
       type: string
       description: Fallback message used when an individual service entry has no message/body.
-      example: "This is a common message"
+      example: 'This is a common message'
     sms:
       type: array
       description: List of SMS notifications (max 5)
@@ -217,16 +217,16 @@ NotifyV2Request:
           destination:
             type: string
             description: Recipient phone number in E.164 format
-            example: "+919876543210"
+            example: '+919876543210'
           message:
             type: string
             description: Optional SMS message. Falls back to `commonMessage` if not provided.
-            example: "Hello, your order has been shipped."
+            example: 'Hello, your order has been shipped.'
       example:
-        - destination: "+919876543210"
-          message: "Hello Rahul, your order has been shipped."
-        - destination: "+919123456789"
-          message: "Hello Priya, your appointment is confirmed."
+        - destination: '+919876543210'
+          message: 'Hello Rahul, your order has been shipped.'
+        - destination: '+919123456789'
+          message: 'Hello Priya, your appointment is confirmed.'
     slack:
       type: array
       description: List of Slack notifications (max 5)
@@ -239,14 +239,14 @@ NotifyV2Request:
           destination:
             type: string
             description: Valid Slack Channel ID
-            example: "C08Q1E38E10R"
+            example: 'C08Q1E38E10R'
           message:
             type: string
             description: Optional Slack message. Falls back to `commonMessage` if not provided.
-            example: "Hello, your order has been shipped."
+            example: 'Hello, your order has been shipped.'
       example:
-        - destination: "C08Q1E38E10R"
-          message: "Hello Rahul, your order has been shipped."
+        - destination: 'C08Q1E38E10R'
+          message: 'Hello Rahul, your order has been shipped.'
     email:
       type: array
       description: List of Email notifications (max 5)
@@ -261,46 +261,46 @@ NotifyV2Request:
             type: string
             format: email
             description: Recipient email address
-            example: "user@example.com"
+            example: 'user@example.com'
           subject:
             type: string
             description: Email subject line
-            example: "Order Confirmation"
+            example: 'Order Confirmation'
           body:
             type: string
             description: Optional email body. Falls back to `commonMessage` if not provided.
-            example: "Hi, your order has been confirmed."
+            example: 'Hi, your order has been confirmed.'
           fromEmail:
             type: string
             format: email
             description: Sender email address (if client is permitted to override).
-            example: "noreply@company.com"
+            example: 'noreply@company.com'
           uniqueKey:
             type: string
             description: Required if `attachments` are present. Must be unique within the request.
-            example: "email-1"
+            example: 'email-1'
           attachments:
             type: array
             description: List of attachment file names to be uploaded via pre-signed URL.
             items:
               type: string
             example:
-              - "invoice.pdf"
-              - "receipt.png"
+              - 'invoice.pdf'
+              - 'receipt.png'
       example:
-        - destination: "alice@example.com"
-          subject: "Order Confirmation"
-          body: "Hi Alice, your order #1001 has been confirmed."
-          fromEmail: "noreply@company.com"
-          uniqueKey: "email-1"
+        - destination: 'alice@example.com'
+          subject: 'Order Confirmation'
+          body: 'Hi Alice, your order #1001 has been confirmed.'
+          fromEmail: 'noreply@company.com'
+          uniqueKey: 'email-1'
           attachments:
-            - "invoice.pdf"
-            - "receipt.png"
-        - destination: "bob@example.com"
-          subject: "Shipment Update"
-          body: "Hi Bob, your order #1002 has been shipped."
-          fromEmail: "noreply@company.com"
-          uniqueKey: "email-2"
+            - 'invoice.pdf'
+            - 'receipt.png'
+        - destination: 'bob@example.com'
+          subject: 'Shipment Update'
+          body: 'Hi Bob, your order #1002 has been shipped.'
+          fromEmail: 'noreply@company.com'
+          uniqueKey: 'email-2'
     whatsapp:
       type: array
       description: List of WhatsApp notifications (max 5)
@@ -313,7 +313,7 @@ NotifyV2Request:
           destination:
             type: string
             description: Recipient WhatsApp number in E.164 format
-            example: "+919929797900"
+            example: '+919929797900'
           message:
             type: string
             description: Optional WhatsApp text message
@@ -322,7 +322,7 @@ NotifyV2Request:
             description: List of public media URLs
             items:
               type: string
-              example: "https://example.com/file.pdf"
+              example: 'https://example.com/file.pdf'
           templateId:
             type: string
             description: WhatsApp template identifier
@@ -332,19 +332,19 @@ NotifyV2Request:
             additionalProperties:
               type: string
             example:
-              "1": "value1"
-              "2": "value2"
+              '1': 'value1'
+              '2': 'value2'
       example:
-        - destination: "+919929797900"
-          message: "Hello!"
-        - destination: "+919929797900"
+        - destination: '+919929797900'
+          message: 'Hello!'
+        - destination: '+919929797900'
           attachments:
-            - "https://example.com/file.pdf"
-        - destination: "+919929797900"
-          templateId: "templateId"
+            - 'https://example.com/file.pdf'
+        - destination: '+919929797900'
+          templateId: 'templateId'
           variableValues:
-            "1": "value1"
-            "2": "value2"
+            '1': 'value1'
+            '2': 'value2'
 
 NotifyV2Response:
   type: object
@@ -353,29 +353,29 @@ NotifyV2Response:
       type: object
       properties:
         email:
-          $ref: "../index.yaml#/components/schemas/V2ServiceResult"
+          $ref: '../index.yaml#/components/schemas/V2ServiceResult'
         sms:
-          $ref: "../index.yaml#/components/schemas/V2ServiceResult"
+          $ref: '../index.yaml#/components/schemas/V2ServiceResult'
         slack:
-          $ref: "../index.yaml#/components/schemas/V2ServiceResult"
+          $ref: '../index.yaml#/components/schemas/V2ServiceResult'
         whatsapp:
-          $ref: "../index.yaml#/components/schemas/V2ServiceResult"
+          $ref: '../index.yaml#/components/schemas/V2ServiceResult'
       example:
         email:
           success: true
-          message: "Notification request accepted and queued."
-          messageIds: ["15471e6e-aa54-47d3-9618-3ff92d75446e"]
+          message: 'Notification request accepted and queued.'
+          messageIds: ['15471e6e-aa54-47d3-9618-3ff92d75446e']
           preSignedUrls: []
         slack:
           success: true
-          message: "Notification request accepted and queued."
-          messageIds: ["296c0beb-a519-45ec-9b6c-b0aeb86e034c"]
+          message: 'Notification request accepted and queued.'
+          messageIds: ['296c0beb-a519-45ec-9b6c-b0aeb86e034c']
           preSignedUrls: []
 
 V2ServiceResult:
   oneOf:
-    - $ref: "../index.yaml#/components/schemas/V2ServiceSuccess"
-    - $ref: "../index.yaml#/components/schemas/V2ServiceFailure"
+    - $ref: '../index.yaml#/components/schemas/V2ServiceSuccess'
+    - $ref: '../index.yaml#/components/schemas/V2ServiceFailure'
   discriminator:
     propertyName: success
 
@@ -387,19 +387,19 @@ V2ServiceSuccess:
       example: true
     message:
       type: string
-      example: "Notification request accepted and queued."
+      example: 'Notification request accepted and queued.'
     messageIds:
       type: array
       items:
         type: string
         format: uuid
       example:
-        - "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+        - 'a1b2c3d4-e5f6-7890-abcd-ef1234567890'
     preSignedUrls:
       type: array
       description: Present only for services with file attachments (email, whatsapp)
       items:
-        $ref: "../index.yaml#/components/schemas/V2PreSignedUrlGroup"
+        $ref: '../index.yaml#/components/schemas/V2PreSignedUrlGroup'
 
 V2ServiceFailure:
   type: object
@@ -412,32 +412,32 @@ V2ServiceFailure:
       example: 400
     message:
       type: string
-      example: "Bulk insert failed."
+      example: 'Bulk insert failed.'
 
 V2PreSignedUrlGroup:
   type: object
   properties:
     uniqueKey:
       type: string
-      example: "email-1"
+      example: 'email-1'
     urls:
       type: array
       items:
-        $ref: "../index.yaml#/components/schemas/V2PreSignedUrl"
+        $ref: '../index.yaml#/components/schemas/V2PreSignedUrl'
 
 V2PreSignedUrl:
   type: object
   properties:
     fileName:
       type: string
-      example: "invoice.pdf"
+      example: 'invoice.pdf'
     s3:
       type: object
       properties:
         url:
           type: string
           format: uri
-          example: "https://bucket.s3.ap-south-1.amazonaws.com/"
+          example: 'https://bucket.s3.ap-south-1.amazonaws.com/'
         fields:
           type: object
           additionalProperties:
@@ -451,8 +451,8 @@ PreSignedUrlResponse:
       example: true
     message:
       type: string
-      example: "Waiting for file upload on URL (expiry 5 mins). Message Id: 24af1e92-cfa3-4c25-9d13-79841734f1ee"
+      example: 'Waiting for file upload on URL (expiry 5 mins). Message Id: 24af1e92-cfa3-4c25-9d13-79841734f1ee'
     preSignedUrls:
       type: array
       items:
-        $ref: "../index.yaml#/components/schemas/V2PreSignedUrl"
+        $ref: '../index.yaml#/components/schemas/V2PreSignedUrl'

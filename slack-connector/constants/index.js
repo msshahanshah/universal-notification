@@ -1,3 +1,3 @@
 module.exports = {
-  SERVICE_NAME: "slack",
+  SERVICE_NAME: 'slack',
 };

@@ -1,26 +1,26 @@
-const webhookService = require("./service");
+const webhookService = require('./service');
 
 // common error handler (optional but clean)
 const handleError = (res, error) => {
   const statusCode = error?.statusCode || 500;
-  const message = error?.message || "Internal server error";
+  const message = error?.message || 'Internal server error';
 
   return res.status(statusCode).json({
     success: false,
-    message: statusCode === 500 ? "internal server error" : message,
+    message: statusCode === 500 ? 'internal server error' : message,
   });
 };
 
 // ---------------- ADD ----------------
 async function addWebhook(req, res) {
   try {
-    const clientId = req.headers["x-client-id"];
+    const clientId = req.headers['x-client-id'];
 
     await webhookService.addWebhook(req.body, clientId);
 
     return res.status(201).json({
       success: true,
-      message: "webhook configuration added successfully.",
+      message: 'webhook configuration added successfully.',
     });
   } catch (error) {
     return handleError(res, error);
@@ -30,14 +30,14 @@ async function addWebhook(req, res) {
 // ---------------- UPDATE ----------------
 async function updateWebhook(req, res) {
   try {
-    const clientId = req.headers["x-client-id"];
+    const clientId = req.headers['x-client-id'];
     const webhookId = req.params.webhookId;
 
     await webhookService.updateWebhook(req.body, webhookId, clientId);
 
     return res.status(200).json({
       success: true,
-      message: "webhook configuration updated successfully.",
+      message: 'webhook configuration updated successfully.',
     });
   } catch (error) {
     return handleError(res, error);
@@ -47,14 +47,14 @@ async function updateWebhook(req, res) {
 // ---------------- DELETE ----------------
 async function deleteWebhook(req, res) {
   try {
-    const clientId = req.headers["x-client-id"];
+    const clientId = req.headers['x-client-id'];
     const webhookId = req.params.webhookId;
 
     await webhookService.deleteWebhook(webhookId, clientId);
 
     return res.status(200).json({
       success: true,
-      message: "webhook configuration deleted successfully.",
+      message: 'webhook configuration deleted successfully.',
     });
   } catch (error) {
     return handleError(res, error);
@@ -64,13 +64,13 @@ async function deleteWebhook(req, res) {
 // ---------------- GET ----------------
 async function getWebhooks(req, res) {
   try {
-    const clientId = req.headers["x-client-id"];
+    const clientId = req.headers['x-client-id'];
 
     const result = await webhookService.getWebhookConfigs(clientId, req.query);
 
     return res.status(200).json({
       success: true,
-      message: "webhook configuration fetched successfully.",
+      message: 'webhook configuration fetched successfully.',
       data: result,
     });
   } catch (error) {
@@ -82,13 +82,13 @@ async function getWebhooks(req, res) {
 // ---------------- GET ----------------
 async function getWebhooksLogs(req, res) {
   try {
-    const clientId = req.headers["x-client-id"];
+    const clientId = req.headers['x-client-id'];
 
     const result = await webhookService.getWebhookLogs(clientId, req.query);
 
     return res.status(200).json({
       success: true,
-      message: "webhook logs fetched successfully.",
+      message: 'webhook logs fetched successfully.',
       data: result,
     });
   } catch (error) {

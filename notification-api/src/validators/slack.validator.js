@@ -1,5 +1,5 @@
-const Joi = require("joi");
-const { slackChannelIdRegex } = require("../../helpers/regex.helper");
+const Joi = require('joi');
+const { slackChannelIdRegex } = require('../../helpers/regex.helper');
 
 const slackValidation = {
   destination: Joi.string()
@@ -7,7 +7,7 @@ const slackValidation = {
     .required()
     .custom((value, helpers) => {
       // Split by comma
-      let channels = value.split(",");
+      let channels = value.split(',');
 
       // Trim & remove empty values
       channels = channels.map((c) => c.trim());
@@ -16,15 +16,13 @@ const slackValidation = {
 
       for (let channel of channels) {
         if (channel.length == 0) {
-          return helpers.message(
-            `An invalid destination is not allowed. An empty or invalid destination value was detected`,
-          );
+          return helpers.message(`An invalid destination is not allowed. An empty or invalid destination value was detected`);
         }
       }
 
       // If after cleanup nothing remains
       if (channels.length === 0) {
-        return helpers.message("At least one Slack channel ID is required");
+        return helpers.message('At least one Slack channel ID is required');
       }
 
       // converting channel ids into uppercase
@@ -45,15 +43,15 @@ const slackValidation = {
       // Duplicate check
       const uniqueChannels = new Set(channels);
       if (uniqueChannels.size !== channels.length) {
-        return helpers.message("Duplicate Slack channel IDs are not allowed");
+        return helpers.message('Duplicate Slack channel IDs are not allowed');
       }
 
       // Return cleaned value
       return [...uniqueChannels];
     })
     .messages({
-      "string.base": "Destination must be a string",
-      "any.required": "Destination is required for Slack service",
+      'string.base': 'Destination must be a string',
+      'any.required': 'Destination is required for Slack service',
     }),
 };
 

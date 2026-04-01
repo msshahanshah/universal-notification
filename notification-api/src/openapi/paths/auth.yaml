@@ -3,15 +3,15 @@ login:
     summary: User login
     tags: [Auth]
     parameters:
-      - $ref: "../index.yaml#/components/parameters/ClientIdHeader"
+      - $ref: '../index.yaml#/components/parameters/ClientIdHeader'
     requestBody:
       required: true
       content:
         application/json:
           schema:
-            $ref: "../index.yaml#/components/schemas/LoginRequest"
+            $ref: '../index.yaml#/components/schemas/LoginRequest'
     responses:
-      "200":
+      '200':
         description: Login successful
         content:
           application/json:
@@ -31,27 +31,27 @@ login:
                       type: string
                     accessToken:
                       type: string
-      "400":
+      '400':
         description: Invalid credentials
         content:
           application/json:
             schema:
-              $ref: "../index.yaml#/components/schemas/ErrorResponse"
+              $ref: '../index.yaml#/components/schemas/ErrorResponse'
 
 refresh:
   post:
     summary: Refresh access token
     tags: [Auth]
     parameters:
-      - $ref: "../index.yaml#/components/parameters/ClientIdHeader"
+      - $ref: '../index.yaml#/components/parameters/ClientIdHeader'
     requestBody:
       required: true
       content:
         application/json:
           schema:
-            $ref: "../index.yaml#/components/schemas/RefreshRequest"
+            $ref: '../index.yaml#/components/schemas/RefreshRequest'
     responses:
-      "200":
+      '200':
         description: Token refreshed successfully
         content:
           application/json:
@@ -69,12 +69,12 @@ refresh:
                   properties:
                     accessToken:
                       type: string
-      "401":
+      '401':
         description: Invalid or expired refresh token
         content:
           application/json:
             schema:
-              $ref: "../index.yaml#/components/schemas/ErrorResponse"
+              $ref: '../index.yaml#/components/schemas/ErrorResponse'
 
 logout:
   post:
@@ -83,9 +83,9 @@ logout:
     security:
       - bearerAuth: []
     parameters:
-      - $ref: "../index.yaml#/components/parameters/ClientIdHeader"
+      - $ref: '../index.yaml#/components/parameters/ClientIdHeader'
     responses:
-      "200":
+      '200':
         description: Logged out successfully
         content:
           application/json:
@@ -98,9 +98,9 @@ logout:
                 message:
                   type: string
                   example: Logout successfully
-      "401":
+      '401':
         description: Unauthorized
         content:
           application/json:
             schema:
-              $ref: "../index.yaml#/components/schemas/ErrorResponse"
+              $ref: '../index.yaml#/components/schemas/ErrorResponse'

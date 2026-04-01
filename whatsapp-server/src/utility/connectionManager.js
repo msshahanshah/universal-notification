@@ -1,12 +1,12 @@
 // connectionManager.js
-"use strict";
+'use strict';
 
-const { Sequelize } = require("sequelize");
-const { LRUCache } = require("lru-cache");
-const { loadClientConfigs } = require("./loadClientConfig.js");
-const logger = require("../logger.js");
-const { WhatsAppSender } = require("./whatsAppSender.js");
-const rabbitManager = require("./rabbit.js");
+const { Sequelize } = require('sequelize');
+const { LRUCache } = require('lru-cache');
+const { loadClientConfigs } = require('./loadClientConfig.js');
+const logger = require('../logger.js');
+const { WhatsAppSender } = require('./whatsAppSender.js');
+const rabbitManager = require('./rabbit.js');
 
 class ConnectionManager {
   constructor() {
@@ -36,17 +36,13 @@ class ConnectionManager {
 
     if (!whatsAppConfig) {
       const clientList = await loadClientConfigs();
-      whatsAppConfig = clientList.find(
-        (client) => client.ID === clientId,
-      )?.WHATSAPP;
+      whatsAppConfig = clientList.find((client) => client.ID === clientId)?.WHATSAPP;
       if (!whatsAppConfig) {
-        throw new Error(
-          `WhatsApp configuration not found for client ID: ${clientId}`,
-        );
+        throw new Error(`WhatsApp configuration not found for client ID: ${clientId}`);
       }
     }
     logger.debug(`[${clientId}] WhatsApp config:`, {
-      provider: whatsAppConfig.TWILIO ? "TWILIO" : "Other",
+      provider: whatsAppConfig.TWILIO ? 'TWILIO' : 'Other',
     });
     logger.info(`[${clientId}] Testing whatsApp service connection...`);
     let whatsAppSender = new WhatsAppSender(clientId, whatsAppConfig);
@@ -72,14 +68,12 @@ class ConnectionManager {
       const clientList = await loadClientConfigs();
       dbConfig = clientList.find((client) => client.ID === clientId)?.DBCONFIG;
       if (!dbConfig) {
-        throw new Error(
-          `Database configuration not found for client ID: ${clientId}`,
-        );
+        throw new Error(`Database configuration not found for client ID: ${clientId}`);
       }
     }
 
     const sequelize = new Sequelize({
-      dialect: "postgres", // Adjust if using another database
+      dialect: 'postgres', // Adjust if using another database
       host: dbConfig.HOST,
       port: dbConfig.PORT,
       database: dbConfig.NAME,
@@ -97,7 +91,7 @@ class ConnectionManager {
     logger.info(`[${clientId}] Testing database connection...`);
     await sequelize.authenticate();
     logger.info(`[${clientId}] Database connection successful.`);
-    let db = await require("../../models")(sequelize, Sequelize, clientId);
+    let db = await require('../../models')(sequelize, Sequelize, clientId);
     this.modelCache.set(clientId, db);
     return Promise.resolve();
   }
@@ -106,9 +100,7 @@ class ConnectionManager {
     if (!db) {
       await this.initializeSequelize(undefined, clientId);
       db = this.modelCache.get(clientId);
-      logger.debug(
-        `Cache stats: size=${this.modelCache.size}, max=${this.modelCache.max}`,
-      );
+      logger.debug(`Cache stats: size=${this.modelCache.size}, max=${this.modelCache.max}`);
     }
     return db;
   }
@@ -121,9 +113,7 @@ class ConnectionManager {
     if (!whatsAppSender) {
       await this.initializeWhatsAppSender(undefined, clientId);
       whatsAppSender = this.whatsAppCache.get(clientId);
-      logger.debug(
-        `WhatsApp cache stats: size=${this.whatsAppCache.size}, max=${this.whatsAppCache.max}`,
-      );
+      logger.debug(`WhatsApp cache stats: size=${this.whatsAppCache.size}, max=${this.whatsAppCache.max}`);
     }
     return whatsAppSender;
   }

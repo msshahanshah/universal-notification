@@ -1,8 +1,5 @@
 const Joi = require('joi');
-const {
-  baseOptions,
-  commonValidation,
-} = require('../validators/common.validator');
+const { baseOptions, commonValidation } = require('../validators/common.validator');
 const emailValidation = require('../validators/email.validator');
 const slackValidation = require('../validators/slack.validator');
 const smsValidation = require('../validators/sms.validator');
@@ -13,10 +10,7 @@ require('dotenv').config({
   path: require('path').resolve(__dirname, '../../../.env'),
 }); // Define the validation schema
 
-console.log(
-  'Environment Variables:',
-  require('path').resolve(__dirname, '../../../.env'),
-);
+console.log('Environment Variables:', require('path').resolve(__dirname, '../../../.env'));
 const destination = Joi.alternatives()
   .conditional('service', {
     switch: [
@@ -68,10 +62,8 @@ const validateSchema = Joi.object({
     is: 'whatsapp',
     then: whatsAppValidation.contentVariables,
     otherwise: Joi.forbidden().messages({
-      'any.unknown':
-        'variableValues is allowed only when service is whatsapp',
-      'any.forbidden':
-        'variableValues is allowed only when service is whatsapp',
+      'any.unknown': 'variableValues is allowed only when service is whatsapp',
+      'any.forbidden': 'variableValues is allowed only when service is whatsapp',
     }),
   }),
 }).when(Joi.object({ service: Joi.valid('whatsapp') }).unknown(), {
@@ -82,14 +74,11 @@ const validateSchema = Joi.object({
     .nand('templateId', 'attachments')
     .nand('message', 'variableValues')
     .messages({
-      'object.missing':
-        "For WhatsApp service provide either 'message', 'attachments', or ('templateId' with 'variableValues')",
+      'object.missing': "For WhatsApp service provide either 'message', 'attachments', or ('templateId' with 'variableValues')",
 
-      'object.with':
-        "'variableValues' must be provided when 'templateId' is used",
+      'object.with': "'variableValues' must be provided when 'templateId' is used",
 
-      'object.nand':
-        "Templated WhatsApp messages cannot contain 'message' or 'attachments'. Or variableValues must be present with templateId",
+      'object.nand': "Templated WhatsApp messages cannot contain 'message' or 'attachments'. Or variableValues must be present with templateId",
     }),
 });
 
@@ -103,9 +92,7 @@ const validateRequest = (req, res, next) => {
     }
     const { error, value } = validateSchema.validate(req.body, baseOptions);
     if (error) {
-      return res
-        .status(400)
-        .json({ success: false, message: cleanJoiMessage(error.details[0].message) });
+      return res.status(400).json({ success: false, message: cleanJoiMessage(error.details[0].message) });
     }
     req.body = value;
     next();

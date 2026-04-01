@@ -1,4 +1,4 @@
-"use strict";
+'use strict';
 
 /**
  * @typedef {import('sequelize').QueryInterface} QueryInterface
@@ -15,9 +15,9 @@ module.exports = {
    * @param {Sequelize} Sequelize
    */
   async up(queryInterface, Sequelize, schemaName) {
-    const tableSchema = "public";
+    const tableSchema = 'public';
     const tableName = {
-      tableName: "users",
+      tableName: 'users',
       schema: tableSchema,
     };
     await queryInterface.createTable(tableName, {
@@ -39,12 +39,12 @@ module.exports = {
       created_at: {
         allowNull: false,
         type: Sequelize.DATE,
-        defaultValue: Sequelize.literal("CURRENT_TIMESTAMP"),
+        defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
       },
       updated_at: {
         allowNull: false,
         type: Sequelize.DATE,
-        defaultValue: Sequelize.literal("CURRENT_TIMESTAMP"),
+        defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
       },
       deleted_at: {
         allowNull: true,
@@ -59,6 +59,6 @@ module.exports = {
    * @param {Sequelize} Sequelize
    */
   async down(queryInterface, Sequelize) {
-    await queryInterface.dropTable("users");
+    await queryInterface.dropTable('users');
   },
 };

@@ -5,7 +5,7 @@ routingRules:
     security:
       - bearerAuth: []
     parameters:
-      - $ref: "../index.yaml#/components/parameters/ClientIdHeader"
+      - $ref: '../index.yaml#/components/parameters/ClientIdHeader'
       - name: service
         in: query
         schema:
@@ -34,24 +34,24 @@ routingRules:
           type: integer
           default: 10
     responses:
-      "200":
+      '200':
         description: Routing rules fetched successfully
         content:
           application/json:
             schema:
-              $ref: "../index.yaml#/components/schemas/RoutingRuleListResponse"
-      "401":
+              $ref: '../index.yaml#/components/schemas/RoutingRuleListResponse'
+      '401':
         description: Unauthorized
         content:
           application/json:
             schema:
-              $ref: "../index.yaml#/components/schemas/ErrorResponse"
-      "403":
+              $ref: '../index.yaml#/components/schemas/ErrorResponse'
+      '403':
         description: Forbidden
         content:
           application/json:
             schema:
-              $ref: "../index.yaml#/components/schemas/ErrorResponse"
+              $ref: '../index.yaml#/components/schemas/ErrorResponse'
 
   post:
     summary: Create a routing rule
@@ -59,15 +59,15 @@ routingRules:
     security:
       - bearerAuth: []
     parameters:
-      - $ref: "../index.yaml#/components/parameters/ClientIdHeader"
+      - $ref: '../index.yaml#/components/parameters/ClientIdHeader'
     requestBody:
       required: true
       content:
         application/json:
           schema:
-            $ref: "../index.yaml#/components/schemas/RoutingRuleRequest"
+            $ref: '../index.yaml#/components/schemas/RoutingRuleRequest'
     responses:
-      "201":
+      '201':
         description: Routing rule created successfully
         content:
           application/json:
@@ -81,25 +81,25 @@ routingRules:
                   type: string
                   example: Routing rule created successfully
                 data:
-                  $ref: "../index.yaml#/components/schemas/RoutingRuleResponse"
-      "400":
+                  $ref: '../index.yaml#/components/schemas/RoutingRuleResponse'
+      '400':
         description: Validation error
         content:
           application/json:
             schema:
-              $ref: "../index.yaml#/components/schemas/ErrorResponse"
-      "401":
+              $ref: '../index.yaml#/components/schemas/ErrorResponse'
+      '401':
         description: Unauthorized
         content:
           application/json:
             schema:
-              $ref: "../index.yaml#/components/schemas/ErrorResponse"
-      "403":
+              $ref: '../index.yaml#/components/schemas/ErrorResponse'
+      '403':
         description: Forbidden
         content:
           application/json:
             schema:
-              $ref: "../index.yaml#/components/schemas/ErrorResponse"
+              $ref: '../index.yaml#/components/schemas/ErrorResponse'
 
 routingRulesId:
   parameters:
@@ -116,15 +116,15 @@ routingRulesId:
     security:
       - bearerAuth: []
     parameters:
-      - $ref: "../index.yaml#/components/parameters/ClientIdHeader"
+      - $ref: '../index.yaml#/components/parameters/ClientIdHeader'
     requestBody:
       required: true
       content:
         application/json:
           schema:
-            $ref: "../index.yaml#/components/schemas/RoutingRuleRequest"
+            $ref: '../index.yaml#/components/schemas/RoutingRuleRequest'
     responses:
-      "200":
+      '200':
         description: Routing rule updated successfully
         content:
           application/json:
@@ -138,31 +138,31 @@ routingRulesId:
                   type: string
                   example: Routing rule updated successfully
                 data:
-                  $ref: "../index.yaml#/components/schemas/RoutingRuleResponse"
-      "400":
+                  $ref: '../index.yaml#/components/schemas/RoutingRuleResponse'
+      '400':
         description: Validation error
         content:
           application/json:
             schema:
-              $ref: "../index.yaml#/components/schemas/ErrorResponse"
-      "401":
+              $ref: '../index.yaml#/components/schemas/ErrorResponse'
+      '401':
         description: Unauthorized
         content:
           application/json:
             schema:
-              $ref: "../index.yaml#/components/schemas/ErrorResponse"
-      "403":
+              $ref: '../index.yaml#/components/schemas/ErrorResponse'
+      '403':
         description: Forbidden
         content:
           application/json:
             schema:
-              $ref: "../index.yaml#/components/schemas/ErrorResponse"
-      "404":
+              $ref: '../index.yaml#/components/schemas/ErrorResponse'
+      '404':
         description: Routing rule not found
         content:
           application/json:
             schema:
-              $ref: "../index.yaml#/components/schemas/ErrorResponse"
+              $ref: '../index.yaml#/components/schemas/ErrorResponse'
 
   delete:
     summary: Delete a routing rule
@@ -170,9 +170,9 @@ routingRulesId:
     security:
       - bearerAuth: []
     parameters:
-      - $ref: "../index.yaml#/components/parameters/ClientIdHeader"
+      - $ref: '../index.yaml#/components/parameters/ClientIdHeader'
     responses:
-      "200":
+      '200':
         description: Routing rule deleted successfully
         content:
           application/json:
@@ -185,21 +185,21 @@ routingRulesId:
                 message:
                   type: string
                   example: Routing rule deleted successfully
-      "401":
+      '401':
         description: Unauthorized
         content:
           application/json:
             schema:
-              $ref: "../index.yaml#/components/schemas/ErrorResponse"
-      "403":
+              $ref: '../index.yaml#/components/schemas/ErrorResponse'
+      '403':
         description: Forbidden
         content:
           application/json:
             schema:
-              $ref: "../index.yaml#/components/schemas/ErrorResponse"
-      "404":
+              $ref: '../index.yaml#/components/schemas/ErrorResponse'
+      '404':
         description: Routing rule not found
         content:
           application/json:
             schema:
-              $ref: "../index.yaml#/components/schemas/ErrorResponse"
+              $ref: '../index.yaml#/components/schemas/ErrorResponse'

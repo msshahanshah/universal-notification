@@ -16,24 +16,19 @@ const basename = path.basename(__filename);
  * @param {object} Sequelize - The Sequelize module (for DataTypes).
  * @returns {object} - The database object containing models, sequelize instance, and Sequelize module.
  */
-module.exports = (sequelize, Sequelize,schemaName) => {
+module.exports = (sequelize, Sequelize, schemaName) => {
   const db = {};
 
   // Read and initialize model files
   fs.readdirSync(__dirname)
-    .filter(file => (
-      file.indexOf('.') !== 0 &&
-      file !== basename &&
-      file.slice(-3) === '.js' &&
-      file.indexOf('.test.js') === -1
-    ))
-    .forEach(file => {
-      const model = require(path.join(__dirname, file))(sequelize,schemaName);
+    .filter((file) => file.indexOf('.') !== 0 && file !== basename && file.slice(-3) === '.js' && file.indexOf('.test.js') === -1)
+    .forEach((file) => {
+      const model = require(path.join(__dirname, file))(sequelize, schemaName);
       db[model.name] = model;
     });
 
   // Call associate methods for models, if they exist
-  Object.keys(db).forEach(modelName => {
+  Object.keys(db).forEach((modelName) => {
     if (db[modelName].associate) {
       db[modelName].associate(db);
     }

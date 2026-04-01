@@ -1,18 +1,18 @@
-"use strict";
+'use strict';
 
 /**
  * Module dependencies.
  */
-const fs = require("fs");
-const path = require("path");
-const Sequelize = require("sequelize");
-const process = require("process");
+const fs = require('fs');
+const path = require('path');
+const Sequelize = require('sequelize');
+const process = require('process');
 const basename = path.basename(__filename);
-const env = process.env.NODE_ENV || "development";
+const env = process.env.NODE_ENV || 'development';
 /**
  * Load the configuration for the current environment.
  */
-const config = require(__dirname + "/../config/config.js")[env];
+const config = require(__dirname + '/../config/config.js')[env];
 
 module.exports = (sequelize, schemaName) => {
   const db = {};
@@ -31,13 +31,13 @@ module.exports = (sequelize, schemaName) => {
   fs.readdirSync(__dirname)
     .filter((file) => {
       return (
-        file.indexOf(".") !== 0 &&
+        file.indexOf('.') !== 0 &&
         /**
          * Exclude files that are not JavaScript files or test files.
          */
         file !== basename &&
-        file.slice(-3) === ".js" &&
-        file.indexOf(".test.js") === -1
+        file.slice(-3) === '.js' &&
+        file.indexOf('.test.js') === -1
       );
     })
     .forEach((file) => {

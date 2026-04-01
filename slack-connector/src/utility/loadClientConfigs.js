@@ -1,6 +1,6 @@
-const logger = require("../logger");
-const { SecretManager } = require("universal_notification_support_lib");
-const config = require("../config.js"); // Environment variables or default configs
+const logger = require('../logger');
+const { SecretManager } = require('universal_notification_support_lib');
+const config = require('../config.js'); // Environment variables or default configs
 /**
  * Loads client configurations from clientList.json and merges with defaults from .env.
  * @returns {Promise<Array<Object>>} - Array of client configurations.
@@ -12,41 +12,37 @@ async function loadClientConfigs() {
 
     const defaultConfig = {
       DBCONFIG: {
-        HOST: config.dbHost || "localhost",
+        HOST: config.dbHost || 'localhost',
         PORT: config.dbPort || 5432,
-        NAME: config.dbName || "notifications_db",
-        USER: config.dbUser || "postgres",
-        PASSWORD: config.dbPassword || "admin",
+        NAME: config.dbName || 'notifications_db',
+        USER: config.dbUser || 'postgres',
+        PASSWORD: config.dbPassword || 'admin',
       },
       RABBITMQ: {
-        HOST: config.rabbitMQHost || "localhost",
+        HOST: config.rabbitMQHost || 'localhost',
         PORT: config.rabbitMQPort || 5672,
-        USER: config.rabbitMQUser || "user",
-        PASSWORD: config.rabbitMQPassword || "password",
+        USER: config.rabbitMQUser || 'user',
+        PASSWORD: config.rabbitMQPassword || 'password',
       },
       SLACKBOT: {
-        TOKEN: config.slackBotToken || "",
+        TOKEN: config.slackBotToken || '',
         RABBITMQ: {
-          EXCHANGE_NAME: config.rabbitMQExchangeName || "notifications",
-          EXCHANGE_TYPE: config.rabbitMQExchangeType || "direct",
-          QUEUE_NAME: config.rabbitMQQueueName || "slack",
-          ROUTING_KEY: config.rabbitMQBindingKey || "slack",
+          EXCHANGE_NAME: config.rabbitMQExchangeName || 'notifications',
+          EXCHANGE_TYPE: config.rabbitMQExchangeType || 'direct',
+          QUEUE_NAME: config.rabbitMQQueueName || 'slack',
+          ROUTING_KEY: config.rabbitMQBindingKey || 'slack',
         },
       },
     };
 
     return clients.map((client) => {
       const dbConfig = { ...(client.DBCONFIG || defaultConfig.DBCONFIG) };
-      if (process.env.DB_HOST_OVERRIDE)
-        dbConfig.HOST = process.env.DB_HOST_OVERRIDE;
-      if (process.env.DB_PORT_OVERRIDE)
-        dbConfig.PORT = process.env.DB_PORT_OVERRIDE;
+      if (process.env.DB_HOST_OVERRIDE) dbConfig.HOST = process.env.DB_HOST_OVERRIDE;
+      if (process.env.DB_PORT_OVERRIDE) dbConfig.PORT = process.env.DB_PORT_OVERRIDE;
 
       const rabbitConfig = { ...(client.RABBITMQ || defaultConfig.RABBITMQ) };
-      if (process.env.RABBITMQ_HOST_OVERRIDE)
-        rabbitConfig.HOST = process.env.RABBITMQ_HOST_OVERRIDE;
-      if (process.env.RABBITMQ_PORT_OVERRIDE)
-        rabbitConfig.PORT = process.env.RABBITMQ_PORT_OVERRIDE;
+      if (process.env.RABBITMQ_HOST_OVERRIDE) rabbitConfig.HOST = process.env.RABBITMQ_HOST_OVERRIDE;
+      if (process.env.RABBITMQ_PORT_OVERRIDE) rabbitConfig.PORT = process.env.RABBITMQ_PORT_OVERRIDE;
 
       return {
         ID: client.ID,
@@ -55,13 +51,12 @@ async function loadClientConfigs() {
         RABBITMQ: rabbitConfig,
         SLACKBOT: {
           TOKEN: client.SLACKBOT?.TOKEN || defaultConfig.SLACKBOT.TOKEN,
-          RABBITMQ:
-            client.SLACKBOT?.RABBITMQ || defaultConfig.SLACKBOT.RABBITMQ,
+          RABBITMQ: client.SLACKBOT?.RABBITMQ || defaultConfig.SLACKBOT.RABBITMQ,
         },
       };
     });
   } catch (error) {
-    logger.error("Failed to load client configurations:", {
+    logger.error('Failed to load client configurations:', {
       error: error.message,
     });
     throw error;

@@ -1,9 +1,9 @@
-"use strict";
+'use strict';
 
-const { Sequelize } = require("sequelize");
-const { LRUCache } = require("lru-cache");
-const logger = require("../logger.js");
-const { loadClientConfigs } = require("./loadClientConfigs.js");
+const { Sequelize } = require('sequelize');
+const { LRUCache } = require('lru-cache');
+const logger = require('../logger.js');
+const { loadClientConfigs } = require('./loadClientConfigs.js');
 
 /**
  * Custom error for connection-related issues
@@ -11,7 +11,7 @@ const { loadClientConfigs } = require("./loadClientConfigs.js");
 class ConnectionError extends Error {
   constructor(message, details = {}) {
     super(message);
-    this.name = "ConnectionError";
+    this.name = 'ConnectionError';
     this.details = details;
   }
 }
@@ -39,7 +39,7 @@ class ConnectionManager {
   }
 
   #validateDbConfig(config) {
-    const requiredFields = ["HOST", "PORT", "NAME", "USER", "PASSWORD"];
+    const requiredFields = ['HOST', 'PORT', 'NAME', 'USER', 'PASSWORD'];
     for (const field of requiredFields) {
       if (!config[field]) {
         throw new ConnectionError(`Missing database config: ${field}`);
@@ -55,7 +55,7 @@ class ConnectionManager {
    */
   async initializeSequelize(dbConfig, clientId) {
     if (!clientId) {
-      throw new ConnectionError("Client ID required");
+      throw new ConnectionError('Client ID required');
     }
 
     if (this.modelCache.get(clientId)) {
@@ -66,20 +66,16 @@ class ConnectionManager {
       if (!dbConfig) {
         const clientList = await loadClientConfigs();
 
-        dbConfig = clientList.find(
-          (client) => client.ID === clientId,
-        )?.DBCONFIG;
+        dbConfig = clientList.find((client) => client.ID === clientId)?.DBCONFIG;
         if (!dbConfig) {
-          throw new ConnectionError(
-            `No database config for client ${clientId}`,
-          );
+          throw new ConnectionError(`No database config for client ${clientId}`);
         }
       }
 
       this.#validateDbConfig(dbConfig);
 
       const sequelize = new Sequelize({
-        dialect: process.env.DB_DIALECT || "postgres",
+        dialect: process.env.DB_DIALECT || 'postgres',
         host: dbConfig.HOST,
         port: dbConfig.PORT,
         database: dbConfig.NAME,
@@ -96,14 +92,11 @@ class ConnectionManager {
       });
 
       await sequelize.authenticate();
-      const db = require("../../models")(sequelize, clientId);
+      const db = require('../../models')(sequelize, clientId);
       this.modelCache.set(clientId, db);
     } catch (error) {
       console.log(error);
-      throw new ConnectionError(
-        `Sequelize init failed for client ${clientId}`,
-        { error: error.message },
-      );
+      throw new ConnectionError(`Sequelize init failed for client ${clientId}`, { error: error.message });
     }
   }
 
@@ -148,18 +141,11 @@ class ConnectionManager {
           this.modelCache.delete(clientId);
         }
       } else {
-        await Promise.all([
-          ...Array.from(this.modelCache.values()).map((db) =>
-            db.sequelize.close(),
-          ),
-        ]);
+        await Promise.all([...Array.from(this.modelCache.values()).map((db) => db.sequelize.close())]);
         this.modelCache.clear();
       }
     } catch (error) {
-      throw new ConnectionError(
-        `Failed to close connections for ${clientId || "all"}`,
-        { error: error.message },
-      );
+      throw new ConnectionError(`Failed to close connections for ${clientId || 'all'}`, { error: error.message });
     }
   }
 

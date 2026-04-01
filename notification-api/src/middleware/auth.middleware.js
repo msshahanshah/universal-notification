@@ -1,28 +1,24 @@
-const { verifyToken } = require("../../helpers/jwt.helper");
-const globalDatabaseManager = require("../utillity/mainDatabase");
+const { verifyToken } = require('../../helpers/jwt.helper');
+const globalDatabaseManager = require('../utillity/mainDatabase');
 
-const { AUTH_TOKEN } = require("../../constants/index.js");
-const RedisHelper = require("../../helpers/redis.helper.js");
-const logger = require("../logger.js");
+const { AUTH_TOKEN } = require('../../constants/index.js');
+const RedisHelper = require('../../helpers/redis.helper.js');
+const logger = require('../logger.js');
 
 const auth = async (req, res, next) => {
   try {
     // get token from request
-    let token = "";
-    const x_clientId = req.headers["x-client-id"];
+    let token = '';
+    const x_clientId = req.headers['x-client-id'];
 
-    if (
-      req.headers &&
-      req.headers.authorization &&
-      req.headers.authorization.startsWith("Bearer")
-    ) {
-      token = req.headers.authorization.split(" ")[1];
+    if (req.headers && req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
+      token = req.headers.authorization.split(' ')[1];
     }
 
     if (!token) {
       throw {
         statusCode: 401,
-        message: "Authorization denied: No token provided",
+        message: 'Authorization denied: No token provided',
       };
     }
 
@@ -32,13 +28,13 @@ const auth = async (req, res, next) => {
     // const REDIS_ACCESS_TOKEN_KEY = RedisHelper.getAccessTokenRedisKey(username);
     // const tokenInRedis = await RedisHelper.getValue(REDIS_ACCESS_TOKEN_KEY);
     //TODO  Update this logic also
-    const key = `access:${token}`
+    const key = `access:${token}`;
     const clientIdInRedis = await RedisHelper.getValue(key);
 
     if (!clientIdInRedis || clientIdInRedis !== x_clientId) {
       throw {
         statusCode: 401,
-        message: "Invalid Token. Please Retry Login",
+        message: 'Invalid Token. Please Retry Login',
       };
     }
 
@@ -56,7 +52,7 @@ const auth = async (req, res, next) => {
     });
 
     if (!user) {
-      throw { statusCode: 404, message: "User does not found" };
+      throw { statusCode: 404, message: 'User does not found' };
     }
 
     req.user = decodedData;
@@ -67,17 +63,12 @@ const auth = async (req, res, next) => {
       message: error.message,
       stack: error?.stack,
     });
-    if (
-      error.name === "JsonWebTokenError" ||
-      error.name === "TokenExpiredError"
-    ) {
-      return res
-        .status(401)
-        .json({ success: false, message: "Token is not valid or has expired" });
+    if (error.name === 'JsonWebTokenError' || error.name === 'TokenExpiredError') {
+      return res.status(401).json({ success: false, message: 'Token is not valid or has expired' });
     }
     return res.status(error.statusCode || 500).json({
       success: false,
-      message: error.message || "Token is not valid or has expired",
+      message: error.message || 'Token is not valid or has expired',
     });
   }
 };

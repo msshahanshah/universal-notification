@@ -1,14 +1,14 @@
-const authService = require("./service");
-const RedisHelper = require("../../helpers/redis.helper");
-const logger = require("../logger");
-const { verifyToken } = require("../../helpers/jwt.helper");
-const { AUTH_TOKEN } = require("../../constants");
+const authService = require('./service');
+const RedisHelper = require('../../helpers/redis.helper');
+const logger = require('../logger');
+const { verifyToken } = require('../../helpers/jwt.helper');
+const { AUTH_TOKEN } = require('../../constants');
 
 const login = async (req, res) => {
   try {
     const { username, password } = req.body;
-    const x_clientId = req.headers["x-client-id"];
-    const userClient = username.split("@")[1];
+    const x_clientId = req.headers['x-client-id'];
+    const userClient = username.split('@')[1];
 
     if (!userClient) {
       throw { statusCode: 401, message: `invalid username or password` };
@@ -17,15 +17,11 @@ const login = async (req, res) => {
     if (userClient.toLowerCase() !== x_clientId.toLowerCase()) {
       throw { statusCode: 401, message: `invalid username or password` };
     }
-    const { accessToken, refreshToken } = await authService.login(
-      x_clientId,
-      username,
-      password,
-    );
+    const { accessToken, refreshToken } = await authService.login(x_clientId, username, password);
 
     return res.status(200).json({
       success: true,
-      message: "login successful",
+      message: 'login successful',
       data: {
         accessToken,
         refreshToken,
@@ -38,7 +34,7 @@ const login = async (req, res) => {
     });
     return res.status(err.statusCode || 500).json({
       success: false,
-      message: err.message || "Internal Server Error",
+      message: err.message || 'Internal Server Error',
     });
   }
 };
@@ -46,17 +42,16 @@ const login = async (req, res) => {
 const refresh = async (req, res) => {
   try {
     const { refreshToken } = req.body;
-    const x_clientId = req.headers["x-client-id"];
+    const x_clientId = req.headers['x-client-id'];
 
-
-    const newAccessToken = await RedisHelper.refreshAccess(x_clientId, refreshToken)
+    const newAccessToken = await RedisHelper.refreshAccess(x_clientId, refreshToken);
     // const newAccessToken = await authService.generateNewAccessToken(
     //   refreshToken,
     //   x_clientId,
     // );
     return res.status(200).json({
       success: true,
-      message: "refresh successful",
+      message: 'refresh successful',
       data: {
         accessToken: newAccessToken,
       },
@@ -68,7 +63,7 @@ const refresh = async (req, res) => {
     });
     return res.status(err.statusCode || 500).json({
       success: false,
-      message: err.message || "Internal Server Error",
+      message: err.message || 'Internal Server Error',
     });
   }
 };
@@ -76,22 +71,22 @@ const refresh = async (req, res) => {
 const logout = async (req, res) => {
   try {
     const { refreshToken } = req.body;
-    const x_clientId = req.headers["x-client-id"];
+    const x_clientId = req.headers['x-client-id'];
 
     const payload = verifyToken(refreshToken, AUTH_TOKEN.REFRESH_TOKEN);
     const { username } = payload;
-    const client = username.split("@")[1];
+    const client = username.split('@')[1];
 
     if (client.toLowerCase() !== x_clientId.toLowerCase()) {
       throw {
         statusCode: 401,
-        message: "Invalid refresh token"
-      }
+        message: 'Invalid refresh token',
+      };
     }
     await RedisHelper.logout(x_clientId, refreshToken);
     return res.status(200).send({
       success: true,
-      message: "Logout successfully",
+      message: 'Logout successfully',
     });
   } catch (err) {
     logger.error({
@@ -100,7 +95,7 @@ const logout = async (req, res) => {
     });
     return res.status(err.statusCode || 500).json({
       success: false,
-      message: err.message || "Internal Server Error",
+      message: err.message || 'Internal Server Error',
     });
   }
 };

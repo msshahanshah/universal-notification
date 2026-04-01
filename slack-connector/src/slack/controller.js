@@ -1,4 +1,4 @@
-const slackService = require("./service");
+const slackService = require('./service');
 
 async function slackReplyMessage(req, res) {
   try {

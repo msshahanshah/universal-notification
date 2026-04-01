@@ -1,70 +1,70 @@
-const { S3Client, PutObjectCommand, GetObjectCommand, DeleteObjectCommand } = require("@aws-sdk/client-s3");
-const { getSignedUrl } = require("@aws-sdk/s3-request-presigner");
+const { S3Client, PutObjectCommand, GetObjectCommand, DeleteObjectCommand } = require('@aws-sdk/client-s3');
+const { getSignedUrl } = require('@aws-sdk/s3-request-presigner');
 
 const s3 = new S3Client({
-    region: process.env.AWS_SECRET_REGION,
-    credentials: {
-        accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
-    }
+  region: process.env.AWS_SECRET_REGION,
+  credentials: {
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+  },
 });
 
 const uploadTemplateToS3 = async (fileKey, htmlContent) => {
-    const params = {
-        Bucket: process.env.AWS_S3_BUCKET_NAME,
-        Key: fileKey,
-        Body: htmlContent,
-        ContentType: "text/html"
-    }
+  const params = {
+    Bucket: process.env.AWS_S3_BUCKET_NAME,
+    Key: fileKey,
+    Body: htmlContent,
+    ContentType: 'text/html',
+  };
 
-    const command = new PutObjectCommand(params);
+  const command = new PutObjectCommand(params);
 
-    await s3.send(command);
+  await s3.send(command);
 
-    return fileKey;
-}
+  return fileKey;
+};
 
 const getTemplatePreSigned = async (fileKey) => {
-    const params = {
-        Bucket: process.env.AWS_S3_BUCKET_NAME,
-        Key: fileKey
-    };
+  const params = {
+    Bucket: process.env.AWS_S3_BUCKET_NAME,
+    Key: fileKey,
+  };
 
-    const command = new GetObjectCommand(params);
+  const command = new GetObjectCommand(params);
 
-    const url = await getSignedUrl(s3, command, {
-        expiresIn: 3600 // URL valid for 1 hour
-    });
+  const url = await getSignedUrl(s3, command, {
+    expiresIn: 3600, // URL valid for 1 hour
+  });
 
-    return url;
-}
+  return url;
+};
 
 const getTemplateText = async (fileKey) => {
-    const params = {
-        Bucket: process.env.AWS_S3_BUCKET_NAME,
-        Key: fileKey
-    };
+  const params = {
+    Bucket: process.env.AWS_S3_BUCKET_NAME,
+    Key: fileKey,
+  };
 
-    const command = new GetObjectCommand(params);
-    const response = await s3.send(command);
+  const command = new GetObjectCommand(params);
+  const response = await s3.send(command);
 
-    const fileText = await response.Body.transformToString();
-    return fileText;
-}
+  const fileText = await response.Body.transformToString();
+  return fileText;
+};
 
 const removeTemplateFromS3 = async (fileKey) => {
-    const params = {
-        Bucket: process.env.AWS_S3_BUCKET_NAME,
-        Key: fileKey
-    };
+  const params = {
+    Bucket: process.env.AWS_S3_BUCKET_NAME,
+    Key: fileKey,
+  };
 
-    const command = new DeleteObjectCommand(params);
-    await s3.send(command);
-}
+  const command = new DeleteObjectCommand(params);
+  await s3.send(command);
+};
 
 module.exports = {
-    uploadTemplateToS3,
-    getTemplatePreSigned,
-    removeTemplateFromS3,
-    getTemplateText
+  uploadTemplateToS3,
+  getTemplatePreSigned,
+  removeTemplateFromS3,
+  getTemplateText,
 };

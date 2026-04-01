@@ -1,6 +1,6 @@
-const DatabaseManager = require("./manager/database");
-const RabbitMQManager = require("./manager/rabbit");
-const SMSManager = require("./manager/sms");
+const DatabaseManager = require('./manager/database');
+const RabbitMQManager = require('./manager/rabbit');
+const SMSManager = require('./manager/sms');
 
 class ConnectionManager {
   constructor() {}

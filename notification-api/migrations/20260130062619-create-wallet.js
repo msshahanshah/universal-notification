@@ -3,7 +3,7 @@
 module.exports = {
   async up(queryInterface, Sequelize, schemaName) {
     const tableName = {
-      tableName: "wallets",
+      tableName: 'wallets',
       schema: schemaName,
     };
     await queryInterface.createTable(tableName, {
@@ -11,20 +11,20 @@ module.exports = {
         allowNull: false,
         autoIncrement: true,
         primaryKey: true,
-        type: Sequelize.INTEGER
+        type: Sequelize.INTEGER,
       },
       code: {
         allowNull: false,
         unique: true,
-        type: Sequelize.STRING(5)
+        type: Sequelize.STRING(5),
       },
       service: {
         allowNull: false,
-        type: Sequelize.ENUM("SMS", "EMAIL", "SLACK")
+        type: Sequelize.ENUM('SMS', 'EMAIL', 'SLACK'),
       },
       provider: {
         allowNull: false,
-        type: Sequelize.STRING
+        type: Sequelize.STRING,
       },
       balance: {
         type: Sequelize.STRING,
@@ -41,12 +41,12 @@ module.exports = {
       created_at: {
         allowNull: false,
         type: Sequelize.DATE,
-        defaultValue: Sequelize.literal("CURRENT_TIMESTAMP"),
+        defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
       },
       updated_at: {
         allowNull: false,
         type: Sequelize.DATE,
-        defaultValue: Sequelize.literal("CURRENT_TIMESTAMP"),
+        defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
       },
       deleted_at: {
         allowNull: true,
@@ -57,5 +57,5 @@ module.exports = {
   },
   async down(queryInterface, Sequelize) {
     await queryInterface.dropTable('wallets');
-  }
+  },
 };

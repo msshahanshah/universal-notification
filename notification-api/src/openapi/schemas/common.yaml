@@ -11,4 +11,4 @@ ErrorResponse:
       example: false
     message:
       type: string
-      example: "error details"
+      example: 'error details'

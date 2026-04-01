@@ -1,4 +1,4 @@
-const redisClient = require("../utillity/redisClient");
+const redisClient = require('../utillity/redisClient');
 
 class RedisHelper {
   static async setKey(key, value) {
@@ -8,7 +8,7 @@ class RedisHelper {
       console.log(err.message);
       throw {
         statusCode: 500,
-        message: "Redis Client is Offline",
+        message: 'Redis Client is Offline',
         originalError: err.message,
       };
     }
@@ -20,7 +20,7 @@ class RedisHelper {
     } catch (err) {
       throw {
         statusCode: 500,
-        message: "Redis Client is Offline",
+        message: 'Redis Client is Offline',
         originalError: err.message,
       };
     }
@@ -31,14 +31,14 @@ class RedisHelper {
     } catch (err) {
       throw {
         statusCode: 500,
-        message: "Redis Client is Offline",
+        message: 'Redis Client is Offline',
         originalError: err.message,
       };
     }
   }
 
   static generateWebhookKey(clientId) {
-    return "webhook" + "#" + clientId;
+    return 'webhook' + '#' + clientId;
   }
 }
 

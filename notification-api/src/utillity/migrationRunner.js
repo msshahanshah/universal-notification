@@ -1,8 +1,8 @@
-const { Sequelize } = require("sequelize");
-const path = require("path");
-const Umzug = require("umzug");
-const { loadClientConfigs } = require("./loadClientConfigs");
-const logger = require("../logger");
+const { Sequelize } = require('sequelize');
+const path = require('path');
+const Umzug = require('umzug');
+const { loadClientConfigs } = require('./loadClientConfigs');
+const logger = require('../logger');
 
 async function runMigrations(sequelize, clientId) {
   // Ensure schema exists
@@ -11,10 +11,10 @@ async function runMigrations(sequelize, clientId) {
   await sequelize.query(`CREATE SCHEMA IF NOT EXISTS ${schemaName}`);
   const umzug = new Umzug({
     migrations: {
-      path: path.join(__dirname, "../../migrations"),
+      path: path.join(__dirname, '../../migrations'),
       params: [sequelize.getQueryInterface(), Sequelize, schemaName],
     },
-    storage: "sequelize",
+    storage: 'sequelize',
     storageOptions: {
       sequelize: sequelize,
     },
@@ -35,7 +35,7 @@ async function migrateAllDatabases() {
     const clients = await loadClientConfigs();
     for (const client of clients) {
       const clientConfig = {
-        dialect: "postgres",
+        dialect: 'postgres',
         host: client?.DBCONFIG?.HOST,
         port: client?.DBCONFIG?.PORT,
         database: client?.DBCONFIG?.NAME,
@@ -51,9 +51,9 @@ async function migrateAllDatabases() {
       await runMigrations(clientSequelize, client.ID);
       await clientSequelize.close();
     }
-    logger.info("All migrations completed successfully");
+    logger.info('All migrations completed successfully');
   } catch (error) {
-    logger.error("Migration process failed:", {
+    logger.error('Migration process failed:', {
       message: error.message,
       stack: error?.stack,
     });

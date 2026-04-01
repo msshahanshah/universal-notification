@@ -1,11 +1,11 @@
-const TextlocalProvider = require("./providers/textlocal");
-const MSG91Provider = require("./providers/msg91");
-const TwilioProvider = require("./providers/twilio");
-const SmsStrikerProvider = require("./providers/smsStriker");
-const Fast2Sms = require("./providers/fast2sms");
+const TextlocalProvider = require('./providers/textlocal');
+const MSG91Provider = require('./providers/msg91');
+const TwilioProvider = require('./providers/twilio');
+const SmsStrikerProvider = require('./providers/smsStriker');
+const Fast2Sms = require('./providers/fast2sms');
 
 class SmsSender {
-  constructor(clientConfig, provider = "DEFAULT") {
+  constructor(clientConfig, provider = 'DEFAULT') {
     this.clientConfig = clientConfig;
     this.provider = provider?.toUpperCase();
     this.sender = null;
@@ -18,17 +18,15 @@ class SmsSender {
       MSG91: MSG91Provider,
       TWILIO: TwilioProvider,
       SMSSTRIKER: SmsStrikerProvider,
-      FAST2SMS: Fast2Sms
+      FAST2SMS: Fast2Sms,
     };
 
     let selectedProvider = this.provider;
 
-    if (selectedProvider === "DEFAULT") {
-      const defaultProviderEntry = Object.entries(this.clientConfig).find(
-        ([key, value]) => value?.default === true,
-      );
+    if (selectedProvider === 'DEFAULT') {
+      const defaultProviderEntry = Object.entries(this.clientConfig).find(([key, value]) => value?.default === true);
       if (!defaultProviderEntry) {
-        throw new Error("No default SMS provider found in clientConfig");
+        throw new Error('No default SMS provider found in clientConfig');
       }
       selectedProvider = defaultProviderEntry[0].toUpperCase();
     }
@@ -45,29 +43,22 @@ class SmsSender {
     }
     const instance = new ProviderClass(providerConfig);
 
-    if (process.env.NODE_ENV === "testing") {
+    if (process.env.NODE_ENV === 'testing') {
       this.sender = instance.dummySend.bind(instance);
-    }
-    else {
+    } else {
       this.sender = instance.send.bind(instance);
     }
     this.stat = instance.getBalance.bind(instance);
   }
 
   async sendSms({ to, message, templateId }) {
-    if (!this.sender) throw new Error("SMS sender not initialized");
+    if (!this.sender) throw new Error('SMS sender not initialized');
     try {
       const result = await this.sender({ to, message, templateId });
-      console.log(
-        `SMS sent via ${this.provider}:`,
-        result?.data || result?.sid || result,
-      );
+      console.log(`SMS sent via ${this.provider}:`, result?.data || result?.sid || result);
       return result;
     } catch (error) {
-      console.error(
-        `Error sending SMS via ${this.provider}:`,
-        error.response?.data || error.message,
-      );
+      console.error(`Error sending SMS via ${this.provider}:`, error.response?.data || error.message);
       throw error;
     }
   }

@@ -1,6 +1,6 @@
-const { WebClient } = require("@slack/web-api");
-const logger = require("../src/logger");
-const { loadClientConfigs } = require("../src/utility/loadClientConfigs");
+const { WebClient } = require('@slack/web-api');
+const logger = require('../src/logger');
+const { loadClientConfigs } = require('../src/utility/loadClientConfigs');
 // Map to cache Slack clients per bot token
 const slackClients = new Map();
 
@@ -21,8 +21,8 @@ storeClientConfig();
 async function getSlackClient(botToken) {
   try {
     if (!botToken) {
-      logger.error("Slack Bot Token is not provided!");
-      throw new Error("Missing Slack configuration: Bot Token");
+      logger.error('Slack Bot Token is not provided!');
+      throw new Error('Missing Slack configuration: Bot Token');
     }
 
     // Check if we already have a client for this token
@@ -32,13 +32,11 @@ async function getSlackClient(botToken) {
 
     // Log only a portion to avoid exposing the full token in logs
     const tokenSnippet = `${botToken.substring(0, 10)}...${botToken.substring(botToken.length - 4)}`;
-    logger.info(
-      `Initializing Slack WebClient. Token snippet: [${tokenSnippet}]`,
-    );
+    logger.info(`Initializing Slack WebClient. Token snippet: [${tokenSnippet}]`);
 
     const client = new WebClient(botToken);
     slackClients.set(botToken, client);
-    logger.info("Slack WebClient initialized and cached.");
+    logger.info('Slack WebClient initialized and cached.');
     return client;
   } catch (err) {
     logger.error({ message: err.message, stack: err.stack });
@@ -61,7 +59,7 @@ async function getUsername(userId, client) {
 
 //making unique key to indentify workspace + channelId
 function getWorkSpaceChannelIdKey(workspaceId, channelId) {
-  return workspaceId + "#" + channelId;
+  return workspaceId + '#' + channelId;
 }
 
 function getSlackBotToken(clientId) {

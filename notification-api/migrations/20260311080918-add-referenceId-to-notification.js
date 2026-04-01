@@ -1,4 +1,4 @@
-"use strict";
+'use strict';
 
 /**
  * @typedef {import('sequelize').QueryInterface} QueryInterface
@@ -8,16 +8,16 @@
 module.exports = {
   async up(queryInterface, Sequelize, schemaName) {
     const tableName = {
-      tableName: "notifications",
+      tableName: 'notifications',
       schema: schemaName,
     };
 
-    await queryInterface.addColumn(tableName, "referenceId", {
+    await queryInterface.addColumn(tableName, 'referenceId', {
       type: Sequelize.STRING,
       allowNull: true,
     });
 
-    await queryInterface.addColumn(tableName, "deletedAt", {
+    await queryInterface.addColumn(tableName, 'deletedAt', {
       type: Sequelize.DATE,
       allowNull: true,
     });
@@ -25,11 +25,11 @@ module.exports = {
 
   async down(queryInterface, Sequelize, schemaName) {
     const tableName = {
-      tableName: "notifications",
+      tableName: 'notifications',
       schema: schemaName,
     };
 
-    await queryInterface.removeColumn(tableName, "referenceId");
-    await queryInterface.removeColumn(tableName, "deletedAt");
+    await queryInterface.removeColumn(tableName, 'referenceId');
+    await queryInterface.removeColumn(tableName, 'deletedAt');
   },
 };

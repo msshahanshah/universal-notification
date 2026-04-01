@@ -5,8 +5,8 @@
  * the configuration for the application.
  */
 
-require("dotenv").config({
-  path: require("path").resolve(__dirname, "../../.env"),
+require('dotenv').config({
+  path: require('path').resolve(__dirname, '../../.env'),
 }); // Load root .env
 // const logger = require('./logger'); // Load logger early if needed
 
@@ -24,19 +24,16 @@ require("dotenv").config({
  */
 
 module.exports = {
-  env: process.env.NODE_ENV || "development",
+  env: process.env.NODE_ENV || 'development',
   port: process.env.PORT || 3000,
   rabbitMQ: {
-    url: process.env.RABBITMQ_URL || "amqp://user:password@rabbitmq:5672", // Use service name 'rabbitmq' for Docker network
-    exchangeName:
-      process.env.RABBITMQ_EXCHANGE_NAME || "notifications_exchange",
-    exchangeType: "direct",
+    url: process.env.RABBITMQ_URL || 'amqp://user:password@rabbitmq:5672', // Use service name 'rabbitmq' for Docker network
+    exchangeName: process.env.RABBITMQ_EXCHANGE_NAME || 'notifications_exchange',
+    exchangeType: 'direct',
     // Email queue configuration
-    emailQueueName: process.env.RABBITMQ_EMAIL_QUEUE_NAME || "email_queue",
-    emailBindingKey: process.env.RABBITMQ_EMAIL_BINDING_KEY || "email",
-    emailExchangeName:
-      process.env.RABBITMQ_EXCHANGE_NAME_EMAIL ||
-      "notifications_exchange_email",
+    emailQueueName: process.env.RABBITMQ_EMAIL_QUEUE_NAME || 'email_queue',
+    emailBindingKey: process.env.RABBITMQ_EMAIL_BINDING_KEY || 'email',
+    emailExchangeName: process.env.RABBITMQ_EXCHANGE_NAME_EMAIL || 'notifications_exchange_email',
   },
   // Add database config (read from Sequelize config implicitly or explicitly define here)
   /**
@@ -46,6 +43,6 @@ module.exports = {
    *   - When running inside docker connecting to docker pg: 'postgres' (service name)
    */
   database: {
-    host: process.env.DB_HOST || "postgres",
+    host: process.env.DB_HOST || 'postgres',
   },
 };

@@ -38,8 +38,7 @@ const serviceEnforcers = {
 
     const { service, content, clientId } = message;
 
-    const serviceConfig =
-      clientConfig[service.toUpperCase()][provider.toUpperCase()];
+    const serviceConfig = clientConfig[service.toUpperCase()][provider.toUpperCase()];
 
     const hasFromEmail = Boolean(content?.fromEmail?.length);
     if (!serviceConfig.allowCustomFromEmail && hasFromEmail) {
@@ -61,15 +60,14 @@ const serviceEnforcers = {
     }
   },
 
-  SMS: () => { },
+  SMS: () => {},
 
-  SLACK: () => { },
+  SLACK: () => {},
 
   WHATSAPP: ({ provider, message, clientConfig }) => {
     if (!provider) return;
     const { service, content, clientId } = message;
-    const serviceConfig =
-      clientConfig[service.toUpperCase()][provider.toUpperCase()];
+    const serviceConfig = clientConfig[service.toUpperCase()][provider.toUpperCase()];
     const hasFromWhatsNumber = Boolean(content?.fromNumber);
 
     if (!serviceConfig.allowCustomFromNumber && hasFromWhatsNumber) {
@@ -142,17 +140,12 @@ const selectProvider = async (service, destination, clientId) => {
  * Create Notification Records
  */
 
-const creatingNotificationRecord = async (
-  clientId,
-  service,
-  destination,
-  content
-) => {
+const creatingNotificationRecord = async (clientId, service, destination, content) => {
   const clientConfig = await getClientConfig(clientId);
   const enabledServices = clientConfig?.ENABLED_SERVERICES;
   const { templateId, variableValues } = content;
   if (!Array.isArray(enabledServices)) {
-    logger.error("Invalid or missing ENABLED_SERVERICES in client config", {
+    logger.error('Invalid or missing ENABLED_SERVERICES in client config', {
       clientId,
       enabledServices,
     });
@@ -189,9 +182,8 @@ const creatingNotificationRecord = async (
           status: 'pending',
           attempts: 0,
           templateId,
-          variableValues
+          variableValues,
         });
-
 
         logger.info('Notification record created successfully', {
           number,
@@ -210,7 +202,7 @@ const creatingNotificationRecord = async (
           number,
           ...response,
         };
-      }),
+      })
     );
 
     return results;
@@ -223,8 +215,7 @@ const creatingNotificationRecord = async (
     if (error.name === 'SequelizeUniqueConstraintError') {
       throw {
         statusCode: 409,
-        message:
-          'Conflict: A notification with this identifier potentially exists.',
+        message: 'Conflict: A notification with this identifier potentially exists.',
       };
     }
 
@@ -240,25 +231,15 @@ const creatingNotificationRecord = async (
  */
 
 const publishingNotificationRequest = async (notificationRecord) => {
-  const {
-    service,
-    destination,
-    content,
-    messageId,
-    clientId,
-    fileId = undefined,
-    attachments,
-    templateId,
-    variableValues
-  } = notificationRecord;
+  const { service, destination, content, messageId, clientId, fileId = undefined, attachments, templateId, variableValues } = notificationRecord;
 
   const rabbitConnect = await rabbitManager.getClient(clientId);
 
   if (!rabbitConnect) return;
 
   let updatedService = service;
-  if (service.toLowerCase() === "slack") {
-    updatedService = "slackbot";
+  if (service.toLowerCase() === 'slack') {
+    updatedService = 'slackbot';
   }
 
   return rabbitConnect.publishMessage(updatedService, {
@@ -272,7 +253,7 @@ const publishingNotificationRequest = async (notificationRecord) => {
     fileId,
     attachments,
     templateId,
-    variableValues
+    variableValues,
   });
 };
 
@@ -305,7 +286,7 @@ const getNotificationData = async (messageId, clientID) => {
     attachments: details.content.attachments,
     fromNumber: details.content.fromNumber,
     message: details.content.message,
-    templateId: details.content.messageId
+    templateId: details.content.messageId,
   };
 
   if (details.content.cc) data.cc = details.content.cc;

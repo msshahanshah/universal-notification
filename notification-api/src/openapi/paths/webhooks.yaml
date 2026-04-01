@@ -5,22 +5,22 @@ webhooks:
     security:
       - bearerAuth: []
     parameters:
-      - $ref: "../index.yaml#/components/parameters/ClientIdHeader"
+      - $ref: '../index.yaml#/components/parameters/ClientIdHeader'
     requestBody:
       required: true
       content:
         application/json:
           schema:
-            $ref: "../index.yaml#/components/schemas/WebhookRequest"
+            $ref: '../index.yaml#/components/schemas/WebhookRequest'
           example:
-            webhookUrl: "https://example.com/webhook"
-            apiKey: "my-secret-api-key"
+            webhookUrl: 'https://example.com/webhook'
+            apiKey: 'my-secret-api-key'
             serviceTrigger:
               email: [success, failed]
               sms: [failed]
             retryEnabled: true
     responses:
-      "201":
+      '201':
         description: Webhook configuration added successfully
         content:
           application/json:
@@ -33,24 +33,24 @@ webhooks:
                 message:
                   type: string
                   example: webhook configuration added successfully.
-      "400":
+      '400':
         description: Validation error
         content:
           application/json:
             schema:
-              $ref: "../index.yaml#/components/schemas/ErrorResponse"
-      "401":
+              $ref: '../index.yaml#/components/schemas/ErrorResponse'
+      '401':
         description: Unauthorized
         content:
           application/json:
             schema:
-              $ref: "../index.yaml#/components/schemas/ErrorResponse"
-      "403":
+              $ref: '../index.yaml#/components/schemas/ErrorResponse'
+      '403':
         description: Forbidden — client does not have access to one or more requested services
         content:
           application/json:
             schema:
-              $ref: "../index.yaml#/components/schemas/ErrorResponse"
+              $ref: '../index.yaml#/components/schemas/ErrorResponse'
 
   get:
     summary: List webhook configurations for the authenticated client
@@ -58,7 +58,7 @@ webhooks:
     security:
       - bearerAuth: []
     parameters:
-      - $ref: "../index.yaml#/components/parameters/ClientIdHeader"
+      - $ref: '../index.yaml#/components/parameters/ClientIdHeader'
       - name: page
         in: query
         schema:
@@ -75,7 +75,7 @@ webhooks:
           type: string
         description: Comma-separated list of fields to return (e.g. `enabledServices`).
     responses:
-      "200":
+      '200':
         description: Webhook configurations fetched successfully
         content:
           application/json:
@@ -91,19 +91,19 @@ webhooks:
                 data:
                   type: array
                   items:
-                    $ref: "../index.yaml#/components/schemas/WebhookResponse"
-      "401":
+                    $ref: '../index.yaml#/components/schemas/WebhookResponse'
+      '401':
         description: Unauthorized
         content:
           application/json:
             schema:
-              $ref: "../index.yaml#/components/schemas/ErrorResponse"
-      "403":
+              $ref: '../index.yaml#/components/schemas/ErrorResponse'
+      '403':
         description: Forbidden
         content:
           application/json:
             schema:
-              $ref: "../index.yaml#/components/schemas/ErrorResponse"
+              $ref: '../index.yaml#/components/schemas/ErrorResponse'
 
 webhooksLogs:
   get:
@@ -115,7 +115,7 @@ webhooksLogs:
     security:
       - bearerAuth: []
     parameters:
-      - $ref: "../index.yaml#/components/parameters/ClientIdHeader"
+      - $ref: '../index.yaml#/components/parameters/ClientIdHeader'
       - name: page
         in: query
         schema:
@@ -132,30 +132,30 @@ webhooksLogs:
           maximum: 100
         description: Number of log entries per page (max 100).
     responses:
-      "200":
+      '200':
         description: Webhook logs fetched successfully
         content:
           application/json:
             schema:
-              $ref: "../index.yaml#/components/schemas/WebhookLogListResponse"
-      "400":
+              $ref: '../index.yaml#/components/schemas/WebhookLogListResponse'
+      '400':
         description: Validation error — invalid query parameters
         content:
           application/json:
             schema:
-              $ref: "../index.yaml#/components/schemas/ErrorResponse"
-      "401":
+              $ref: '../index.yaml#/components/schemas/ErrorResponse'
+      '401':
         description: Unauthorized
         content:
           application/json:
             schema:
-              $ref: "../index.yaml#/components/schemas/ErrorResponse"
-      "403":
+              $ref: '../index.yaml#/components/schemas/ErrorResponse'
+      '403':
         description: Forbidden
         content:
           application/json:
             schema:
-              $ref: "../index.yaml#/components/schemas/ErrorResponse"
+              $ref: '../index.yaml#/components/schemas/ErrorResponse'
 
 webhooksId:
   parameters:
@@ -172,18 +172,18 @@ webhooksId:
     security:
       - bearerAuth: []
     parameters:
-      - $ref: "../index.yaml#/components/parameters/ClientIdHeader"
+      - $ref: '../index.yaml#/components/parameters/ClientIdHeader'
     requestBody:
       required: true
       content:
         application/json:
           schema:
-            $ref: "../index.yaml#/components/schemas/WebhookUpdateRequest"
+            $ref: '../index.yaml#/components/schemas/WebhookUpdateRequest'
           example:
             isActive: false
             retryEnabled: false
     responses:
-      "200":
+      '200':
         description: Webhook configuration updated successfully
         content:
           application/json:
@@ -196,30 +196,30 @@ webhooksId:
                 message:
                   type: string
                   example: webhook configuration updated successfully.
-      "400":
+      '400':
         description: Validation error — unknown fields or no fields provided
         content:
           application/json:
             schema:
-              $ref: "../index.yaml#/components/schemas/ErrorResponse"
-      "401":
+              $ref: '../index.yaml#/components/schemas/ErrorResponse'
+      '401':
         description: Unauthorized
         content:
           application/json:
             schema:
-              $ref: "../index.yaml#/components/schemas/ErrorResponse"
-      "403":
+              $ref: '../index.yaml#/components/schemas/ErrorResponse'
+      '403':
         description: Forbidden
         content:
           application/json:
             schema:
-              $ref: "../index.yaml#/components/schemas/ErrorResponse"
-      "404":
+              $ref: '../index.yaml#/components/schemas/ErrorResponse'
+      '404':
         description: Webhook configuration not found
         content:
           application/json:
             schema:
-              $ref: "../index.yaml#/components/schemas/ErrorResponse"
+              $ref: '../index.yaml#/components/schemas/ErrorResponse'
 
   delete:
     summary: Delete a webhook configuration
@@ -227,9 +227,9 @@ webhooksId:
     security:
       - bearerAuth: []
     parameters:
-      - $ref: "../index.yaml#/components/parameters/ClientIdHeader"
+      - $ref: '../index.yaml#/components/parameters/ClientIdHeader'
     responses:
-      "200":
+      '200':
         description: Webhook configuration deleted successfully
         content:
           application/json:
@@ -242,21 +242,21 @@ webhooksId:
                 message:
                   type: string
                   example: webhook configuration deleted successfully.
-      "401":
+      '401':
         description: Unauthorized
         content:
           application/json:
             schema:
-              $ref: "../index.yaml#/components/schemas/ErrorResponse"
-      "403":
+              $ref: '../index.yaml#/components/schemas/ErrorResponse'
+      '403':
         description: Forbidden
         content:
           application/json:
             schema:
-              $ref: "../index.yaml#/components/schemas/ErrorResponse"
-      "404":
+              $ref: '../index.yaml#/components/schemas/ErrorResponse'
+      '404':
         description: Webhook configuration not found
         content:
           application/json:
             schema:
-              $ref: "../index.yaml#/components/schemas/ErrorResponse"
+              $ref: '../index.yaml#/components/schemas/ErrorResponse'

@@ -1,12 +1,12 @@
 // connectionManager.js
-"use strict";
+'use strict';
 
-const { Sequelize } = require("sequelize");
-const { LRUCache } = require("lru-cache");
-const { loadClientConfigs } = require("./loadClientConfigs.js");
-const logger = require("../logger.js");
-const { EmailSender } = require("./emailSender.js");
-const rabbitManager = require("./rabbit.js");
+const { Sequelize } = require('sequelize');
+const { LRUCache } = require('lru-cache');
+const { loadClientConfigs } = require('./loadClientConfigs.js');
+const logger = require('../logger.js');
+const { EmailSender } = require('./emailSender.js');
+const rabbitManager = require('./rabbit.js');
 
 class ConnectionManager {
   constructor() {
@@ -38,17 +38,11 @@ class ConnectionManager {
       const clientList = await loadClientConfigs();
       emailConfig = clientList.find((client) => client.ID === clientId)?.EMAIL;
       if (!emailConfig) {
-        throw new Error(
-          `Email configuration not found for client ID: ${clientId}`,
-        );
+        throw new Error(`Email configuration not found for client ID: ${clientId}`);
       }
     }
     logger.debug(`[${clientId}] Email config:`, {
-      provider: emailConfig.AWS
-        ? "AWS"
-        : emailConfig.SENDGRID
-          ? "SendGrid"
-          : "Other",
+      provider: emailConfig.AWS ? 'AWS' : emailConfig.SENDGRID ? 'SendGrid' : 'Other',
     });
     logger.info(`[${clientId}] Testing email service connection...`);
     let emailSender = new EmailSender(clientId, emailConfig);
@@ -74,14 +68,12 @@ class ConnectionManager {
       const clientList = await loadClientConfigs();
       dbConfig = clientList.find((client) => client.ID === clientId)?.DBCONFIG;
       if (!dbConfig) {
-        throw new Error(
-          `Database configuration not found for client ID: ${clientId}`,
-        );
+        throw new Error(`Database configuration not found for client ID: ${clientId}`);
       }
     }
 
     const sequelize = new Sequelize({
-      dialect: "postgres", // Adjust if using another database
+      dialect: 'postgres', // Adjust if using another database
       host: dbConfig.HOST,
       port: dbConfig.PORT,
       database: dbConfig.NAME,
@@ -99,7 +91,7 @@ class ConnectionManager {
     logger.info(`[${clientId}] Testing database connection...`);
     await sequelize.authenticate();
     logger.info(`[${clientId}] Database connection successful.`);
-    let db = await require("../../models")(sequelize, Sequelize, clientId);
+    let db = await require('../../models')(sequelize, Sequelize, clientId);
     this.modelCache.set(clientId, db);
     return Promise.resolve();
   }
@@ -108,9 +100,7 @@ class ConnectionManager {
     if (!db) {
       await this.initializeSequelize(undefined, clientId);
       db = this.modelCache.get(clientId);
-      logger.debug(
-        `Cache stats: size=${this.modelCache.size}, max=${this.modelCache.max}`,
-      );
+      logger.debug(`Cache stats: size=${this.modelCache.size}, max=${this.modelCache.max}`);
     }
     return db;
   }
@@ -123,9 +113,7 @@ class ConnectionManager {
     if (!emailSender) {
       await this.initializeEmailSender(undefined, clientId);
       emailSender = this.emailCache.get(clientId);
-      logger.debug(
-        `Email cache stats: size=${this.emailCache.size}, max=${this.emailCache.max}`,
-      );
+      logger.debug(`Email cache stats: size=${this.emailCache.size}, max=${this.emailCache.max}`);
     }
     return emailSender;
   }

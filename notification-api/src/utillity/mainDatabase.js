@@ -1,6 +1,6 @@
-"use strict";
+'use strict';
 
-const { Sequelize } = require("sequelize");
+const { Sequelize } = require('sequelize');
 
 class GlobalDatabaseManager {
   constructor() {
@@ -13,13 +13,13 @@ class GlobalDatabaseManager {
       return { User: this.User };
     }
     const sequelize = new Sequelize({
-      dialect: "postgres",
+      dialect: 'postgres',
       host: process.env.POSTGRES_HOST,
       port: process.env.POSTGRES_PORT,
       database: process.env.POSTGRES_DB,
       username: process.env.POSTGRES_USER,
       password: process.env.POSTGRES_PASSWORD,
-      schema: "public",
+      schema: 'public',
       logging: (msg) => console.log(`Global Sequelize: ${msg}`),
       pool: { max: 5, min: 0, acquire: 30000, idle: 10000 },
     });
@@ -28,7 +28,7 @@ class GlobalDatabaseManager {
     await sequelize.authenticate();
     console.log(`Database global connection successful.`);
 
-    this.User = await require("../../models/user")(sequelize, Sequelize);
+    this.User = await require('../../models/user')(sequelize, Sequelize);
     return { User: this.User };
   }
 

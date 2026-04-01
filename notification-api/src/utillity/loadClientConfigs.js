@@ -1,6 +1,6 @@
-const { stack } = require("sequelize/lib/utils");
-const logger = require("../logger");
-const { SecretManager } = require("universal_notification_support_lib");
+const { stack } = require('sequelize/lib/utils');
+const logger = require('../logger');
+const { SecretManager } = require('universal_notification_support_lib');
 
 /**
  * Loads client configurations from clientList.json and merges with defaults from .env.
@@ -13,41 +13,31 @@ async function loadClientConfigs() {
     // Default configurations from .env
     const defaultConfig = {
       DBCONFIG: {
-        HOST: process.env.POSTGRES_HOST || "localhost",
+        HOST: process.env.POSTGRES_HOST || 'localhost',
         PORT: process.env.POSTGRES_PORT || 5432,
-        NAME: process.env.POSTGRES_DB || "notifications_db",
-        USER: process.env.POSTGRES_USER || "postgres",
-        PASSWORD: process.env.POSTGRES_PASSWORD || "admin",
+        NAME: process.env.POSTGRES_DB || 'notifications_db',
+        USER: process.env.POSTGRES_USER || 'postgres',
+        PASSWORD: process.env.POSTGRES_PASSWORD || 'admin',
       },
       RABBITMQ: {
-        HOST: "localhost",
+        HOST: 'localhost',
         PORT: 5672,
-        USER: "user",
-        PASSWORD: "password",
+        USER: 'user',
+        PASSWORD: 'password',
       },
     };
 
     // Merge client configs with defaults
     return clients.map((client) => {
       const dbConfig = { ...(client.DBCONFIG || defaultConfig.DBCONFIG) };
-      if (process.env.DB_HOST_OVERRIDE)
-        dbConfig.HOST = process.env.DB_HOST_OVERRIDE;
-      if (process.env.DB_PORT_OVERRIDE)
-        dbConfig.PORT = process.env.DB_PORT_OVERRIDE;
+      if (process.env.DB_HOST_OVERRIDE) dbConfig.HOST = process.env.DB_HOST_OVERRIDE;
+      if (process.env.DB_PORT_OVERRIDE) dbConfig.PORT = process.env.DB_PORT_OVERRIDE;
 
-      const rabbitConfig = client.RABBITMQ
-        ? { ...client.RABBITMQ }
-        : { ...defaultConfig.RABBITMQ };
-      rabbitConfig.SERVERICES = [
-        client.EMAIL.RABBITMQ,
-        client.SMS.RABBITMQ,
-        client.SLACKBOT.RABBITMQ,
-      ];
+      const rabbitConfig = client.RABBITMQ ? { ...client.RABBITMQ } : { ...defaultConfig.RABBITMQ };
+      rabbitConfig.SERVERICES = [client.EMAIL.RABBITMQ, client.SMS.RABBITMQ, client.SLACKBOT.RABBITMQ];
 
-      if (process.env.RABBITMQ_HOST_OVERRIDE)
-        rabbitConfig.HOST = process.env.RABBITMQ_HOST_OVERRIDE;
-      if (process.env.RABBITMQ_PORT_OVERRIDE)
-        rabbitConfig.PORT = process.env.RABBITMQ_PORT_OVERRIDE;
+      if (process.env.RABBITMQ_HOST_OVERRIDE) rabbitConfig.HOST = process.env.RABBITMQ_HOST_OVERRIDE;
+      if (process.env.RABBITMQ_PORT_OVERRIDE) rabbitConfig.PORT = process.env.RABBITMQ_PORT_OVERRIDE;
 
       return {
         ID: client.ID,
@@ -59,7 +49,7 @@ async function loadClientConfigs() {
       };
     });
   } catch (error) {
-    logger.error("Failed to load client configurations:", {
+    logger.error('Failed to load client configurations:', {
       message: error.message,
       stack: error?.stack,
     });

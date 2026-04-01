@@ -1,17 +1,8 @@
-const logger = require("../logger");
+const logger = require('../logger');
 
-const {
-  fetchWebhookConfigs,
-  addWebhookGRPC,
-  updateWebhookGRPC,
-  deleteWebhookGRPC,
-  fetchWebhookLogs,
-} = require("../webhook/client");
+const { fetchWebhookConfigs, addWebhookGRPC, updateWebhookGRPC, deleteWebhookGRPC, fetchWebhookLogs } = require('../webhook/client');
 
-const {
-  getCacheTriggerServices,
-  cacheTriggerServices,
-} = require("../../helpers/webhookCache.helper");
+const { getCacheTriggerServices, cacheTriggerServices } = require('../../helpers/webhookCache.helper');
 
 // ---------------- ADD ----------------
 async function addWebhook(payload, clientId) {
@@ -85,7 +76,7 @@ async function getWebhookEnabledServices(clientId, service) {
 
     if (!services.length) {
       const { enabledServices } = await fetchWebhookConfigs(clientId, {
-        fields: "enabledServices",
+        fields: 'enabledServices',
       });
 
       services = await cacheTriggerServices(clientId, enabledServices);
@@ -93,9 +84,7 @@ async function getWebhookEnabledServices(clientId, service) {
 
     return service ? services.includes(service) : services;
   } catch (error) {
-    logger.error(
-      `failed to fetch enabled services for client ${clientId}, ERROR: ${JSON.stringify(error)}`,
-    );
+    logger.error(`failed to fetch enabled services for client ${clientId}, ERROR: ${JSON.stringify(error)}`);
   } finally {
     return service ? services.includes(service) : services;
   }

@@ -5,16 +5,16 @@ notify:
     security:
       - bearerAuth: []
     parameters:
-      - $ref: "../index.yaml#/components/parameters/ClientIdHeader"
+      - $ref: '../index.yaml#/components/parameters/ClientIdHeader'
     requestBody:
       required: true
       content:
         application/json:
           schema:
             oneOf:
-              - $ref: "../index.yaml#/components/schemas/NotifySms"
-              - $ref: "../index.yaml#/components/schemas/NotifySlack"
-              - $ref: "../index.yaml#/components/schemas/NotifyEmail"
+              - $ref: '../index.yaml#/components/schemas/NotifySms'
+              - $ref: '../index.yaml#/components/schemas/NotifySlack'
+              - $ref: '../index.yaml#/components/schemas/NotifyEmail'
             discriminator:
               propertyName: service
           examples:
@@ -22,26 +22,26 @@ notify:
               summary: SMS Notification
               value:
                 service: sms
-                message: "Hello Rahul, how are you"
-                destination: "+919929797900"
+                message: 'Hello Rahul, how are you'
+                destination: '+919929797900'
             slack:
               summary: Slack Notification
               value:
                 service: slack
-                message: "Good Morning, Guys"
-                destination: "C08Q1239E10R"
+                message: 'Good Morning, Guys'
+                destination: 'C08Q1239E10R'
             email:
               summary: Email Notification
               value:
                 service: email
-                destination: "user@example.com"
-                subject: "Recent Mail"
-                body: "Email body content"
-                fromEmail: "sender@example.com"
-                cc: "itest@gmail.com"
-                bcc: "itest@gmail.com"
+                destination: 'user@example.com'
+                subject: 'Recent Mail'
+                body: 'Email body content'
+                fromEmail: 'sender@example.com'
+                cc: 'itest@gmail.com'
+                bcc: 'itest@gmail.com'
     responses:
-      "202":
+      '202':
         description: Notification accepted and queued
         content:
           application/json:
@@ -56,40 +56,40 @@ notify:
                   example: Notification request accepted and queued.
                 messageId:
                   type: string
-                  example: "7ec67efd-21e1-4189-aa8e-25686a6f8845"
-      "400":
+                  example: '7ec67efd-21e1-4189-aa8e-25686a6f8845'
+      '400':
         description: Validation error
         content:
           application/json:
             schema:
-              $ref: "../index.yaml#/components/schemas/ErrorResponse"
-      "401":
+              $ref: '../index.yaml#/components/schemas/ErrorResponse'
+      '401':
         description: Unauthorized
         content:
           application/json:
             schema:
-              $ref: "../index.yaml#/components/schemas/ErrorResponse"
-      "403":
+              $ref: '../index.yaml#/components/schemas/ErrorResponse'
+      '403':
         description: Forbidden
         content:
           application/json:
             schema:
-              $ref: "../index.yaml#/components/schemas/ErrorResponse"
+              $ref: '../index.yaml#/components/schemas/ErrorResponse'
 
 notifyWithAttachment:
   post:
     summary: Send an email notification with file attachment (pre-signed S3 upload)
     tags: [Notification]
     parameters:
-      - $ref: "../index.yaml#/components/parameters/ClientIdHeader"
+      - $ref: '../index.yaml#/components/parameters/ClientIdHeader'
     requestBody:
       required: true
       content:
         application/json:
           schema:
-            $ref: "../index.yaml#/components/schemas/NotifyEmailWithFileAttachment"
+            $ref: '../index.yaml#/components/schemas/NotifyEmailWithFileAttachment'
     responses:
-      "202":
+      '202':
         description: Notification accepted and queued
         content:
           application/json:
@@ -107,25 +107,25 @@ notifyWithAttachment:
                   example: Notification request accepted and queued.
                 messageId:
                   type: string
-                  example: "7ec67efd-21e1-4189-aa8e-25686a6f8845"
-      "400":
+                  example: '7ec67efd-21e1-4189-aa8e-25686a6f8845'
+      '400':
         description: Validation error
         content:
           application/json:
             schema:
-              $ref: "../index.yaml#/components/schemas/ErrorResponse"
-      "401":
+              $ref: '../index.yaml#/components/schemas/ErrorResponse'
+      '401':
         description: Unauthorized
         content:
           application/json:
             schema:
-              $ref: "../index.yaml#/components/schemas/ErrorResponse"
-      "403":
+              $ref: '../index.yaml#/components/schemas/ErrorResponse'
+      '403':
         description: Forbidden
         content:
           application/json:
             schema:
-              $ref: "../index.yaml#/components/schemas/ErrorResponse"
+              $ref: '../index.yaml#/components/schemas/ErrorResponse'
 
 v2Notify:
   post:
@@ -145,72 +145,72 @@ v2Notify:
       - Duplicate `uniqueKey` in same request → `400`
       - Messages exceeding configured limit → `400`
     parameters:
-      - $ref: "../index.yaml#/components/parameters/ClientIdHeader"
+      - $ref: '../index.yaml#/components/parameters/ClientIdHeader'
     requestBody:
       required: true
       content:
         application/json:
           schema:
-            $ref: "../index.yaml#/components/schemas/NotifyV2Request"
+            $ref: '../index.yaml#/components/schemas/NotifyV2Request'
     responses:
-      "202":
+      '202':
         description: All notifications processed successfully
         content:
           application/json:
             schema:
-              $ref: "../index.yaml#/components/schemas/NotifyV2Response"
-      "207":
+              $ref: '../index.yaml#/components/schemas/NotifyV2Response'
+      '207':
         description: |
           Partial success. Some services processed successfully, others failed.
           Response body contains service-specific results in `data`.
         content:
           application/json:
             schema:
-              $ref: "../index.yaml#/components/schemas/NotifyV2Response"
+              $ref: '../index.yaml#/components/schemas/NotifyV2Response'
             example:
               data:
                 email:
                   success: false
                   statusCode: 400
-                  message: "Bulk insert failed."
+                  message: 'Bulk insert failed.'
                 slack:
                   success: true
-                  message: "Notification request accepted and queued."
-                  messageIds: ["296c0beb-a519-45ec-9b6c-b0aeb86e034c"]
+                  message: 'Notification request accepted and queued.'
+                  messageIds: ['296c0beb-a519-45ec-9b6c-b0aeb86e034c']
                   preSignedUrls: []
-      "400":
+      '400':
         description: Validation error — one or more service-level payloads are invalid
         content:
           application/json:
             schema:
-              $ref: "../index.yaml#/components/schemas/NotifyV2Response"
+              $ref: '../index.yaml#/components/schemas/NotifyV2Response'
             example:
               data:
                 email:
                   success: false
                   statusCode: 400
-                  message: "Email no-reply.com in destination is invalid."
-      "401":
+                  message: 'Email no-reply.com in destination is invalid.'
+      '401':
         description: Unauthorized
         content:
           application/json:
             schema:
-              $ref: "../index.yaml#/components/schemas/ErrorResponse"
-      "403":
+              $ref: '../index.yaml#/components/schemas/ErrorResponse'
+      '403':
         description: Forbidden
         content:
           application/json:
             schema:
-              $ref: "../index.yaml#/components/schemas/ErrorResponse"
-      "413":
+              $ref: '../index.yaml#/components/schemas/ErrorResponse'
+      '413':
         description: Payload Too Large (exceeds 100 KB limit)
         content:
           application/json:
             schema:
-              $ref: "../index.yaml#/components/schemas/ErrorResponse"
-      "500":
+              $ref: '../index.yaml#/components/schemas/ErrorResponse'
+      '500':
         description: Internal server error
         content:
           application/json:
             schema:
-              $ref: "../index.yaml#/components/schemas/ErrorResponse"
+              $ref: '../index.yaml#/components/schemas/ErrorResponse'

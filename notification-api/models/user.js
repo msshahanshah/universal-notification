@@ -1,6 +1,6 @@
-"use strict";
+'use strict';
 
-const { Model, DataTypes } = require("sequelize");
+const { Model, DataTypes } = require('sequelize');
 
 module.exports = (sequelize, schemaName) => {
   /**
@@ -42,11 +42,11 @@ module.exports = (sequelize, schemaName) => {
 
     {
       sequelize,
-      modelName: "User",
+      modelName: 'User',
       timestamps: true, // Enable createdAt and updatedAt fields
       underscored: true,
-      tableName: "users", // Explicit table name for clarity
-      schema: "public", // Use lowercase schema name
+      tableName: 'users', // Explicit table name for clarity
+      schema: 'public', // Use lowercase schema name
     }
   );
 

@@ -5,7 +5,7 @@ deliveryStatusId:
     security:
       - bearerAuth: []
     parameters:
-      - $ref: "../index.yaml#/components/parameters/ClientIdHeader"
+      - $ref: '../index.yaml#/components/parameters/ClientIdHeader'
       - name: id
         in: path
         required: true
@@ -13,7 +13,7 @@ deliveryStatusId:
           type: string
         description: Message ID (UUID) of the notification
     responses:
-      "200":
+      '200':
         description: Delivery status returned
         content:
           application/json:
@@ -31,39 +31,39 @@ deliveryStatusId:
                     deliveryStatus:
                       type: string
                       example: pending
-      "400":
+      '400':
         description: Bad Request
         content:
           application/json:
             schema:
-              $ref: "../index.yaml#/components/schemas/ErrorResponse"
-      "401":
+              $ref: '../index.yaml#/components/schemas/ErrorResponse'
+      '401':
         description: Unauthorized
         content:
           application/json:
             schema:
-              $ref: "../index.yaml#/components/schemas/ErrorResponse"
-      "403":
+              $ref: '../index.yaml#/components/schemas/ErrorResponse'
+      '403':
         description: Forbidden
         content:
           application/json:
             schema:
-              $ref: "../index.yaml#/components/schemas/ErrorResponse"
-      "404":
+              $ref: '../index.yaml#/components/schemas/ErrorResponse'
+      '404':
         description: Message ID not found
         content:
           application/json:
             schema:
-              $ref: "../index.yaml#/components/schemas/ErrorResponse"
+              $ref: '../index.yaml#/components/schemas/ErrorResponse'
             example:
               success: false
-              message: "Message ID not found"
-      "500":
+              message: 'Message ID not found'
+      '500':
         description: Internal Server Error
         content:
           application/json:
             schema:
-              $ref: "../index.yaml#/components/schemas/ErrorResponse"
+              $ref: '../index.yaml#/components/schemas/ErrorResponse'
 
 logs:
   get:
@@ -72,7 +72,7 @@ logs:
     security:
       - bearerAuth: []
     parameters:
-      - $ref: "../index.yaml#/components/parameters/ClientIdHeader"
+      - $ref: '../index.yaml#/components/parameters/ClientIdHeader'
       - name: status
         in: query
         schema:
@@ -148,7 +148,7 @@ logs:
           format: date-time
         description: Filter logs up to this date (ISO 8601)
     responses:
-      "200":
+      '200':
         description: Logs fetched successfully
         content:
           application/json:
@@ -192,24 +192,24 @@ logs:
                       type: number
                     totalPages:
                       type: number
-      "400":
+      '400':
         description: Bad Request
         content:
           application/json:
             schema:
-              $ref: "../index.yaml#/components/schemas/ErrorResponse"
-      "401":
+              $ref: '../index.yaml#/components/schemas/ErrorResponse'
+      '401':
         description: Unauthorized
         content:
           application/json:
             schema:
-              $ref: "../index.yaml#/components/schemas/ErrorResponse"
-      "403":
+              $ref: '../index.yaml#/components/schemas/ErrorResponse'
+      '403':
         description: Forbidden
         content:
           application/json:
             schema:
-              $ref: "../index.yaml#/components/schemas/ErrorResponse"
+              $ref: '../index.yaml#/components/schemas/ErrorResponse'
 
 slackLogs:
   get:
@@ -218,7 +218,7 @@ slackLogs:
     security:
       - bearerAuth: []
     parameters:
-      - $ref: "../index.yaml#/components/parameters/ClientIdHeader"
+      - $ref: '../index.yaml#/components/parameters/ClientIdHeader'
       - name: status
         in: query
         schema:
@@ -274,7 +274,7 @@ slackLogs:
           format: date-time
         description: Filter logs up to this date (ISO 8601)
     responses:
-      "200":
+      '200':
         description: Slack logs fetched successfully
         content:
           application/json:
@@ -314,15 +314,15 @@ slackLogs:
                         properties:
                           username:
                             type: string
-                            example: "john_doe"
+                            example: 'john_doe'
                           message:
                             type: string
-                            example: "Thanks for the reply!"
+                            example: 'Thanks for the reply!'
                           reactions:
                             type: array
                             items:
                               type: string
-                            example: ["+1", "white_check_mark"]
+                            example: ['+1', 'white_check_mark']
                 pagination:
                   type: object
                   properties:
@@ -332,21 +332,21 @@ slackLogs:
                       type: number
                     totalPages:
                       type: number
-      "400":
+      '400':
         description: Bad Request
         content:
           application/json:
             schema:
-              $ref: "../index.yaml#/components/schemas/ErrorResponse"
-      "401":
+              $ref: '../index.yaml#/components/schemas/ErrorResponse'
+      '401':
         description: Unauthorized
         content:
           application/json:
             schema:
-              $ref: "../index.yaml#/components/schemas/ErrorResponse"
-      "403":
+              $ref: '../index.yaml#/components/schemas/ErrorResponse'
+      '403':
         description: Forbidden
         content:
           application/json:
             schema:
-              $ref: "../index.yaml#/components/schemas/ErrorResponse"
+              $ref: '../index.yaml#/components/schemas/ErrorResponse'

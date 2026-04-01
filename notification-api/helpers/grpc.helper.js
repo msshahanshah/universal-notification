@@ -1,4 +1,4 @@
-const logger = require("../src/logger");
+const logger = require('../src/logger');
 
 const grpcCodeToHttpStatusCode = {
   0: 200, // OK
@@ -23,120 +23,90 @@ const grpcCodeToHttpStatusCode = {
 //ADD WEBHOOK
 function addWebhook(webhookGRPCClient, payload, metadata) {
   return new Promise((resolve, reject) => {
-    webhookGRPCClient.AddWebhookConfig(
-      { payload: JSON.stringify(payload) },
-      metadata,
-      (error, response) => {
-        if (error) {
-          logger.error(
-            `Error in adding webhook config to mongo ${error.message}`,
-          );
-          error = {
-            statusCode: grpcCodeToHttpStatusCode[error.code],
-            message: error.details,
-          };
+    webhookGRPCClient.AddWebhookConfig({ payload: JSON.stringify(payload) }, metadata, (error, response) => {
+      if (error) {
+        logger.error(`Error in adding webhook config to mongo ${error.message}`);
+        error = {
+          statusCode: grpcCodeToHttpStatusCode[error.code],
+          message: error.details,
+        };
 
-          return reject(error);
-        }
+        return reject(error);
+      }
 
-        resolve(JSON.parse(response.payload));
-      },
-    );
+      resolve(JSON.parse(response.payload));
+    });
   });
 }
 
 //UPDATE WEBHOOK
 function updateWebhook(webhookGRPCClient, payload, metadata) {
   return new Promise((resolve, reject) => {
-    webhookGRPCClient.updateWebhookConfig(
-      { payload: JSON.stringify(payload) },
-      metadata,
-      (error, response) => {
-        if (error) {
-          logger.error(
-            `Error in updating webhook config to mongo ${error.message}`,
-          );
-          error = {
-            statusCode: grpcCodeToHttpStatusCode[error.code],
-            message: error.details,
-          };
+    webhookGRPCClient.updateWebhookConfig({ payload: JSON.stringify(payload) }, metadata, (error, response) => {
+      if (error) {
+        logger.error(`Error in updating webhook config to mongo ${error.message}`);
+        error = {
+          statusCode: grpcCodeToHttpStatusCode[error.code],
+          message: error.details,
+        };
 
-          return reject(error);
-        }
-        resolve(JSON.parse(response.payload));
-      },
-    );
+        return reject(error);
+      }
+      resolve(JSON.parse(response.payload));
+    });
   });
 }
 
 //DELETE WEBHOOK
 function deleteWebhook(webhookGRPCClient, payload, metadata) {
   return new Promise((resolve, reject) => {
-    webhookGRPCClient.deleteWebhookConfig(
-      { payload: JSON.stringify(payload) },
-      metadata,
-      (error, response) => {
-        if (error) {
-          logger.error(
-            `Error in deleting webhook config to mongo ${error.message}`,
-          );
-          error = {
-            statusCode: grpcCodeToHttpStatusCode[error.code],
-            message: error.details,
-          };
+    webhookGRPCClient.deleteWebhookConfig({ payload: JSON.stringify(payload) }, metadata, (error, response) => {
+      if (error) {
+        logger.error(`Error in deleting webhook config to mongo ${error.message}`);
+        error = {
+          statusCode: grpcCodeToHttpStatusCode[error.code],
+          message: error.details,
+        };
 
-          return reject(error);
-        }
-        resolve(JSON.parse(response.payload));
-      },
-    );
+        return reject(error);
+      }
+      resolve(JSON.parse(response.payload));
+    });
   });
 }
 
 //ALL WEBHOOK
 function getWebhooks(webhookGRPCClient, payload, metadata) {
   return new Promise((resolve, reject) => {
-    webhookGRPCClient.AllWebhookConfig(
-      { payload: JSON.stringify(payload) },
-      metadata,
-      (error, response) => {
-        if (error) {
-          logger.error(
-            `Error in fetching webhook config from mongo ${error.message}`,
-          );
-          error = {
-            statusCode: grpcCodeToHttpStatusCode[error.code],
-            message: error.details,
-          };
+    webhookGRPCClient.AllWebhookConfig({ payload: JSON.stringify(payload) }, metadata, (error, response) => {
+      if (error) {
+        logger.error(`Error in fetching webhook config from mongo ${error.message}`);
+        error = {
+          statusCode: grpcCodeToHttpStatusCode[error.code],
+          message: error.details,
+        };
 
-          return reject(error);
-        }
-        resolve(JSON.parse(response.payload));
-      },
-    );
+        return reject(error);
+      }
+      resolve(JSON.parse(response.payload));
+    });
   });
 }
 
 function getWebhookLogs(webhookGRPCClient, payload, metadata) {
   return new Promise((resolve, reject) => {
-    webhookGRPCClient.GetAllWebhookLogs(
-      { payload: JSON.stringify(payload) },
-      metadata,
-      (error, response) => {
-        if (error) {
-          logger.error(
-            `Error in fetching webhook logs from mongo ${error.message}`,
-          );
-          error = {
-            statusCode: grpcCodeToHttpStatusCode[error.code],
-            message: error.details,
-          };
+    webhookGRPCClient.GetAllWebhookLogs({ payload: JSON.stringify(payload) }, metadata, (error, response) => {
+      if (error) {
+        logger.error(`Error in fetching webhook logs from mongo ${error.message}`);
+        error = {
+          statusCode: grpcCodeToHttpStatusCode[error.code],
+          message: error.details,
+        };
 
-          return reject(error);
-        }
-        resolve(JSON.parse(response.payload));
-      },
-    );
+        return reject(error);
+      }
+      resolve(JSON.parse(response.payload));
+    });
   });
 }
 

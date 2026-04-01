@@ -1,6 +1,6 @@
-const jwt = require("jsonwebtoken");
-require("dotenv").config();
-const { AUTH_TOKEN } = require("../constants/index.js");
+const jwt = require('jsonwebtoken');
+require('dotenv').config();
+const { AUTH_TOKEN } = require('../constants/index.js');
 
 const tokenConfig = {
   [AUTH_TOKEN.ACCESS_TOKEN]: {
@@ -15,7 +15,7 @@ const tokenConfig = {
 
 const signToken = (payload, type) => {
   const config = tokenConfig[type];
-  if (!config) throw new Error("Invalid token type");
+  if (!config) throw new Error('Invalid token type');
 
   return jwt.sign(payload, config.secret, {
     expiresIn: config.expiresIn,
@@ -24,7 +24,7 @@ const signToken = (payload, type) => {
 
 const verifyToken = (token, type) => {
   const config = tokenConfig[type];
-  if (!config) throw new Error("Invalid token type");
+  if (!config) throw new Error('Invalid token type');
 
   return jwt.verify(token, config.secret);
 };

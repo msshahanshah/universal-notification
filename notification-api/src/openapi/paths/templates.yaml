@@ -5,15 +5,15 @@ templates:
     security:
       - bearerAuth: []
     parameters:
-      - $ref: "../index.yaml#/components/parameters/ClientIdHeader"
+      - $ref: '../index.yaml#/components/parameters/ClientIdHeader'
     requestBody:
       required: true
       content:
         application/json:
           schema:
-            $ref: "../index.yaml#/components/schemas/TemplateRequest"
+            $ref: '../index.yaml#/components/schemas/TemplateRequest'
     responses:
-      "201":
+      '201':
         description: Template created successfully
         content:
           application/json:
@@ -27,31 +27,31 @@ templates:
                   type: string
                   example: Template created successfully
                 data:
-                  $ref: "../index.yaml#/components/schemas/TemplateResponse"
-      "400":
+                  $ref: '../index.yaml#/components/schemas/TemplateResponse'
+      '400':
         description: Validation error
         content:
           application/json:
             schema:
-              $ref: "../index.yaml#/components/schemas/ErrorResponse"
-      "401":
+              $ref: '../index.yaml#/components/schemas/ErrorResponse'
+      '401':
         description: Unauthorized
         content:
           application/json:
             schema:
-              $ref: "../index.yaml#/components/schemas/ErrorResponse"
-      "403":
+              $ref: '../index.yaml#/components/schemas/ErrorResponse'
+      '403':
         description: Forbidden
         content:
           application/json:
             schema:
-              $ref: "../index.yaml#/components/schemas/ErrorResponse"
-      "409":
+              $ref: '../index.yaml#/components/schemas/ErrorResponse'
+      '409':
         description: Conflict — template name or templateId already exists
         content:
           application/json:
             schema:
-              $ref: "../index.yaml#/components/schemas/ErrorResponse"
+              $ref: '../index.yaml#/components/schemas/ErrorResponse'
 
   get:
     summary: List / search templates
@@ -59,7 +59,7 @@ templates:
     security:
       - bearerAuth: []
     parameters:
-      - $ref: "../index.yaml#/components/parameters/ClientIdHeader"
+      - $ref: '../index.yaml#/components/parameters/ClientIdHeader'
       - name: service
         in: query
         schema:
@@ -84,7 +84,7 @@ templates:
           type: integer
           default: 10
     responses:
-      "200":
+      '200':
         description: Templates fetched successfully
         content:
           application/json:
@@ -100,7 +100,7 @@ templates:
                 data:
                   type: array
                   items:
-                    $ref: "../index.yaml#/components/schemas/TemplateResponse"
+                    $ref: '../index.yaml#/components/schemas/TemplateResponse'
                 pagination:
                   type: object
                   properties:
@@ -110,18 +110,18 @@ templates:
                       type: integer
                     totalPages:
                       type: integer
-      "401":
+      '401':
         description: Unauthorized
         content:
           application/json:
             schema:
-              $ref: "../index.yaml#/components/schemas/ErrorResponse"
-      "403":
+              $ref: '../index.yaml#/components/schemas/ErrorResponse'
+      '403':
         description: Forbidden
         content:
           application/json:
             schema:
-              $ref: "../index.yaml#/components/schemas/ErrorResponse"
+              $ref: '../index.yaml#/components/schemas/ErrorResponse'
 
 templatesId:
   parameters:
@@ -138,7 +138,7 @@ templatesId:
     security:
       - bearerAuth: []
     parameters:
-      - $ref: "../index.yaml#/components/parameters/ClientIdHeader"
+      - $ref: '../index.yaml#/components/parameters/ClientIdHeader'
     requestBody:
       required: true
       content:
@@ -168,7 +168,7 @@ templatesId:
                     constraints:
                       type: object
     responses:
-      "200":
+      '200':
         description: Template updated successfully
         content:
           application/json:
@@ -182,31 +182,31 @@ templatesId:
                   type: string
                   example: Template updated successfully
                 data:
-                  $ref: "../index.yaml#/components/schemas/TemplateResponse"
-      "400":
+                  $ref: '../index.yaml#/components/schemas/TemplateResponse'
+      '400':
         description: Validation error
         content:
           application/json:
             schema:
-              $ref: "../index.yaml#/components/schemas/ErrorResponse"
-      "401":
+              $ref: '../index.yaml#/components/schemas/ErrorResponse'
+      '401':
         description: Unauthorized
         content:
           application/json:
             schema:
-              $ref: "../index.yaml#/components/schemas/ErrorResponse"
-      "403":
+              $ref: '../index.yaml#/components/schemas/ErrorResponse'
+      '403':
         description: Forbidden
         content:
           application/json:
             schema:
-              $ref: "../index.yaml#/components/schemas/ErrorResponse"
-      "404":
+              $ref: '../index.yaml#/components/schemas/ErrorResponse'
+      '404':
         description: Template not found
         content:
           application/json:
             schema:
-              $ref: "../index.yaml#/components/schemas/ErrorResponse"
+              $ref: '../index.yaml#/components/schemas/ErrorResponse'
 
   delete:
     summary: Delete a template
@@ -214,9 +214,9 @@ templatesId:
     security:
       - bearerAuth: []
     parameters:
-      - $ref: "../index.yaml#/components/parameters/ClientIdHeader"
+      - $ref: '../index.yaml#/components/parameters/ClientIdHeader'
     responses:
-      "200":
+      '200':
         description: Template deleted successfully
         content:
           application/json:
@@ -229,21 +229,21 @@ templatesId:
                 message:
                   type: string
                   example: Template deleted successfully
-      "401":
+      '401':
         description: Unauthorized
         content:
           application/json:
             schema:
-              $ref: "../index.yaml#/components/schemas/ErrorResponse"
-      "403":
+              $ref: '../index.yaml#/components/schemas/ErrorResponse'
+      '403':
         description: Forbidden
         content:
           application/json:
             schema:
-              $ref: "../index.yaml#/components/schemas/ErrorResponse"
-      "404":
+              $ref: '../index.yaml#/components/schemas/ErrorResponse'
+      '404':
         description: Template not found
         content:
           application/json:
             schema:
-              $ref: "../index.yaml#/components/schemas/ErrorResponse"
+              $ref: '../index.yaml#/components/schemas/ErrorResponse'

@@ -1,23 +1,17 @@
-const fse = require("fs-extra");
-const axios = require("axios");
-const path = require("path");
-const logger = require("../logger");
+const fse = require('fs-extra');
+const axios = require('axios');
+const path = require('path');
+const logger = require('../logger');
 
-const downloadS3File = async (
-  s3Url,
-  filename,
-  messageId,
-  isPresigned = false,
-  isStream = false,
-) => {
+const downloadS3File = async (s3Url, filename, messageId, isPresigned = false, isStream = false) => {
   try {
     let newS3Url = s3Url;
-    if (!isPresigned) newS3Url = s3Url.replace("?", "%3F"); // % -> %3F
+    if (!isPresigned) newS3Url = s3Url.replace('?', '%3F'); // % -> %3F
     // creating file stream
     const response = await axios({
       url: newS3Url,
-      method: "GET",
-      responseType: isStream ? "stream" : "arraybuffer",
+      method: 'GET',
+      responseType: isStream ? 'stream' : 'arraybuffer',
     });
 
     return {
@@ -25,7 +19,7 @@ const downloadS3File = async (
       content: isStream ? response.data : Buffer.from(response.data),
     };
   } catch (err) {
-    logger.error("Download failed:", err);
+    logger.error('Download failed:', err);
     throw err;
   }
 };
@@ -39,7 +33,7 @@ async function downloadFromS3AsStream({ bucket, key, filename }) {
   const response = await s3.send(command);
 
   if (!response.Body) {
-    throw new Error("Empty S3 response body");
+    throw new Error('Empty S3 response body');
   }
 
   // response.Body is a Node.js Readable stream
@@ -50,8 +44,8 @@ async function downloadFromS3AsStream({ bucket, key, filename }) {
 }
 
 const deleteLocalFile = async (filePath) => {
-  if (!filePath || typeof filePath !== "string") {
-    logger.warn("Deletion skipped: Invalid filePath");
+  if (!filePath || typeof filePath !== 'string') {
+    logger.warn('Deletion skipped: Invalid filePath');
     return;
   }
 
@@ -59,19 +53,19 @@ const deleteLocalFile = async (filePath) => {
     const stats = await fse.stat(filePath).catch(() => null);
 
     if (!stats) {
-      logger.warn("Deletion skipped: File does not exist", { filePath });
+      logger.warn('Deletion skipped: File does not exist', { filePath });
       return;
     }
 
     if (!stats.isFile()) {
-      logger.error("Deletion blocked: Path is not a file", { filePath });
+      logger.error('Deletion blocked: Path is not a file', { filePath });
       return;
     }
 
     await fse.unlink(filePath);
-    logger.info("Local file deleted", { filePath });
+    logger.info('Local file deleted', { filePath });
   } catch (err) {
-    logger.error("Error deleting local file", {
+    logger.error('Error deleting local file', {
       filePath,
       error: err.message,
     });
@@ -84,32 +78,20 @@ const deleteLocalFiles = async (messageId, attachements = []) => {
   let deletePromises = [];
 
   if (attachments?.length) {
-    if (typeof attachments[0] === "object") {
+    if (typeof attachments[0] === 'object') {
       deletePromises = attachments.map((attachment) => {
-        const localPath = path.resolve(
-          __dirname,
-          "..",
-          "uploads",
-          messageId,
-          attachment.fileName,
-        );
+        const localPath = path.resolve(__dirname, '..', 'uploads', messageId, attachment.fileName);
         return deleteLocalFile(localPath);
       });
     } else {
       deletePromises = attachments.map((s3Url) => {
         // 1. Remove ?1/ safely
-        const cleanUrl = s3Url.replace(/\?.*?\//, "/");
+        const cleanUrl = s3Url.replace(/\?.*?\//, '/');
         // 2. Extract relative path after /uploads/
-        const relativePath = cleanUrl.split("/uploads/")[1];
-        const [client, _messageId, fileName] = relativePath.split("/");
+        const relativePath = cleanUrl.split('/uploads/')[1];
+        const [client, _messageId, fileName] = relativePath.split('/');
         // 3. Build local file path
-        const localPath = path.resolve(
-          __dirname,
-          "..",
-          "uploads",
-          messageId,
-          fileName,
-        );
+        const localPath = path.resolve(__dirname, '..', 'uploads', messageId, fileName);
 
         return deleteLocalFile(localPath);
       });

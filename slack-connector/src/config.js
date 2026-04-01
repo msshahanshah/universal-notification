@@ -25,34 +25,34 @@ require('dotenv').config(); // Load local .env potentially overriding root setti
  * @property {number} maxProcessingAttempts - The maximum number of processing attempts before marking a message as a permanent failure.
  */
 module.exports = {
+  /** @type {string} */
+  env: process.env.NODE_ENV || 'development',
+  rabbitMQ: {
     /** @type {string} */
-    env: process.env.NODE_ENV || 'development',
-    rabbitMQ: {
-        /** @type {string} */
-        url: process.env.RABBITMQ_URL || 'amqp://user:password@rabbitmq:5672', // Use service name 'rabbitmq'
-        /** @type {string} */
-        exchangeName: process.env.RABBITMQ_EXCHANGE_NAME || 'notifications_exchange',
-        /** @type {string} */
-        exchangeType: 'direct',
-        /** @type {string} */
-        queueName: process.env.RABBITMQ_QUEUE_NAME || 'slack_queue',
-        /** @type {string} */
-        bindingKey: process.env.RABBITMQ_BINDING_KEY || 'slack',
-        // --- For DLQ/Retries (add later) ---
-        // deadLetterExchange: process.env.RABBITMQ_DLX_NAME || 'notifications_dlx',
-        // retryDelay: parseInt(process.env.RETRY_DELAY_MS || '30000', 10), // e.g., 30 seconds
-    },
-    database: {
-        /** @type {string} */
-        host: process.env.DB_HOST || 'postgres', // Use service name 'postgres'
-        // Sequelize will pick up user/pass/db from env vars based on config/config.json pattern
-        // Need to ensure the connector process has access to these vars
-    },
-    slack: {
-        /** @type {string} */
-        botToken: process.env.SLACK_BOT_TOKEN, // Ensure this is set in .env or environment
-    },
-    // Max retry attempts for processing before marking as permanent failure
-    /** @type {number} */
-    maxProcessingAttempts: parseInt(process.env.MAX_PROCESSING_ATTEMPTS || '3', 10)
+    url: process.env.RABBITMQ_URL || 'amqp://user:password@rabbitmq:5672', // Use service name 'rabbitmq'
+    /** @type {string} */
+    exchangeName: process.env.RABBITMQ_EXCHANGE_NAME || 'notifications_exchange',
+    /** @type {string} */
+    exchangeType: 'direct',
+    /** @type {string} */
+    queueName: process.env.RABBITMQ_QUEUE_NAME || 'slack_queue',
+    /** @type {string} */
+    bindingKey: process.env.RABBITMQ_BINDING_KEY || 'slack',
+    // --- For DLQ/Retries (add later) ---
+    // deadLetterExchange: process.env.RABBITMQ_DLX_NAME || 'notifications_dlx',
+    // retryDelay: parseInt(process.env.RETRY_DELAY_MS || '30000', 10), // e.g., 30 seconds
+  },
+  database: {
+    /** @type {string} */
+    host: process.env.DB_HOST || 'postgres', // Use service name 'postgres'
+    // Sequelize will pick up user/pass/db from env vars based on config/config.json pattern
+    // Need to ensure the connector process has access to these vars
+  },
+  slack: {
+    /** @type {string} */
+    botToken: process.env.SLACK_BOT_TOKEN, // Ensure this is set in .env or environment
+  },
+  // Max retry attempts for processing before marking as permanent failure
+  /** @type {number} */
+  maxProcessingAttempts: parseInt(process.env.MAX_PROCESSING_ATTEMPTS || '3', 10),
 };

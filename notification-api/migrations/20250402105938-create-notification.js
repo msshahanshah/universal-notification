@@ -1,4 +1,4 @@
-"use strict";
+'use strict';
 
 /**
  * @typedef {import('sequelize').QueryInterface} QueryInterface
@@ -16,7 +16,7 @@ module.exports = {
    */
   async up(queryInterface, Sequelize, schemaName) {
     const tableName = {
-      tableName: "notifications",
+      tableName: 'notifications',
       schema: schemaName,
     };
     await queryInterface.createTable(tableName, {
@@ -50,7 +50,7 @@ module.exports = {
       status: {
         type: Sequelize.STRING,
         allowNull: false,
-        defaultValue: "pending",
+        defaultValue: 'pending',
       },
       attempts: {
         type: Sequelize.INTEGER,
@@ -82,9 +82,9 @@ module.exports = {
     });
 
     // Add indexes for better query performance
-    await queryInterface.addIndex(tableName, ["messageId"], { unique: true });
-    await queryInterface.addIndex(tableName, ["status"]);
-    await queryInterface.addIndex(tableName, ["service", "status"]);
+    await queryInterface.addIndex(tableName, ['messageId'], { unique: true });
+    await queryInterface.addIndex(tableName, ['status']);
+    await queryInterface.addIndex(tableName, ['service', 'status']);
   },
 
   /**
@@ -92,6 +92,6 @@ module.exports = {
    * @param {Sequelize} Sequelize
    */
   async down(queryInterface, Sequelize) {
-    await queryInterface.dropTable("notifications");
+    await queryInterface.dropTable('notifications');
   },
 };

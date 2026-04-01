@@ -4,23 +4,23 @@
 module.exports = {
   async up(queryInterface, Sequelize, schemaName) {
     const tableName = {
-      tableName: "notifications",
+      tableName: 'notifications',
       schema: schemaName,
     };
 
-    await queryInterface.addColumn(tableName, "variableValues", {
+    await queryInterface.addColumn(tableName, 'variableValues', {
       type: Sequelize.JSON,
       allowNull: true,
-      defaultValue: []
+      defaultValue: [],
     });
   },
 
   async down(queryInterface, Sequelize, schemaName) {
     const tableName = {
-      tableName: "notifications",
+      tableName: 'notifications',
       schema: schemaName,
     };
 
-    await queryInterface.removeColumn(tableName, "variableValues");
+    await queryInterface.removeColumn(tableName, 'variableValues');
   },
 };

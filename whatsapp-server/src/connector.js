@@ -1,18 +1,12 @@
-const logger = require("./logger");
-const connectionManager = require("./utility/connectionManager");
+const logger = require('./logger');
+const connectionManager = require('./utility/connectionManager');
 
 async function connectAndConsume(clientConfigList) {
   try {
     await Promise.all(
       clientConfigList.map(async (clientItem) => {
-        await connectionManager.initializeSequelize(
-          clientItem.DBCONFIG,
-          clientItem.ID,
-        );
-        await connectionManager.initializeWhatsAppSender(
-          clientItem.EMAIL,
-          clientItem.ID,
-        );
+        await connectionManager.initializeSequelize(clientItem.DBCONFIG, clientItem.ID);
+        await connectionManager.initializeWhatsAppSender(clientItem.EMAIL, clientItem.ID);
         // Get RabbitMQ client from package manager
         const rabbitClient = await connectionManager.getRabbitMQ(clientItem.ID);
 
@@ -20,20 +14,14 @@ async function connectAndConsume(clientConfigList) {
         const db = await connectionManager.getModels(clientItem.ID);
 
         // Create WhatsApp sender function
-        const whatsAppSender = await connectionManager.getWhatsAppSender(
-          clientItem.ID,
-        );
+        const whatsAppSender = await connectionManager.getWhatsAppSender(clientItem.ID);
 
         // Start consuming with package consumer
         await rabbitClient.consume({
-          service: "whatsapp",
+          service: 'whatsapp',
           sender: async (payload, messageId) => {
             const { destination, content, provider, templateId, variableValues } = payload;
-            const {
-              fromNumber,
-              attachments = [],
-              message
-            } = content;
+            const { fromNumber, attachments = [], message } = content;
 
             const msgData = {
               fromNumber,
@@ -45,7 +33,7 @@ async function connectAndConsume(clientConfigList) {
               provider,
             };
 
-            if (process.env.NODE_ENV === "testing") {
+            if (process.env.NODE_ENV === 'testing') {
               const msg = await db.Notification.findOne({
                 where: { messageId },
               });
@@ -53,10 +41,7 @@ async function connectAndConsume(clientConfigList) {
                 logger.error(`Message not found for id: {messageId}`);
                 return;
               }
-              await db.Notification.update(
-                { status: "sent" },
-                { where: { messageId } },
-              );
+              await db.Notification.update({ status: 'sent' }, { where: { messageId } });
 
               return;
             }
@@ -75,27 +60,24 @@ async function connectAndConsume(clientConfigList) {
                     contentVariables: variableValues,
                     provider,
                   },
-                  messageId,
+                  messageId
                 );
-              }),
+              })
             );
             return result.length === 1 ? result[0] : result;
           },
           db,
           maxProcessAttemptCount: 3,
         });
-      }),
+      })
     );
 
     // Make connectionManager available globally for rabbitMQClient
     global.connectionManager = connectionManager;
 
-    logger.info("All connections initialized successfully.");
+    logger.info('All connections initialized successfully.');
   } catch (error) {
-    logger.error(
-      "Failed to connect or consume from RabbitMQ / DB check failed:",
-      { error: error.message, stack: error.stack },
-    );
+    logger.error('Failed to connect or consume from RabbitMQ / DB check failed:', { error: error.message, stack: error.stack });
     throw error; // Re-throw to let caller handle retry logic
   }
 }
@@ -107,10 +89,10 @@ async function closeConnections(clientId) {
       logger.info(`Closed all connections for client ${clientId}`);
     } else {
       await connectionManager.close();
-      logger.info("Closed all connections");
+      logger.info('Closed all connections');
     }
   } catch (error) {
-    logger.error("Failed to close connections:", { error: error.message });
+    logger.error('Failed to close connections:', { error: error.message });
   }
 }
 module.exports = {

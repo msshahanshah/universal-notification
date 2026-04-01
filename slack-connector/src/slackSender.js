@@ -1,14 +1,14 @@
 // ./slack-connector/src/slackSender.js
-const { WebClient } = require("@slack/web-api");
-const logger = require("./logger");
-const RedisHelper = require("../helpers/redis.helper");
+const { WebClient } = require('@slack/web-api');
+const logger = require('./logger');
+const RedisHelper = require('../helpers/redis.helper');
 // Map to cache Slack clients per bot token
 const slackClients = new Map();
 
 function getSlackClient(botToken) {
   if (!botToken) {
-    logger.error("Slack Bot Token is not provided! \n");
-    throw new Error("Missing Slack configuration: Bot Token");
+    logger.error('Slack Bot Token is not provided! \n');
+    throw new Error('Missing Slack configuration: Bot Token');
   }
 
   // Check if we already have a client for this token
@@ -18,69 +18,56 @@ function getSlackClient(botToken) {
 
   // Log only a portion to avoid exposing the full token in logs
   const tokenSnippet = `${botToken.substring(0, 10)}...${botToken.substring(botToken.length - 4)}`;
-  logger.info(
-    `Initializing Slack WebClient. Token snippet: [${tokenSnippet}] \n`,
-  );
+  logger.info(`Initializing Slack WebClient. Token snippet: [${tokenSnippet}] \n`);
 
   const client = new WebClient(botToken);
   slackClients.set(botToken, client);
-  logger.info("Slack WebClient initialized and cached.\n");
+  logger.info('Slack WebClient initialized and cached.\n');
 
   return client;
 }
 
-async function sendSlackMessage(
-  authToken,
-  channel,
-  message,
-  messageId,
-  clientId,
-) {
+async function sendSlackMessage(authToken, channel, message, messageId, clientId) {
   const client = getSlackClient(authToken); // Get initialized client
 
-  logger.debug(
-    `Attempting to send message to Slack channel: ${channel} , messageId:${messageId} \n`,
-  );
+  logger.debug(`Attempting to send message to Slack channel: ${channel} , messageId:${messageId} \n`);
 
   try {
-    if (process.env.NODE_ENV === "testing") {
+    if (process.env.NODE_ENV === 'testing') {
       const result = {
         ok: true,
-        channel: "C0A665655RGF6K",
-        ts: "1769585676.071389",
+        channel: 'C0A665655RGF6K',
+        ts: '1769585676.071389',
         message: {
-          user: "U08LH6S3667",
-          type: "message",
-          ts: "1769585676.071389",
-          bot_id: "B08LH6S1D0T",
-          app_id: "A08M2U89YCQ",
-          text: "Test",
-          team: "T0XMQFKA8",
+          user: 'U08LH6S3667',
+          type: 'message',
+          ts: '1769585676.071389',
+          bot_id: 'B08LH6S1D0T',
+          app_id: 'A08M2U89YCQ',
+          text: 'Test',
+          team: 'T0XMQFKA8',
           bot_profile: {
-            id: "B08LH6S1D0T",
-            app_id: "A08M2U89YCQ",
-            user_id: "U08LH6S3667",
-            name: "universal-notification",
+            id: 'B08LH6S1D0T',
+            app_id: 'A08M2U89YCQ',
+            user_id: 'U08LH6S3667',
+            name: 'universal-notification',
             icons: [Object],
             deleted: false,
             updated: 1743597891,
-            team_id: "T0XMQFKA8",
+            team_id: 'T0XMQFKA8',
           },
           blocks: [[Object]],
         },
         response_metadata: {
-          scopes: ["chat:write"],
-          acceptedScopes: ["chat:write"],
+          scopes: ['chat:write'],
+          acceptedScopes: ['chat:write'],
         },
       };
       if (result.ok) {
-        logger.info(
-          `Message sent successfully to Slack channel: ${channel} ,messageId : ${messageId} \n`,
-          {
-            messageId,
-            slackMessageTs: result.ts,
-          },
-        );
+        logger.info(`Message sent successfully to Slack channel: ${channel} ,messageId : ${messageId} \n`, {
+          messageId,
+          slackMessageTs: result.ts,
+        });
         return { success: true, response: result };
       }
     } else {
@@ -101,10 +88,7 @@ async function sendSlackMessage(
         // storing thread id in notification table
         const dbConnect = await global.connectionManager.getModels(clientId);
 
-        await dbConnect.Notification.update(
-          { referenceId: result.ts },
-          { where: { messageId: messageId } },
-        );
+        await dbConnect.Notification.update({ referenceId: result.ts }, { where: { messageId: messageId } });
 
         // //Store team id(workspaceid) in redis mapping to clientid
         await RedisHelper.setKey(result?.message?.team, clientId);
@@ -112,15 +96,12 @@ async function sendSlackMessage(
         return { success: true, response: result }; // Return success and the full response
       } else {
         // This path might not be hit often if errors throw exceptions, but handle defensively
-        logger.error(
-          `Slack API indicated failure, but no exception was thrown.\n`,
-          {
-            messageId,
-          },
-        );
+        logger.error(`Slack API indicated failure, but no exception was thrown.\n`, {
+          messageId,
+        });
         return {
           success: false,
-          error: `Slack API error: ${result.error || "Unknown error"} \n`,
+          error: `Slack API error: ${result.error || 'Unknown error'} \n`,
           response: result,
         };
       }

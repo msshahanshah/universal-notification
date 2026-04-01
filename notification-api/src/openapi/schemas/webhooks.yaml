@@ -9,11 +9,11 @@ WebhookRequest:
     webhookUrl:
       type: string
       format: uri
-      example: "https://example.com/webhook"
+      example: 'https://example.com/webhook'
       description: Destination HTTPS URL for webhook delivery.
     apiKey:
       type: string
-      example: "my-secret-api-key"
+      example: 'my-secret-api-key'
       description: Secret API key sent with each webhook call for authentication.
     serviceTrigger:
       type: object
@@ -42,10 +42,10 @@ WebhookUpdateRequest:
     webhookUrl:
       type: string
       format: uri
-      example: "https://example.com/webhook"
+      example: 'https://example.com/webhook'
     apiKey:
       type: string
-      example: "new-secret-key"
+      example: 'new-secret-key'
     serviceTrigger:
       type: object
       additionalProperties:
@@ -70,11 +70,11 @@ WebhookResponse:
       example: 1
     clientId:
       type: string
-      example: "client-abc"
+      example: 'client-abc'
     webhookUrl:
       type: string
       format: uri
-      example: "https://example.com/webhook"
+      example: 'https://example.com/webhook'
     serviceTrigger:
       type: object
       additionalProperties:
@@ -101,15 +101,15 @@ WebhookLogEntry:
   properties:
     _id:
       type: string
-      example: "69c49c81efae382a523537da"
+      example: '69c49c81efae382a523537da'
       description: MongoDB document ID.
     clientId:
       type: string
-      example: "ACCEL"
+      example: 'ACCEL'
     webhookUrl:
       type: string
       format: uri
-      example: "https://webhook-api.free.beeceptor.com"
+      example: 'https://webhook-api.free.beeceptor.com'
     serviceTrigger:
       type: object
       description: Map of service name to the event status that triggered this delivery.
@@ -123,7 +123,7 @@ WebhookLogEntry:
       description: |
         Delivery status. `sent` is a delivery-only status indicating the webhook
         was dispatched but no confirmation has been received yet.
-      example: "success"
+      example: 'success'
     retryAttempts:
       type: integer
       example: 2
@@ -134,13 +134,13 @@ WebhookLogEntry:
       properties:
         clientId:
           type: string
-          example: "ACCEL"
+          example: 'ACCEL'
         service:
           type: string
-          example: "email"
+          example: 'email'
         status:
           type: string
-          example: "sent"
+          example: 'sent'
         details:
           type: object
           additionalProperties: true
@@ -154,7 +154,7 @@ WebhookLogEntry:
           example: 200
         body:
           type: string
-          example: "OK"
+          example: 'OK'
     createdAt:
       type: string
       format: date-time
@@ -170,11 +170,11 @@ WebhookLogListResponse:
       example: true
     message:
       type: string
-      example: "webhook logs fetched successfully."
+      example: 'webhook logs fetched successfully.'
     data:
       type: array
       items:
-        $ref: "../index.yaml#/components/schemas/WebhookLogEntry"
+        $ref: '../index.yaml#/components/schemas/WebhookLogEntry'
     pagination:
       type: object
       properties:

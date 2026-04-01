@@ -5,7 +5,7 @@ balance:
     security:
       - bearerAuth: []
     parameters:
-      - $ref: "../index.yaml#/components/parameters/ClientIdHeader"
+      - $ref: '../index.yaml#/components/parameters/ClientIdHeader'
       - name: service
         in: query
         required: true
@@ -19,7 +19,7 @@ balance:
           type: string
         description: Provider name (MSG91, Twilio, AWS_SES, etc.)
     responses:
-      "200":
+      '200':
         description: Balance fetched successfully
         content:
           application/json:
@@ -43,30 +43,30 @@ balance:
                       type: number
                     currency:
                       type: string
-      "400":
+      '400':
         description: Missing service or provider query parameter
         content:
           application/json:
             schema:
-              $ref: "../index.yaml#/components/schemas/ErrorResponse"
-      "401":
+              $ref: '../index.yaml#/components/schemas/ErrorResponse'
+      '401':
         description: Unauthorized
         content:
           application/json:
             schema:
-              $ref: "../index.yaml#/components/schemas/ErrorResponse"
-      "403":
+              $ref: '../index.yaml#/components/schemas/ErrorResponse'
+      '403':
         description: Forbidden
         content:
           application/json:
             schema:
-              $ref: "../index.yaml#/components/schemas/ErrorResponse"
-      "500":
+              $ref: '../index.yaml#/components/schemas/ErrorResponse'
+      '500':
         description: Internal Server Error
         content:
           application/json:
             schema:
-              $ref: "../index.yaml#/components/schemas/ErrorResponse"
+              $ref: '../index.yaml#/components/schemas/ErrorResponse'
 
 refreshBalance:
   post:
@@ -75,7 +75,7 @@ refreshBalance:
     security:
       - bearerAuth: []
     parameters:
-      - $ref: "../index.yaml#/components/parameters/ClientIdHeader"
+      - $ref: '../index.yaml#/components/parameters/ClientIdHeader'
       - name: service
         in: query
         required: true
@@ -89,7 +89,7 @@ refreshBalance:
           type: string
         description: Provider name (MSG91, Twilio, AWS_SES, etc.)
     responses:
-      "200":
+      '200':
         description: Balance refreshed successfully
         content:
           application/json:
@@ -113,27 +113,27 @@ refreshBalance:
                       type: number
                     currency:
                       type: string
-      "400":
+      '400':
         description: Missing service or provider query parameter
         content:
           application/json:
             schema:
-              $ref: "../index.yaml#/components/schemas/ErrorResponse"
-      "401":
+              $ref: '../index.yaml#/components/schemas/ErrorResponse'
+      '401':
         description: Unauthorized
         content:
           application/json:
             schema:
-              $ref: "../index.yaml#/components/schemas/ErrorResponse"
-      "403":
+              $ref: '../index.yaml#/components/schemas/ErrorResponse'
+      '403':
         description: Forbidden
         content:
           application/json:
             schema:
-              $ref: "../index.yaml#/components/schemas/ErrorResponse"
-      "500":
+              $ref: '../index.yaml#/components/schemas/ErrorResponse'
+      '500':
         description: Internal Server Error
         content:
           application/json:
             schema:
-              $ref: "../index.yaml#/components/schemas/ErrorResponse"
+              $ref: '../index.yaml#/components/schemas/ErrorResponse'

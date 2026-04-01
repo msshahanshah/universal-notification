@@ -1,4 +1,4 @@
-"use strict";
+'use strict';
 
 /**
  * @typedef {import('sequelize').QueryInterface} QueryInterface
@@ -16,7 +16,7 @@ module.exports = {
    */
   async up(queryInterface, Sequelize, schemaName) {
     const tableName = {
-      tableName: "slack_reply_messages",
+      tableName: 'slack_reply_messages',
       schema: schemaName,
     };
     await queryInterface.createTable(tableName, {
@@ -80,33 +80,16 @@ module.exports = {
 
     // Add indexes for better query performance
 
+    await queryInterface.addIndex(tableName, ['parent_reference_id', 'child_reference_id', 'service', 'workspace_channel_key', 'deleted_at'], {
+      name: 'parent_reference_id_child_reference_id_service_workspace_channel_key_deleted_at_slack_reply_messages_cidx',
+    });
     await queryInterface.addIndex(
       tableName,
-      [
-        "parent_reference_id",
-        "child_reference_id",
-        "service",
-        "workspace_channel_key",
-        "deleted_at",
-      ],
-      {
-        name: "parent_reference_id_child_reference_id_service_workspace_channel_key_deleted_at_slack_reply_messages_cidx",
-      },
-    );
-    await queryInterface.addIndex(
-      tableName,
-      [
-        "parent_reference_id",
-        "user_reference_id",
-        "service",
-        "workspace_channel_key",
-        "child_reference_id",
-        "deleted_at",
-      ],
+      ['parent_reference_id', 'user_reference_id', 'service', 'workspace_channel_key', 'child_reference_id', 'deleted_at'],
       {
         unique: true,
-        name: "parent_reference_id_user_reference_id_service_workspace_channel_key_child_reference_id_deleted_at_slack_reply_messages_cidx",
-      },
+        name: 'parent_reference_id_user_reference_id_service_workspace_channel_key_child_reference_id_deleted_at_slack_reply_messages_cidx',
+      }
     );
   },
 
@@ -115,6 +98,6 @@ module.exports = {
    * @param {Sequelize} Sequelize
    */
   async down(queryInterface, Sequelize) {
-    await queryInterface.dropTable("slack_reply_messages");
+    await queryInterface.dropTable('slack_reply_messages');
   },
 };

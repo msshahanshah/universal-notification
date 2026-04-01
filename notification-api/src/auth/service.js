@@ -1,8 +1,8 @@
-const { verifyToken, generateTokens } = require("../../helpers/jwt.helper");
-const bcrypt = require("bcrypt");
-const globalDatabaseManager = require("../utillity/mainDatabase");
-const { AUTH_TOKEN } = require("../../constants/index.js");
-const RedisHelper = require("../../helpers/redis.helper.js");
+const { verifyToken, generateTokens } = require('../../helpers/jwt.helper');
+const bcrypt = require('bcrypt');
+const globalDatabaseManager = require('../utillity/mainDatabase');
+const { AUTH_TOKEN } = require('../../constants/index.js');
+const RedisHelper = require('../../helpers/redis.helper.js');
 
 const login = async (clientId, username, password) => {
   try {
@@ -15,14 +15,14 @@ const login = async (clientId, username, password) => {
     });
 
     if (!user) {
-      throw { message: "Invalid username or password", statusCode: 401 };
+      throw { message: 'Invalid username or password', statusCode: 401 };
     }
 
     // compare password
     const isCorrect = await bcrypt.compare(password, user.password);
     if (!isCorrect) {
       throw {
-        message: "Invalid username or password",
+        message: 'Invalid username or password',
         statusCode: 401,
       };
     }
@@ -33,12 +33,7 @@ const login = async (clientId, username, password) => {
       refresh: true,
     });
 
-
-    await RedisHelper.login(
-      clientId,
-      refreshToken,
-      accessToken
-    )
+    await RedisHelper.login(clientId, refreshToken, accessToken);
 
     return {
       accessToken,

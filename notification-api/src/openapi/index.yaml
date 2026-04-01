@@ -28,67 +28,67 @@ components:
   schemas:
     # ─── Auth ─────────────────────────────────────────────────────────────────
     LoginRequest:
-      $ref: "./schemas/auth.yaml#/LoginRequest"
+      $ref: './schemas/auth.yaml#/LoginRequest'
     RefreshRequest:
-      $ref: "./schemas/auth.yaml#/RefreshRequest"
+      $ref: './schemas/auth.yaml#/RefreshRequest'
 
     # ─── Common ───────────────────────────────────────────────────────────────
     ErrorResponse:
-      $ref: "./schemas/common.yaml#/ErrorResponse"
+      $ref: './schemas/common.yaml#/ErrorResponse'
 
     # ─── Notification ─────────────────────────────────────────────────────────
     NotifySms:
-      $ref: "./schemas/notify.yaml#/NotifySms"
+      $ref: './schemas/notify.yaml#/NotifySms'
     NotifySlack:
-      $ref: "./schemas/notify.yaml#/NotifySlack"
+      $ref: './schemas/notify.yaml#/NotifySlack'
     NotifyEmail:
-      $ref: "./schemas/notify.yaml#/NotifyEmail"
+      $ref: './schemas/notify.yaml#/NotifyEmail'
     NotifyEmailWithFileAttachment:
-      $ref: "./schemas/notify.yaml#/NotifyEmailWithFileAttachment"
+      $ref: './schemas/notify.yaml#/NotifyEmailWithFileAttachment'
     NotifyEmailWithS3FileAttachment:
-      $ref: "./schemas/notify.yaml#/NotifyEmailWithS3FileAttachment"
+      $ref: './schemas/notify.yaml#/NotifyEmailWithS3FileAttachment'
     NotifyV2Request:
-      $ref: "./schemas/notify.yaml#/NotifyV2Request"
+      $ref: './schemas/notify.yaml#/NotifyV2Request'
     NotifyV2Response:
-      $ref: "./schemas/notify.yaml#/NotifyV2Response"
+      $ref: './schemas/notify.yaml#/NotifyV2Response'
     V2ServiceResult:
-      $ref: "./schemas/notify.yaml#/V2ServiceResult"
+      $ref: './schemas/notify.yaml#/V2ServiceResult'
     V2ServiceSuccess:
-      $ref: "./schemas/notify.yaml#/V2ServiceSuccess"
+      $ref: './schemas/notify.yaml#/V2ServiceSuccess'
     V2ServiceFailure:
-      $ref: "./schemas/notify.yaml#/V2ServiceFailure"
+      $ref: './schemas/notify.yaml#/V2ServiceFailure'
     V2PreSignedUrlGroup:
-      $ref: "./schemas/notify.yaml#/V2PreSignedUrlGroup"
+      $ref: './schemas/notify.yaml#/V2PreSignedUrlGroup'
     V2PreSignedUrl:
-      $ref: "./schemas/notify.yaml#/V2PreSignedUrl"
+      $ref: './schemas/notify.yaml#/V2PreSignedUrl'
     PreSignedUrlResponse:
-      $ref: "./schemas/notify.yaml#/PreSignedUrlResponse"
+      $ref: './schemas/notify.yaml#/PreSignedUrlResponse'
 
     # ─── Templates ────────────────────────────────────────────────────────────
     TemplateRequest:
-      $ref: "./schemas/templates.yaml#/TemplateRequest"
+      $ref: './schemas/templates.yaml#/TemplateRequest'
     TemplateResponse:
-      $ref: "./schemas/templates.yaml#/TemplateResponse"
+      $ref: './schemas/templates.yaml#/TemplateResponse'
 
     # ─── Routing Rules ────────────────────────────────────────────────────────
     RoutingRuleRequest:
-      $ref: "./schemas/routing-rules.yaml#/RoutingRuleRequest"
+      $ref: './schemas/routing-rules.yaml#/RoutingRuleRequest'
     RoutingRuleResponse:
-      $ref: "./schemas/routing-rules.yaml#/RoutingRuleResponse"
+      $ref: './schemas/routing-rules.yaml#/RoutingRuleResponse'
     RoutingRuleListResponse:
-      $ref: "./schemas/routing-rules.yaml#/RoutingRuleListResponse"
+      $ref: './schemas/routing-rules.yaml#/RoutingRuleListResponse'
 
     # ─── Webhooks ─────────────────────────────────────────────────────────────
     WebhookRequest:
-      $ref: "./schemas/webhooks.yaml#/WebhookRequest"
+      $ref: './schemas/webhooks.yaml#/WebhookRequest'
     WebhookUpdateRequest:
-      $ref: "./schemas/webhooks.yaml#/WebhookUpdateRequest"
+      $ref: './schemas/webhooks.yaml#/WebhookUpdateRequest'
     WebhookResponse:
-      $ref: "./schemas/webhooks.yaml#/WebhookResponse"
+      $ref: './schemas/webhooks.yaml#/WebhookResponse'
     WebhookLogEntry:
-      $ref: "./schemas/webhooks.yaml#/WebhookLogEntry"
+      $ref: './schemas/webhooks.yaml#/WebhookLogEntry'
     WebhookLogListResponse:
-      $ref: "./schemas/webhooks.yaml#/WebhookLogListResponse"
+      $ref: './schemas/webhooks.yaml#/WebhookLogListResponse'
 
 # ─── Paths ────────────────────────────────────────────────────────────────────
 paths:
@@ -98,55 +98,55 @@ paths:
       summary: Health check
       tags: [System]
       responses:
-        "200":
+        '200':
           description: Service is healthy
 
   # ── Auth ────────────────────────────────────────────────────────────────────
   /login:
-    $ref: "./paths/auth.yaml#/login"
+    $ref: './paths/auth.yaml#/login'
   /refresh:
-    $ref: "./paths/auth.yaml#/refresh"
+    $ref: './paths/auth.yaml#/refresh'
   /logout:
-    $ref: "./paths/auth.yaml#/logout"
+    $ref: './paths/auth.yaml#/logout'
 
   # ── Notification ────────────────────────────────────────────────────────────
   /notify:
-    $ref: "./paths/notify.yaml#/notify"
+    $ref: './paths/notify.yaml#/notify'
   /notify-with-attachment:
-    $ref: "./paths/notify.yaml#/notifyWithAttachment"
+    $ref: './paths/notify.yaml#/notifyWithAttachment'
   /v2/notify:
-    $ref: "./paths/notify.yaml#/v2Notify"
+    $ref: './paths/notify.yaml#/v2Notify'
 
   # ── Delivery Status & Logs ─────────────────────────────────────────────────
   /delivery-status/{id}:
-    $ref: "./paths/logs.yaml#/deliveryStatusId"
+    $ref: './paths/logs.yaml#/deliveryStatusId'
   /logs:
-    $ref: "./paths/logs.yaml#/logs"
+    $ref: './paths/logs.yaml#/logs'
   /slack-logs:
-    $ref: "./paths/logs.yaml#/slackLogs"
+    $ref: './paths/logs.yaml#/slackLogs'
 
   # ── Balance ─────────────────────────────────────────────────────────────────
   /balance:
-    $ref: "./paths/balance.yaml#/balance"
+    $ref: './paths/balance.yaml#/balance'
   /refresh-balance:
-    $ref: "./paths/balance.yaml#/refreshBalance"
+    $ref: './paths/balance.yaml#/refreshBalance'
 
   # ── Templates ───────────────────────────────────────────────────────────────
   /templates:
-    $ref: "./paths/templates.yaml#/templates"
+    $ref: './paths/templates.yaml#/templates'
   /templates/{id}:
-    $ref: "./paths/templates.yaml#/templatesId"
+    $ref: './paths/templates.yaml#/templatesId'
 
   # ── Routing Rules ───────────────────────────────────────────────────────────
   /routing-rules:
-    $ref: "./paths/routing-rules.yaml#/routingRules"
+    $ref: './paths/routing-rules.yaml#/routingRules'
   /routing-rules/{ruleId}:
-    $ref: "./paths/routing-rules.yaml#/routingRulesId"
+    $ref: './paths/routing-rules.yaml#/routingRulesId'
 
   # ── Webhooks ────────────────────────────────────────────────────────────────
   /webhooks:
-    $ref: "./paths/webhooks.yaml#/webhooks"
+    $ref: './paths/webhooks.yaml#/webhooks'
   /webhooks/logs:
-    $ref: "./paths/webhooks.yaml#/webhooksLogs"
+    $ref: './paths/webhooks.yaml#/webhooksLogs'
   /webhooks/{webhookId}:
-    $ref: "./paths/webhooks.yaml#/webhooksId"
+    $ref: './paths/webhooks.yaml#/webhooksId'

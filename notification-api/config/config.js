@@ -10,8 +10,8 @@
  * It prioritizes the root .env file, allowing a local .env file
  * (if present) to override the settings defined in the root.
  */
-require("dotenv").config({
-  path: require("path").resolve(__dirname, "../../.env"),
+require('dotenv').config({
+  path: require('path').resolve(__dirname, '../../.env'),
 }); // Path relative to config.js
 // require('dotenv').config(); // Uncomment if you have a specific .env in notification-api
 
@@ -20,21 +20,19 @@ require("dotenv").config({
  * In production, it defaults to 'postgres' (likely a Docker service name).
  * In other environments, it defaults to 'localhost'.
  */
-const dbHost =
-  process.env.DB_HOST ||
-  (process.env.NODE_ENV === "production" ? "postgres" : "localhost");
+const dbHost = process.env.DB_HOST || (process.env.NODE_ENV === 'production' ? 'postgres' : 'localhost');
 // ^ Smart default: 'postgres' when in production (likely Docker), 'localhost' otherwise. Adjust if needed.
 
 /** @type {import('sequelize').Options} */
 
 module.exports = {
   development: {
-    username: process.env.POSTGRES_USER || "intern",
-    password: process.env.POSTGRES_PASSWORD || "intern123",
-    database: process.env.POSTGRES_DB || "notifications_db",
+    username: process.env.POSTGRES_USER || 'intern',
+    password: process.env.POSTGRES_PASSWORD || 'intern123',
+    database: process.env.POSTGRES_DB || 'notifications_db',
     port: process.env.POSTGRES_PORT || 5432,
     host: dbHost, // Use calculated host
-    dialect: "postgres",
+    dialect: 'postgres',
     dialectOptions: {
       // ssl: { // Uncomment and configure if using SSL
       //   require: true,
@@ -46,7 +44,7 @@ module.exports = {
      * Controlled by the SEQ_LOGGING environment variable.
      * Logs to console.log if enabled, otherwise no logging.
      */
-    logging: process.env.SEQ_LOGGING === "true" ? console.log : false, // Control logging via env var
+    logging: process.env.SEQ_LOGGING === 'true' ? console.log : false, // Control logging via env var
     /**
      * Connection pool settings.
      * Defines the pool's maximum and minimum connections,
@@ -61,12 +59,12 @@ module.exports = {
   },
   test: {
     // Configure for tests (e.g., use sqlite or a test DB)
-    username: process.env.POSTGRES_USER || "user",
-    password: process.env.POSTGRES_PASSWORD || "password",
-    database: process.env.POSTGRES_DB_TEST || "notifications_db_test",
-    host: process.env.DB_HOST || "localhost", // Usually localhost for local tests
+    username: process.env.POSTGRES_USER || 'user',
+    password: process.env.POSTGRES_PASSWORD || 'password',
+    database: process.env.POSTGRES_DB_TEST || 'notifications_db_test',
+    host: process.env.DB_HOST || 'localhost', // Usually localhost for local tests
     port: process.env.POSTGRES_PORT || 5432,
-    dialect: "postgres",
+    dialect: 'postgres',
     /**
      * Disable logging for tests unless debugging.
      */
@@ -82,7 +80,7 @@ module.exports = {
     database: process.env.POSTGRES_DB,
     host: process.env.DB_HOST, // Should be set explicitly in prod env (e.g., 'postgres' service name or external host)
     port: process.env.POSTGRES_PORT || 5432,
-    dialect: "postgres",
+    dialect: 'postgres',
     logging: false, // Usually disable logging in prod unless needed
     /**
      * Highly recommended for production connections.
@@ -94,7 +92,7 @@ module.exports = {
         /**
          * Default to true unless explicitly set to 'false'.
          */
-        rejectUnauthorized: process.env.DB_SSL_REJECT_UNAUTHORIZED !== "false",
+        rejectUnauthorized: process.env.DB_SSL_REJECT_UNAUTHORIZED !== 'false',
       },
     },
     /**

@@ -1,29 +1,16 @@
-const express = require("express");
-const validateRequest = require("./validation");
-const { notify, notifyWithEmailAttachment } = require("./controller");
-const { notify: v2notify } = require("./v2/controller");
-const { validateRequest: v2validateRequest } = require("./v2/validation");
+const express = require('express');
+const validateRequest = require('./validation');
+const { notify, notifyWithEmailAttachment } = require('./controller');
+const { notify: v2notify } = require('./v2/controller');
+const { validateRequest: v2validateRequest } = require('./v2/validation');
 
-const auth = require("../middleware/auth.middleware");
-const accessControl = require("../middleware/access-control.middleware");
-const templateMiddleware = require("./v2/template.middleware");
+const auth = require('../middleware/auth.middleware');
+const accessControl = require('../middleware/access-control.middleware');
+const templateMiddleware = require('./v2/template.middleware');
 const notificationRouter = express.Router();
 
-notificationRouter.post(
-  "/notify",
-  auth,
-  accessControl,
-  validateRequest,
-  notify,
-);
-notificationRouter.post(
-  "/v2/notify",
-  auth,
-  accessControl,
-  v2validateRequest,
-  templateMiddleware,
-  v2notify,
-);
-notificationRouter.post("/notify-with-attachment", notifyWithEmailAttachment);
+notificationRouter.post('/notify', auth, accessControl, validateRequest, notify);
+notificationRouter.post('/v2/notify', auth, accessControl, v2validateRequest, templateMiddleware, v2notify);
+notificationRouter.post('/notify-with-attachment', notifyWithEmailAttachment);
 
 module.exports = notificationRouter;

@@ -1,9 +1,9 @@
-const logger = require("../../logger");
-const { getWebhookEnabledServices } = require("../../webhook/service");
-const { notifyService: notifyV2Service } = require("./service");
+const logger = require('../../logger');
+const { getWebhookEnabledServices } = require('../../webhook/service');
+const { notifyService: notifyV2Service } = require('./service');
 
 const notify = async (req, res) => {
-  const clientId = req.headers["x-client-id"];
+  const clientId = req.headers['x-client-id'];
   const body = req.body;
   const data = {}; // response data
   let isSuccess = false;
@@ -12,19 +12,7 @@ const notify = async (req, res) => {
   for (const [service, messages] of Object.entries(body)) {
     const bulkMessages = [];
     for (const msg of messages) {
-      const {
-        destination,
-        message: textMessage,
-        subject,
-        body,
-        fromEmail,
-        cc,
-        bcc,
-        attachments,
-        templateId,
-        uniqueKey,
-        variableValues,
-      } = msg;
+      const { destination, message: textMessage, subject, body, fromEmail, cc, bcc, attachments, templateId, uniqueKey, variableValues } = msg;
 
       const content = textMessage
         ? { message: textMessage, uniqueKey, attachments, clientId }
@@ -40,7 +28,7 @@ const notify = async (req, res) => {
           };
 
       const isWebhookEnabled = getWebhookEnabledServices(clientId, service);
-      content["isWebhookEnabled"] = isWebhookEnabled;
+      content['isWebhookEnabled'] = isWebhookEnabled;
 
       // insert into bulk
       bulkMessages.push({
@@ -55,18 +43,12 @@ const notify = async (req, res) => {
     }
 
     try {
-      const notificationRecord = await notifyV2Service(
-        clientId,
-        service,
-        bulkMessages,
-      );
+      const notificationRecord = await notifyV2Service(clientId, service, bulkMessages);
 
       // prepare success response
       let successRecord = {
         service,
-        messageIds: notificationRecord.messages?.map(
-          (record) => record.messageId,
-        ),
+        messageIds: notificationRecord.messages?.map((record) => record.messageId),
       };
 
       if (notificationRecord.preSignedUrls) {
@@ -76,7 +58,7 @@ const notify = async (req, res) => {
       // insert success response
       data[successRecord.service] = {
         success: true,
-        message: "Notification request accepted and queued.",
+        message: 'Notification request accepted and queued.',
         messageIds: successRecord.messageIds,
         preSignedUrls: successRecord.preSignedUrls,
       };
@@ -84,7 +66,7 @@ const notify = async (req, res) => {
       // update isSuccess flag
       isSuccess = true;
     } catch (error) {
-      logger.error("ERROR: In creating notify record: v2", error);
+      logger.error('ERROR: In creating notify record: v2', error);
       data[error.service] = {
         success: false,
         statusCode: error?.statusCode,

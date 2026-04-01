@@ -1,35 +1,32 @@
-const Joi = require("joi");
-const { PhoneNumberUtil } = require("google-libphonenumber");
+const Joi = require('joi');
+const { PhoneNumberUtil } = require('google-libphonenumber');
 const phoneUtil = PhoneNumberUtil.getInstance();
-const { phonenNumberRegex } = require("../../helpers/regex.helper");
+const { phonenNumberRegex } = require('../../helpers/regex.helper');
 const smsValidation = {
   destination: Joi.string()
     .trim()
     .required()
     .custom((value, helpers) => {
       // Split by comma
-      let numbers = value.split(",");
+      let numbers = value.split(',');
 
       // Trim & remove empty values
       numbers = numbers.map((n) => n.trim());
 
       //checking extra commas
       for (let number of numbers) {
-        if (number.length == 0)
-          return helpers.message(
-            `An invalid destination is not allowed. An empty or invalid destination value was detected`,
-          );
+        if (number.length == 0) return helpers.message(`An invalid destination is not allowed. An empty or invalid destination value was detected`);
       }
 
       // If after cleanup nothing remainsss
       if (numbers.length === 0) {
-        return helpers.message("At least one phone number is required");
+        return helpers.message('At least one phone number is required');
       }
 
       // Validate each number
       for (const number of numbers) {
         if (!phonenNumberRegex.test(number)) {
-          return helpers.message("Invalid phone number ");
+          return helpers.message('Invalid phone number ');
         }
 
         try {
@@ -38,17 +35,17 @@ const smsValidation = {
 
           // Check validity
           if (!phoneUtil.isValidNumber(parsedNumber)) {
-            return helpers.message("Invalid phone number");
+            return helpers.message('Invalid phone number');
           }
         } catch (err) {
-          return helpers.message("Invalid phone number");
+          return helpers.message('Invalid phone number');
         }
       }
 
       // Duplicate check (after trimming)
       let uniqueNumbers = new Set(numbers);
       if (uniqueNumbers.size !== numbers.length) {
-        return helpers.message("Duplicate phone numbers are not allowed");
+        return helpers.message('Duplicate phone numbers are not allowed');
       }
 
       uniqueNumbers = [...new Set(numbers)];
@@ -56,8 +53,8 @@ const smsValidation = {
       return uniqueNumbers;
     })
     .messages({
-      "string.base": "Destination must be a string",
-      "any.required": "Destination is required for SMS service",
+      'string.base': 'Destination must be a string',
+      'any.required': 'Destination is required for SMS service',
     }),
 };
 

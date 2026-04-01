@@ -1,37 +1,34 @@
-const Joi = require("joi");
-const { loadClientConfigs } = require("../../utillity/loadClientConfigs");
-const {
-  baseOptions,
-  commonValidation,
-} = require("../../validators/common.validator");
-const emailValidation = require("../../validators/email.validator");
-const slackValidation = require("../../validators/slack.validator");
-const smsValidation = require("../../validators/sms.validator");
-const whatsAppValidation = require("../../validators/whatsapp.validator");
-const logger = require("../../logger");
-const cleanJoiMessage = require("../../../helpers/cleanJoiMessage");
-const { validPublicURL } = require("../../../helpers/regex.helper");
-const { SERVICES } = require("../../../constants");
+const Joi = require('joi');
+const { loadClientConfigs } = require('../../utillity/loadClientConfigs');
+const { baseOptions, commonValidation } = require('../../validators/common.validator');
+const emailValidation = require('../../validators/email.validator');
+const slackValidation = require('../../validators/slack.validator');
+const smsValidation = require('../../validators/sms.validator');
+const whatsAppValidation = require('../../validators/whatsapp.validator');
+const logger = require('../../logger');
+const cleanJoiMessage = require('../../../helpers/cleanJoiMessage');
+const { validPublicURL } = require('../../../helpers/regex.helper');
+const { SERVICES } = require('../../../constants');
 
 const destinationSchema = Joi.alternatives()
-  .conditional("service", {
+  .conditional('service', {
     switch: [
-      { is: "slack", then: slackValidation.destination.required() },
-      { is: "email", then: emailValidation.destination.required() },
-      { is: "sms", then: smsValidation.destination.required() },
-      { is: "whatsapp", then: whatsAppValidation.destination.required() },
+      { is: 'slack', then: slackValidation.destination.required() },
+      { is: 'email', then: emailValidation.destination.required() },
+      { is: 'sms', then: smsValidation.destination.required() },
+      { is: 'whatsapp', then: whatsAppValidation.destination.required() },
     ],
     otherwise: Joi.forbidden().messages({
-      "any.unknown": "Invalid service type",
+      'any.unknown': 'Invalid service type',
     }),
   })
   .required()
-  .messages({ "string.empty": "Destination is required" });
+  .messages({ 'string.empty': 'Destination is required' });
 
-const attachmentValidation = Joi.alternatives().conditional("service", {
+const attachmentValidation = Joi.alternatives().conditional('service', {
   switch: [
-    { is: "email", then: emailValidation.attachments },
-    { is: "whatsapp", then: whatsAppValidation.attachments },
+    { is: 'email', then: emailValidation.attachments },
+    { is: 'whatsapp', then: whatsAppValidation.attachments },
   ],
   otherwise: Joi.forbidden(),
 });
@@ -40,42 +37,42 @@ const messageObject = Joi.object({
   service: commonValidation.service,
   destination: destinationSchema,
 
-  message: Joi.when("templateId", {
+  message: Joi.when('templateId', {
     is: Joi.exist(),
     then: Joi.forbidden().messages({
-      "object.unknown": "message is not allowed when templateId is provided",
-      "any.forbidden": "message is not allowed when templateId is provided",
+      'object.unknown': 'message is not allowed when templateId is provided',
+      'any.forbidden': 'message is not allowed when templateId is provided',
     }),
     otherwise: Joi.string()
       .trim()
-      .when("service", {
+      .when('service', {
         switch: [
           {
-            is: "email",
+            is: 'email',
             then: Joi.forbidden().messages({
-              "any.unknown": "Message is not allowed for email service",
-              "string.empty": "please provide message or commonMessage",
+              'any.unknown': 'Message is not allowed for email service',
+              'string.empty': 'please provide message or commonMessage',
             }),
           },
           {
-            is: "whatsapp",
+            is: 'whatsapp',
             then: Joi.optional().messages({
-              "string.base": "Message must be a string",
-              "string.empty": "please provide message or commonMessage",
+              'string.base': 'Message must be a string',
+              'string.empty': 'please provide message or commonMessage',
             }),
           },
         ],
         otherwise: Joi.required().messages({
-          "any.required": "Message is required for this service",
-          "string.empty": "please provide message or commonMessage",
+          'any.required': 'Message is required for this service',
+          'string.empty': 'please provide message or commonMessage',
         }),
       }),
   }),
 
-  body: Joi.when("templateId", {
+  body: Joi.when('templateId', {
     is: Joi.exist(),
     then: Joi.forbidden().messages({
-      "any.forbidden": "body is not allowed when templateId is provided",
+      'any.forbidden': 'body is not allowed when templateId is provided',
     }),
     otherwise: emailValidation.body.optional(),
   }),
@@ -99,53 +96,52 @@ const messageObject = Joi.object({
   .when(Joi.object({ templateId: Joi.exist() }).unknown(), {
     then: Joi.object({
       message: Joi.forbidden().messages({
-        "any.forbidden": "message is not allowed when templateId is provided",
+        'any.forbidden': 'message is not allowed when templateId is provided',
       }),
       body: Joi.forbidden().messages({
-        "any.forbidden": "body is not allowed when templateId is provided",
+        'any.forbidden': 'body is not allowed when templateId is provided',
       }),
     }),
     otherwise: Joi.when(
       Joi.object({
-        service: Joi.valid("whatsapp"),
+        service: Joi.valid('whatsapp'),
         attachments: Joi.exist(),
       }).unknown(),
       {
         then: Joi.object({
-          message: Joi.string().allow("").optional(), // ✅ allow empty string
+          message: Joi.string().allow('').optional(), // ✅ allow empty string
         }),
-      },
+      }
     ),
   })
 
   .when(Joi.object({ variableValues: Joi.exist() }).unknown(), {
     then: Joi.object({
       templateId: Joi.required().messages({
-        "any.required":
-          "templateId is required when variable values is provided",
+        'any.required': 'templateId is required when variable values is provided',
       }),
     }),
   })
-  .when(Joi.object({ service: Joi.valid("email") }).unknown(), {
-    then: Joi.object().or("templateId", "body"),
+  .when(Joi.object({ service: Joi.valid('email') }).unknown(), {
+    then: Joi.object().or('templateId', 'body'),
   })
 
-  .when(Joi.object({ service: Joi.valid("whatsapp") }).unknown(), {
-    then: Joi.object().or("message", "attachments", "templateId"),
+  .when(Joi.object({ service: Joi.valid('whatsapp') }).unknown(), {
+    then: Joi.object().or('message', 'attachments', 'templateId'),
   })
 
   .when(
     Joi.object({
-      service: Joi.valid("sms", "slack"),
+      service: Joi.valid('sms', 'slack'),
     }).unknown(),
     {
-      then: Joi.object().or("message", "templateId"),
-    },
+      then: Joi.object().or('message', 'templateId'),
+    }
   );
 
 const validateSchema = Joi.array().min(1).max(5).items(messageObject).messages({
-  "array.max": "messages should not exceed 5.",
-  "array.min": "At least one message is required.",
+  'array.max': 'messages should not exceed 5.',
+  'array.min': 'At least one message is required.',
 });
 
 let configs = null;
@@ -153,22 +149,19 @@ const validateRequest = async (req, res, next) => {
   try {
     let { commonMessage, ...sanitizeBody } = req.body;
 
-    const clientId = req.headers["x-client-id"];
+    const clientId = req.headers['x-client-id'];
     const services = Object.keys(sanitizeBody);
 
     if (!services.length) {
-      throw { statusCode: 400, message: "No notification service specified" };
+      throw { statusCode: 400, message: 'No notification service specified' };
     }
     configs = configs ? configs : await loadClientConfigs();
 
     // Extract Enabling services of client
-    const enabledServices = configs?.filter((conf) => conf.ID === clientId)[0]
-      ?.ENABLED_SERVERICES;
+    const enabledServices = configs?.filter((conf) => conf.ID === clientId)[0]?.ENABLED_SERVERICES;
 
     if (!enabledServices || !Array.isArray(enabledServices)) {
-      logger.error(
-        `invalid or missing ENABLED_SERVERICES in client config for ${clientId}`,
-      );
+      logger.error(`invalid or missing ENABLED_SERVERICES in client config for ${clientId}`);
       throw {
         statusCode: 500,
         message: `invalid or missing ENABLED_SERVERICES in client config for ${clientId}`,
@@ -178,16 +171,12 @@ const validateRequest = async (req, res, next) => {
     // check for enabling service
     services.forEach((service) => {
       if (!enabledServices.includes(service)) {
-        logger.error(
-          `ERROR: ${service} is not enabled for ${clientId}. All enabled services for ${clientId} are ${JSON.stringify(enabledServices)}`,
-        );
+        logger.error(`ERROR: ${service} is not enabled for ${clientId}. All enabled services for ${clientId} are ${JSON.stringify(enabledServices)}`);
 
         throw {
           service,
           statusCode: 400,
-          message: SERVICES.service
-            ? `${service} is not enabled`
-            : "Invalid service",
+          message: SERVICES.service ? `${service} is not enabled` : 'Invalid service',
         };
       }
     });
@@ -199,34 +188,22 @@ const validateRequest = async (req, res, next) => {
         throw {
           service,
           statusCode: 400,
-          message: "messages must be array of objects.",
+          message: 'messages must be array of objects.',
         };
       }
       let messageWithFileAttachmentCount = 0;
       const uniqueKeySet = new Set();
 
       const enrichedBody = body.map((item) => {
-        if (
-          !item.templateId &&
-          !Object.keys(item).includes("message") &&
-          service !== "email"
-        ) {
+        if (!item.templateId && !Object.keys(item).includes('message') && service !== 'email') {
           item.message = commonMessage;
         }
 
-        if (
-          !item.templateId &&
-          !Object.keys(item).includes("body") &&
-          service == "email"
-        ) {
+        if (!item.templateId && !Object.keys(item).includes('body') && service == 'email') {
           item.body = commonMessage;
         }
 
-        if (
-          item.attachments &&
-          typeof item.attachments[0] === "string" &&
-          !validPublicURL(item.attachments[0])
-        ) {
+        if (item.attachments && typeof item.attachments[0] === 'string' && !validPublicURL(item.attachments[0])) {
           messageWithFileAttachmentCount += 1;
         }
 
@@ -236,17 +213,11 @@ const validateRequest = async (req, res, next) => {
         return { ...item, service };
       });
 
-      const { error, value } = validateSchema.validate(
-        enrichedBody,
-        baseOptions,
-      );
+      const { error, value } = validateSchema.validate(enrichedBody, baseOptions);
       console.log(value);
       console.log(error);
       // checking for uniqueKey for messages with attachments when there are file attachment
-      if (
-        messageWithFileAttachmentCount !== 0 &&
-        uniqueKeySet.size < messageWithFileAttachmentCount
-      ) {
+      if (messageWithFileAttachmentCount !== 0 && uniqueKeySet.size < messageWithFileAttachmentCount) {
         throw {
           service,
           statusCode: 400,
@@ -263,7 +234,7 @@ const validateRequest = async (req, res, next) => {
 
       sanitizeBody[service] = value;
       if (error) {
-        logger.error("ERROR: validation failed notify: v2", error);
+        logger.error('ERROR: validation failed notify: v2', error);
         return res.status(400).json({
           data: {
             [service]: {
@@ -283,7 +254,7 @@ const validateRequest = async (req, res, next) => {
     if (error.service) {
       return res.status(error.statusCode || 500).json({
         data: {
-          [error?.service || "internal"]: {
+          [error?.service || 'internal']: {
             success: false,
             statusCode: error.statusCode,
             message: error.message,

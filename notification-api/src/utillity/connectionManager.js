@@ -1,9 +1,9 @@
-"use strict";
+'use strict';
 
-const { Sequelize } = require("sequelize");
-const { LRUCache } = require("lru-cache");
-const { loadClientConfigs } = require("./loadClientConfigs.js");
-const logger = require("../logger.js");
+const { Sequelize } = require('sequelize');
+const { LRUCache } = require('lru-cache');
+const { loadClientConfigs } = require('./loadClientConfigs.js');
+const logger = require('../logger.js');
 
 /**
  * Custom error for connection-related issues
@@ -11,7 +11,7 @@ const logger = require("../logger.js");
 class ConnectionError extends Error {
   constructor(message, details = {}) {
     super(message);
-    this.name = "ConnectionError";
+    this.name = 'ConnectionError';
     this.details = details;
   }
 }
@@ -52,14 +52,7 @@ class ConnectionManager {
    * @private
    */
   #validateRabbitConfig(config) {
-    const requiredFields = [
-      "HOST",
-      "PORT",
-      "USER",
-      "PASSWORD",
-      "EXCHANGE_NAME",
-      "EXCHANGE_TYPE",
-    ];
+    const requiredFields = ['HOST', 'PORT', 'USER', 'PASSWORD', 'EXCHANGE_NAME', 'EXCHANGE_TYPE'];
     for (const field of requiredFields) {
       if (!config[field]) {
         throw new ConnectionError(`Missing RabbitMQ config: ${field}`);
@@ -75,7 +68,7 @@ class ConnectionManager {
    */
   async initializeRabbitMQ(rabbitConfig, clientId) {
     if (!clientId) {
-      throw new ConnectionError("Client ID required");
+      throw new ConnectionError('Client ID required');
     }
 
     if (this.rabbitCache.get(clientId)) {
@@ -89,23 +82,18 @@ class ConnectionManager {
     try {
       if (!rabbitConfig) {
         const clientList = await loadClientConfigs();
-        rabbitConfig = clientList.find(
-          (client) => client.ID === clientId
-        )?.RABBITMQ;
+        rabbitConfig = clientList.find((client) => client.ID === clientId)?.RABBITMQ;
         if (!rabbitConfig) {
-          throw new ConnectionError(
-            `No RabbitMQ config for client ${clientId}`
-          );
+          throw new ConnectionError(`No RabbitMQ config for client ${clientId}`);
         }
       }
 
       this.#validateRabbitConfig(rabbitConfig);
 
       const RABBITMQ_URL =
-        `amqp://${rabbitConfig.USER}:${rabbitConfig.PASSWORD}@${rabbitConfig.HOST}:${rabbitConfig.PORT}` ||
-        process.env.RABBITMQ_URL;
+        `amqp://${rabbitConfig.USER}:${rabbitConfig.PASSWORD}@${rabbitConfig.HOST}:${rabbitConfig.PORT}` || process.env.RABBITMQ_URL;
 
-      const rabbit = await require("../rabbitMQClient.js")({
+      const rabbit = await require('../rabbitMQClient.js')({
         url: RABBITMQ_URL,
         exchange: {
           name: rabbitConfig.EXCHANGE_NAME,
@@ -131,7 +119,7 @@ class ConnectionManager {
    * @private
    */
   #validateDbConfig(config) {
-    const requiredFields = ["HOST", "PORT", "NAME", "USER", "PASSWORD"];
+    const requiredFields = ['HOST', 'PORT', 'NAME', 'USER', 'PASSWORD'];
     for (const field of requiredFields) {
       if (!config[field]) {
         throw new ConnectionError(`Missing database config: ${field}`);
@@ -147,7 +135,7 @@ class ConnectionManager {
    */
   async initializeSequelize(dbConfig, clientId) {
     if (!clientId) {
-      throw new ConnectionError("Client ID required");
+      throw new ConnectionError('Client ID required');
     }
 
     if (this.modelCache.get(clientId)) {
@@ -157,20 +145,16 @@ class ConnectionManager {
     try {
       if (!dbConfig) {
         const clientList = await loadClientConfigs();
-        dbConfig = clientList.find(
-          (client) => client.ID === clientId
-        )?.DBCONFIG;
+        dbConfig = clientList.find((client) => client.ID === clientId)?.DBCONFIG;
         if (!dbConfig) {
-          throw new ConnectionError(
-            `No database config for client ${clientId}`
-          );
+          throw new ConnectionError(`No database config for client ${clientId}`);
         }
       }
 
       this.#validateDbConfig(dbConfig);
 
       const sequelize = new Sequelize({
-        dialect: process.env.DB_DIALECT || "postgres",
+        dialect: process.env.DB_DIALECT || 'postgres',
         host: dbConfig.HOST,
         port: dbConfig.PORT,
         database: dbConfig.NAME,
@@ -188,14 +172,11 @@ class ConnectionManager {
 
       await sequelize.authenticate();
 
-      const db = await require("../../models")(sequelize, clientId);
+      const db = await require('../../models')(sequelize, clientId);
       this.modelCache.set(clientId, db);
     } catch (error) {
-      console.log(error)
-      throw new ConnectionError(
-        `Sequelize init failed for client ${clientId}`,
-        { error: error.message }
-      );
+      console.log(error);
+      throw new ConnectionError(`Sequelize init failed for client ${clientId}`, { error: error.message });
     }
   }
 
@@ -262,21 +243,14 @@ class ConnectionManager {
         }
       } else {
         await Promise.all([
-          ...Array.from(this.modelCache.values()).map((db) =>
-            db.sequelize.close()
-          ),
-          ...Array.from(this.rabbitCache.values()).map((rabbit) =>
-            rabbit.closeConnection()
-          ),
+          ...Array.from(this.modelCache.values()).map((db) => db.sequelize.close()),
+          ...Array.from(this.rabbitCache.values()).map((rabbit) => rabbit.closeConnection()),
         ]);
         this.modelCache.clear();
         this.rabbitCache.clear();
       }
     } catch (error) {
-      throw new ConnectionError(
-        `Failed to close connections for ${clientId || "all"}`,
-        { error: error.message }
-      );
+      throw new ConnectionError(`Failed to close connections for ${clientId || 'all'}`, { error: error.message });
     }
   }
 

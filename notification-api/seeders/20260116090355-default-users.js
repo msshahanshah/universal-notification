@@ -1,27 +1,27 @@
-"use strict";
-const defaultPassword = require("../helpers/defaultPassword.helper");
+'use strict';
+const defaultPassword = require('../helpers/defaultPassword.helper');
 // const { loadClientSecret } = require("../src/utillity/awsSecretManager");
-const { SecretManager } = require("universal_notification_support_lib");
+const { SecretManager } = require('universal_notification_support_lib');
 
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up(queryInterface, Sequelize) {
-    const targetSchema = "public";
+    const targetSchema = 'public';
     const tableName = {
-      tableName: "users",
+      tableName: 'users',
       schema: targetSchema,
     };
     try {
       const clients = await SecretManager.getSecrets();
 
       if (!Array.isArray(clients) || clients.length === 0) {
-        throw new Error("No client found!");
+        throw new Error('No client found!');
       }
 
       const defaultUsername = clients.map((client) => client.ID.toLowerCase());
 
       if (!defaultUsername || defaultUsername.length === 0) {
-        throw new Error("No client found");
+        throw new Error('No client found');
       }
 
       const defaultUsers = await Promise.all(
@@ -30,19 +30,19 @@ module.exports = {
             username: `admin@${user}`,
             password: await defaultPassword(`admin@${user}`),
           };
-        }),
+        })
       );
 
       await queryInterface.bulkInsert(tableName, defaultUsers, {
         ignoreDuplicates: true,
       });
     } catch (error) {
-      console.error("Seeder failed:", error);
+      console.error('Seeder failed:', error);
       throw error;
     }
   },
 
   async down(queryInterface, Sequelize) {
-    await queryInterface.bulkDelete("users");
+    await queryInterface.bulkDelete('users');
   },
 };

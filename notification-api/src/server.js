@@ -1,11 +1,11 @@
-const cluster = require("cluster");
-const path = require("path");
-const express = require("express");
-const httpProxy = require("http-proxy");
-const config = require("./config");
-const logger = require("./logger");
-const connectionManager = require("./utillity/connectionManager");
-const { loadClientConfigs } = require("./utillity/loadClientConfigs");
+const cluster = require('cluster');
+const path = require('path');
+const express = require('express');
+const httpProxy = require('http-proxy');
+const config = require('./config');
+const logger = require('./logger');
+const connectionManager = require('./utillity/connectionManager');
+const { loadClientConfigs } = require('./utillity/loadClientConfigs');
 
 /**
  * @type {import('http').Server|null}
@@ -22,22 +22,14 @@ async function startServer(clientConfigList) {
   try {
     // Initialize client-specific Sequelize
     for (const clientItem of clientConfigList) {
-      await connectionManager.initializeSequelize(
-        clientItem.DBCONFIG,
-        clientItem.ID,
-      );
-      await connectionManager.initializeRabbitMQ(
-        clientItem.RABBITMQ,
-        clientItem.ID,
-      );
+      await connectionManager.initializeSequelize(clientItem.DBCONFIG, clientItem.ID);
+      await connectionManager.initializeRabbitMQ(clientItem.RABBITMQ, clientItem.ID);
     }
     global.connectionManager = connectionManager;
-    const app = require("./app");
+    const app = require('./app');
     // Start HTTP Server
     server = app.listen(process.env.SERVER_PORT, () => {
-      logger.info(
-        `[${process.env.clientList}] Notification API listening on port ${process.env.SERVER_PORT} in ${config.env} mode`,
-      );
+      logger.info(`[${process.env.clientList}] Notification API listening on port ${process.env.SERVER_PORT} in ${config.env} mode`);
     });
     return server;
   } catch (error) {
@@ -55,7 +47,7 @@ async function startServer(clientConfigList) {
  * @param {string} [clientId='unknown'] - Client identifier.
  * @returns {Promise<void>}
  */
-async function shutdown(exitCode = 0, clientId = "unknown", server) {
+async function shutdown(exitCode = 0, clientId = 'unknown', server) {
   logger.info(`[${clientId}] Shutting down server...`);
 
   // Close HTTP server
@@ -70,10 +62,7 @@ async function shutdown(exitCode = 0, clientId = "unknown", server) {
           logger.info(`[${clientId}] HTTP server closed.`);
           resolve();
         });
-        setTimeout(
-          () => reject(new Error("HTTP server close timeout")),
-          10000,
-        ).unref();
+        setTimeout(() => reject(new Error('HTTP server close timeout')), 10000).unref();
       } else {
         logger.info(`[${clientId}] HTTP server already closed.`);
         resolve();
@@ -87,9 +76,7 @@ async function shutdown(exitCode = 0, clientId = "unknown", server) {
     await global.connectionManager.closeAllTypeConnection(clientId);
   }
 
-  logger.info(
-    `[${clientId}] Shutdown complete. Exiting with code ${exitCode}.`,
-  );
+  logger.info(`[${clientId}] Shutdown complete. Exiting with code ${exitCode}.`);
   process.exit(exitCode);
 }
 
@@ -106,18 +93,18 @@ if (cluster.isMaster) {
       // Start master router
       try {
         const proxy = httpProxy.createProxyServer({});
-        const swaggerUi = require("swagger-ui-express");
-        const SwaggerParser = require("@apidevtools/swagger-parser");
-        const swaggerDoc = await SwaggerParser.dereference(path.join(__dirname, "openapi", "index.yaml"));
+        const swaggerUi = require('swagger-ui-express');
+        const SwaggerParser = require('@apidevtools/swagger-parser');
+        const swaggerDoc = await SwaggerParser.dereference(path.join(__dirname, 'openapi', 'index.yaml'));
         const masterApp = express();
 
         // cors setting
-        masterApp.use(require("cors")());
+        masterApp.use(require('cors')());
         const MASTER_SERVER_PORT = process.env.PORT || 8000;
-        
-        masterApp.use("/api-docs", swaggerUi.serve, (req, res, next) => {
-          const protocol = req.headers["x-forwarded-proto"] || req.protocol || "http";
-          const host = req.headers["x-forwarded-host"] || req.headers.host;
+
+        masterApp.use('/api-docs', swaggerUi.serve, (req, res, next) => {
+          const protocol = req.headers['x-forwarded-proto'] || req.protocol || 'http';
+          const host = req.headers['x-forwarded-host'] || req.headers.host;
           const dynamicSwaggerDoc = {
             ...swaggerDoc,
             servers: [{ url: `${protocol}://${host}` }],
@@ -128,47 +115,37 @@ if (cluster.isMaster) {
         // routing for client's requests
         masterApp.use((req, res, next) => {
           // skip health
-          if (req.path === "/health") {
+          if (req.path === '/health') {
             return next();
           }
 
-          const clientId = req.headers["x-client-id"];
+          const clientId = req.headers['x-client-id'];
           const client = clients.find((c) => c.ID === clientId);
           if (!client) {
-            const message =
-              req.path === "/login"
-                ? "invalid username or password"
-                : "Authentication required";
-            logger.warn("Invalid or missing X-Client-Id header >>>>", {
+            const message = req.path === '/login' ? 'invalid username or password' : 'Authentication required';
+            logger.warn('Invalid or missing X-Client-Id header >>>>', {
               clientId,
             });
             return res.status(401).json({ success: false, message: message });
           }
 
-          logger.info(
-            `Routing request for client ${clientId} to port ${client.SERVER_PORT}`,
-          );
+          logger.info(`Routing request for client ${clientId} to port ${client.SERVER_PORT}`);
 
-          proxy.web(
-            req,
-            res,
-            { target: `http://localhost:${client.SERVER_PORT}` },
-            (err) => {
-              logger.error("Proxy error", { error: err.message });
-              res.status(500).json({ error: "Failed to route request" });
-            },
-          );
+          proxy.web(req, res, { target: `http://localhost:${client.SERVER_PORT}` }, (err) => {
+            logger.error('Proxy error', { error: err.message });
+            res.status(500).json({ error: 'Failed to route request' });
+          });
         });
         // health check for master app
-        masterApp.get("/health", (req, res) => {
-          logger.debug("Health check endpoint hit");
-          res.status(200).send("OK");
+        masterApp.get('/health', (req, res) => {
+          logger.debug('Health check endpoint hit');
+          res.status(200).send('OK');
         });
         masterServer = masterApp.listen(MASTER_SERVER_PORT, () => {
           logger.info(`Master router listening on port ${MASTER_SERVER_PORT}`);
         });
       } catch (error) {
-        logger.error("Master router error:", {
+        logger.error('Master router error:', {
           error: error.message,
           stack: error.stack,
         });
@@ -179,41 +156,32 @@ if (cluster.isMaster) {
         let clientList = clients
           .filter((client) => client.SERVER_PORT === port)
           .map((item) => item.ID)
-          .join(",");
+          .join(',');
         const worker = cluster.fork({ SERVER_PORT: port, clientList });
-        logger.info(
-          `Master: Forked worker for client ${clientList} (PID: ${worker.process.pid})`,
-        );
+        logger.info(`Master: Forked worker for client ${clientList} (PID: ${worker.process.pid})`);
       });
 
       // Handle worker exit and restart
-      cluster.on("exit", (worker, code, signal) => {
-        logger.warn(
-          `Master: Worker ${worker.process.pid} exited with code ${code} (signal: ${signal})`,
-        );
+      cluster.on('exit', (worker, code, signal) => {
+        logger.warn(`Master: Worker ${worker.process.pid} exited with code ${code} (signal: ${signal})`);
         // Get port and client list from the worker's env that we set during fork
         // const workerEnv = worker.process.env;
         const port = worker.SERVER_PORT;
         const workerClientList = worker.clientList;
 
         if (port && workerClientList) {
-          logger.info(
-            `Master: Restarting worker for port ${port} (clients: ${workerClientList})...`,
-          );
+          logger.info(`Master: Restarting worker for port ${port} (clients: ${workerClientList})...`);
           cluster.fork({ SERVER_PORT: port, clientList: workerClientList });
         } else {
-          logger.error(
-            "Master: Unable to restart worker - missing configuration",
-            {
-              port,
-              workerClientList,
-              pid: worker.process.pid,
-            },
-          );
+          logger.error('Master: Unable to restart worker - missing configuration', {
+            port,
+            workerClientList,
+            pid: worker.process.pid,
+          });
         }
       });
     } catch (error) {
-      logger.error("Master: Failed to initialize:", { error: error.message });
+      logger.error('Master: Failed to initialize:', { error: error.message });
       process.exit(1);
     }
   })();
@@ -227,18 +195,16 @@ if (cluster.isMaster) {
       }
 
       clients = await loadClientConfigs();
-      const clientConfigList = clients.filter(
-        (c) => c.SERVER_PORT === +process.env.SERVER_PORT,
-      );
+      const clientConfigList = clients.filter((c) => c.SERVER_PORT === +process.env.SERVER_PORT);
 
       let server = await startServer(clientConfigList);
 
       // Handle graceful shutdown
-      process.on("SIGTERM", () => shutdown(0, process.env.clientList, server));
-      process.on("SIGINT", () => shutdown(0, process.env.clientList, server));
+      process.on('SIGTERM', () => shutdown(0, process.env.clientList, server));
+      process.on('SIGINT', () => shutdown(0, process.env.clientList, server));
 
       // Handle unhandled promise rejections
-      process.on("unhandledRejection", (reason, promise) => {
+      process.on('unhandledRejection', (reason, promise) => {
         logger.error(`[${process.env.clientList}] Unhandled Rejection at:${reason}`, {
           promise,
           reason: reason.message || reason,
@@ -247,7 +213,7 @@ if (cluster.isMaster) {
       });
 
       // Handle uncaught exceptions
-      process.on("uncaughtException", (error) => {
+      process.on('uncaughtException', (error) => {
         logger.error(`[${process.env.clientList}] Uncaught Exception:`, {
           error: error.message,
           stack: error.stack,
@@ -255,10 +221,7 @@ if (cluster.isMaster) {
         shutdown(1, process.env.clientList);
       });
     } catch (error) {
-      logger.error(
-        `Worker: Failed to start for client ${process.env.clientList}:`,
-        { error: error.message },
-      );
+      logger.error(`Worker: Failed to start for client ${process.env.clientList}:`, { error: error.message });
       process.exit(1);
     }
   })();

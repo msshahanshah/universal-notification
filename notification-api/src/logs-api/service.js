@@ -1,6 +1,6 @@
-const { serializeLogs } = require("./serialization");
-const Sequelize = require("sequelize");
-const { SERVICES, LOG_TYPE } = require("../../constants/index");
+const { serializeLogs } = require('./serialization');
+const Sequelize = require('sequelize');
+const { SERVICES, LOG_TYPE } = require('../../constants/index');
 const viewDeliveryStatus = async (messageId, clientId) => {
   let dbConnect = await global.connectionManager.getModels(clientId);
   const data = await dbConnect.Notification.findOne({
@@ -8,7 +8,7 @@ const viewDeliveryStatus = async (messageId, clientId) => {
   });
 
   if (!data) {
-    throw new Error("Message not found");
+    throw new Error('Message not found');
   }
 
   return {
@@ -34,7 +34,7 @@ const viewMessageLogs = async (
   bcc,
   fromEmail,
   fromDate,
-  toDate,
+  toDate
 ) => {
   try {
     const offset = (page - 1) * limit;
@@ -48,8 +48,7 @@ const viewMessageLogs = async (
       if (!fromDate || !toDate) {
         throw {
           statusCode: 400,
-          message:
-            "for date based filter both from-date and to-date are required",
+          message: 'for date based filter both from-date and to-date are required',
         };
       }
 
@@ -60,20 +59,20 @@ const viewMessageLogs = async (
         };
       }
     }
-    if (sort && order && (order === "asc" || order === "desc")) {
-      const keys = sort.split(",");
+    if (sort && order && (order === 'asc' || order === 'desc')) {
+      const keys = sort.split(',');
       for (let i = 0; i < keys.length; i++) {
         if (validColumns.includes(keys[i])) {
           sortOrder.push([keys[i], order]);
-        } else if (keys[i] === "message") {
-          sortOrder.push(["connectorResponse", order.toUpperCase()]);
+        } else if (keys[i] === 'message') {
+          sortOrder.push(['connectorResponse', order.toUpperCase()]);
         }
       }
     }
 
     if (fromDate) {
       let startDay;
-      if (!fromDate.includes("T")) {
+      if (!fromDate.includes('T')) {
         startDay = new Date(fromDate);
         startDay.setHours(0, 0, 0, 0);
       } else {
@@ -86,7 +85,7 @@ const viewMessageLogs = async (
 
     if (toDate) {
       let endDay;
-      if (!toDate.includes("T")) {
+      if (!toDate.includes('T')) {
         endDay = new Date(toDate);
         endDay.setUTCHours(18, 29, 0, 0);
       } else {
@@ -100,13 +99,13 @@ const viewMessageLogs = async (
     }
 
     const filters = [
-      { key: "connectorResponse", value: message, pattern: (v) => `%${v}%` },
-      { key: "destination", value: destination, pattern: (v) => `%${v}%` },
-      { key: "content.cc", value: cc, pattern: (v) => `%${v}%` },
-      { key: "content.bcc", value: bcc, pattern: (v) => `%${v}%` },
-      { key: "content.fromEmail", value: fromEmail, pattern: (v) => `%${v}%` },
-      { key: "service", value: service, pattern: (v) => `%${v}%` },
-      { key: "status", value: status, pattern: (v) => `%${v}%` },
+      { key: 'connectorResponse', value: message, pattern: (v) => `%${v}%` },
+      { key: 'destination', value: destination, pattern: (v) => `%${v}%` },
+      { key: 'content.cc', value: cc, pattern: (v) => `%${v}%` },
+      { key: 'content.bcc', value: bcc, pattern: (v) => `%${v}%` },
+      { key: 'content.fromEmail', value: fromEmail, pattern: (v) => `%${v}%` },
+      { key: 'service', value: service, pattern: (v) => `%${v}%` },
+      { key: 'status', value: status, pattern: (v) => `%${v}%` },
     ];
 
     filters.forEach(({ key, value, pattern }) => {
@@ -119,10 +118,7 @@ const viewMessageLogs = async (
 
     const { count, rows } = await dbConnect.Notification.findAndCountAll({
       where,
-      order:
-        sortOrder.length === 0
-          ? [["createdAt", order.toUpperCase()]]
-          : sortOrder,
+      order: sortOrder.length === 0 ? [['createdAt', order.toUpperCase()]] : sortOrder,
       offset,
       limit,
     });
@@ -147,7 +143,7 @@ const viewMessageLogs = async (
           parentReferenceId: referenceIds,
           service,
         },
-        attributes: ["parentReferenceId", "userReferenceName", "content"],
+        attributes: ['parentReferenceId', 'userReferenceName', 'content'],
       });
 
       // to store userRepledMessages taking map

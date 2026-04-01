@@ -1,6 +1,6 @@
-"use strict";
+'use strict';
 
-const { Model, DataTypes } = require("sequelize");
+const { Model, DataTypes } = require('sequelize');
 
 module.exports = (sequelize, schemaName) => {
   /**
@@ -56,7 +56,7 @@ module.exports = (sequelize, schemaName) => {
       status: {
         type: DataTypes.STRING,
         allowNull: false,
-        defaultValue: "pending", // Default status
+        defaultValue: 'pending', // Default status
       },
 
       // Number of attempts made to send the notification
@@ -81,7 +81,7 @@ module.exports = (sequelize, schemaName) => {
         type: DataTypes.STRING,
         allowNull: true,
       },
-      
+
       // Variables values respect to templateID
       variableValues: {
         type: DataTypes.JSON,
@@ -95,11 +95,11 @@ module.exports = (sequelize, schemaName) => {
     },
     {
       sequelize,
-      modelName: "Notification",
+      modelName: 'Notification',
       timestamps: true, // Enable createdAt and updatedAt fields
-      tableName: "notifications", // Explicit table name for clarity
+      tableName: 'notifications', // Explicit table name for clarity
       schema: schemaName.toLowerCase(), // Use lowercase schema name
-    },
+    }
   );
 
   return Notification;

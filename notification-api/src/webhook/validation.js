@@ -1,13 +1,10 @@
-const Joi = require("joi");
-const { baseOptions } = require("../validators/common.validator");
-const { SecretManager } = require("universal_notification_support_lib");
+const Joi = require('joi');
+const { baseOptions } = require('../validators/common.validator');
+const { SecretManager } = require('universal_notification_support_lib');
 
 const clientServiceMap = new Map();
 
-async function checkWebhookServicesAreEnabledForClient(
-  servicesTrigger,
-  clientId,
-) {
+async function checkWebhookServicesAreEnabledForClient(servicesTrigger, clientId) {
   try {
     let clientEnabledServicesSet = [];
     if (clientServiceMap.has(clientId)) {
@@ -41,70 +38,61 @@ async function checkWebhookServicesAreEnabledForClient(
 const baseWebhookSchema = {
   webhookUrl: Joi.string()
     .trim()
-    .uri({ scheme: ["https"] })
+    .uri({ scheme: ['https'] })
     .custom((value, helpers) => {
       try {
         const url = new URL(value);
 
-        if (
-          url.hostname === "localhost" ||
-          url.hostname.startsWith("127.") ||
-          url.hostname === "0.0.0.0"
-        ) {
-          return helpers.error("webhook.localhost");
+        if (url.hostname === 'localhost' || url.hostname.startsWith('127.') || url.hostname === '0.0.0.0') {
+          return helpers.error('webhook.localhost');
         }
 
         return value;
       } catch (err) {
-        return helpers.error("string.uri");
+        return helpers.error('string.uri');
       }
     })
     .messages({
-      "string.base": "webhookUrl must be a string",
-      "string.empty": "webhookUrl cannot be empty",
-      "string.uri": "webhookUrl must be a valid HTTPS URL",
-      "string.uriCustomScheme": "webhookUrl must be a valid HTTPS URL",
-      "webhook.localhost": "webhookUrl cannot be a localhost or private URL",
+      'string.base': 'webhookUrl must be a string',
+      'string.empty': 'webhookUrl cannot be empty',
+      'string.uri': 'webhookUrl must be a valid HTTPS URL',
+      'string.uriCustomScheme': 'webhookUrl must be a valid HTTPS URL',
+      'webhook.localhost': 'webhookUrl cannot be a localhost or private URL',
     }),
 
   apiKey: Joi.string().trim().min(1).messages({
-    "string.base": "apiKey must be a string",
-    "string.empty": "apiKey cannot be empty",
+    'string.base': 'apiKey must be a string',
+    'string.empty': 'apiKey cannot be empty',
   }),
 
   serviceTrigger: Joi.object()
-    .pattern(
-      Joi.string(),
-      Joi.array().items(
-        Joi.string().valid("sent", "success", "failed", "pending"),
-      ),
-    )
+    .pattern(Joi.string(), Joi.array().items(Joi.string().valid('sent', 'success', 'failed', 'pending')))
     .min(1)
     .messages({
-      "object.base": "Invalid servicesTrigger format",
-      "object.min": "servicesTrigger object cannot be empty",
+      'object.base': 'Invalid servicesTrigger format',
+      'object.min': 'servicesTrigger object cannot be empty',
     }),
 
   retryEnabled: Joi.boolean().messages({
-    "boolean.base": "retryEnabled must be a boolean value",
+    'boolean.base': 'retryEnabled must be a boolean value',
   }),
 
   isActive: Joi.boolean().strict().messages({
-    "boolean.base": "isActive must be a boolean",
+    'boolean.base': 'isActive must be a boolean',
   }),
 };
 
 const createWebhookSchema = Joi.object({
   webhookUrl: baseWebhookSchema.webhookUrl.required().messages({
-    "any.required": "webhookUrl is required",
+    'any.required': 'webhookUrl is required',
   }),
 
   apiKey: baseWebhookSchema.apiKey.required().messages({
-    "any.required": "apiKey is required",
+    'any.required': 'apiKey is required',
   }),
 
   serviceTrigger: baseWebhookSchema.serviceTrigger.required().messages({
-    "any.required": "servicesTrigger is required",
+    'any.required': 'servicesTrigger is required',
   }),
 
   retryEnabled: baseWebhookSchema.retryEnabled,
@@ -113,7 +101,7 @@ const createWebhookSchema = Joi.object({
 })
   .unknown(false)
   .messages({
-    "object.unknown": "Unknown fields are not allowed",
+    'object.unknown': 'Unknown fields are not allowed',
   });
 
 const updateWebhookSchema = Joi.object({
@@ -126,8 +114,8 @@ const updateWebhookSchema = Joi.object({
   .min(1)
   .unknown(false)
   .messages({
-    "object.min": "At least one field must be provided for update",
-    "object.unknown": "Unknown fields are not allowed",
+    'object.min': 'At least one field must be provided for update',
+    'object.unknown': 'Unknown fields are not allowed',
   });
 
 const queryValidationSchema = Joi.object({
@@ -136,26 +124,26 @@ const queryValidationSchema = Joi.object({
     .custom((value, helpers) => {
       const raw = helpers.original;
       // Reject decimal representation like "1.0", "2.5"
-      if (typeof raw === "string" && !/^[0-9]+$/.test(raw)) {
-        return helpers.error("number.integer");
+      if (typeof raw === 'string' && !/^[0-9]+$/.test(raw)) {
+        return helpers.error('number.integer');
       }
       return value;
     })
     .integer()
     .optional()
     .messages({
-      "number.base": "Page must be a number",
-      "number.integer": "Page must be an integer",
-      "number.min": "Page must be at least 1",
-      "number.unsafe": "Page must be a valid integer",
+      'number.base': 'Page must be a number',
+      'number.integer': 'Page must be an integer',
+      'number.min': 'Page must be at least 1',
+      'number.unsafe': 'Page must be a valid integer',
     }),
   limit: Joi.number()
     .min(1)
     .custom((value, helpers) => {
       const raw = helpers.original;
       // Reject decimal representation like "1.0", "2.5"
-      if (typeof raw === "string" && !/^[0-9]+$/.test(raw)) {
-        return helpers.error("number.integer");
+      if (typeof raw === 'string' && !/^[0-9]+$/.test(raw)) {
+        return helpers.error('number.integer');
       }
       return value;
     })
@@ -163,19 +151,19 @@ const queryValidationSchema = Joi.object({
     .max(100)
     .optional()
     .messages({
-      "number.base": "Limit must be a number",
-      "number.integer": "Limit must be an integer",
-      "number.min": "Limit must be at least 1",
-      "number.max": "Limit cannot exceed 100",
-      "number.unsafe": "Limit must be a valid integer",
+      'number.base': 'Limit must be a number',
+      'number.integer': 'Limit must be an integer',
+      'number.min': 'Limit must be at least 1',
+      'number.max': 'Limit cannot exceed 100',
+      'number.unsafe': 'Limit must be a valid integer',
     }),
   fields: Joi.string(),
-  sort: Joi.string().valid("createdAt", "updatedAt").messages({
-    "any.only": "Sort must be either 'createdAt' or 'updatedAt'.",
+  sort: Joi.string().valid('createdAt', 'updatedAt').messages({
+    'any.only': "Sort must be either 'createdAt' or 'updatedAt'.",
   }),
 
-  order: Joi.string().valid("asc", "desc").messages({
-    "any.only": "Order must be either 'asc' or 'desc'.",
+  order: Joi.string().valid('asc', 'desc').messages({
+    'any.only': "Order must be either 'asc' or 'desc'.",
   }),
 });
 
@@ -184,30 +172,26 @@ const webhookValidation = async (req, res, next) => {
     if (!req.body) {
       throw {
         statusCode: 422,
-        message: "Invalid Content-Type or Request Body",
+        message: 'Invalid Content-Type or Request Body',
       };
     }
 
-    const schema =
-      req.method === "PATCH" ? updateWebhookSchema : createWebhookSchema;
+    const schema = req.method === 'PATCH' ? updateWebhookSchema : createWebhookSchema;
 
     const { error, value } = schema.validate(req.body, baseOptions);
 
     if (error) {
-      console.log("Error", error);
+      console.log('Error', error);
       return res.status(400).json({
         success: false,
         message: error.details[0].message,
       });
     }
 
-    const clientId = req.headers["x-client-id"];
+    const clientId = req.headers['x-client-id'];
 
     if (value.servicesTrigger) {
-      await checkWebhookServicesAreEnabledForClient(
-        value.servicesTrigger,
-        clientId,
-      );
+      await checkWebhookServicesAreEnabledForClient(value.servicesTrigger, clientId);
     }
 
     req.body = value;
@@ -215,17 +199,14 @@ const webhookValidation = async (req, res, next) => {
   } catch (error) {
     return res.status(error.statusCode || 500).json({
       success: false,
-      message: error.message || "Internal server error",
+      message: error.message || 'Internal server error',
     });
   }
 };
 
 const queryValidation = (req, res, next) => {
   try {
-    const { error, value } = queryValidationSchema.validate(
-      req.query,
-      baseOptions,
-    );
+    const { error, value } = queryValidationSchema.validate(req.query, baseOptions);
     if (error) {
       return res.status(400).json({
         success: false,
@@ -238,7 +219,7 @@ const queryValidation = (req, res, next) => {
   } catch (error) {
     return res.status(error.statusCode || 500).json({
       success: false,
-      message: error.message || "Internal server error",
+      message: error.message || 'Internal server error',
     });
   }
 };

@@ -1,42 +1,31 @@
-const Joi = require("joi");
-const { validateAttachments } = require("./common.validator");
+const Joi = require('joi');
+const { validateAttachments } = require('./common.validator');
 
 const validateEmailList = (value, helpers, fieldName) => {
   const isValueEmpty = !value || value.trim().length === 0;
-  const mandatoryFields = ["fromEmail", "destination"];
+  const mandatoryFields = ['fromEmail', 'destination'];
 
   //when fiels name is not cc or bcc then empty value is not allowed
-  if (isValueEmpty && fieldName !== "cc" && fieldName != "bcc") {
-    return mandatoryFields.includes(fieldName)
-      ? helpers.message(`${fieldName} is required and cannot be empty.`)
-      : value;
+  if (isValueEmpty && fieldName !== 'cc' && fieldName != 'bcc') {
+    return mandatoryFields.includes(fieldName) ? helpers.message(`${fieldName} is required and cannot be empty.`) : value;
   }
 
   //spliting string by command and converting into array
-  let emails = value.split(",").map((e) => e.trim().toLowerCase());
+  let emails = value.split(',').map((e) => e.trim().toLowerCase());
 
   //checking extra commans
 
   for (let email of emails) {
-    if (email.length == 0)
-      return helpers.message(
-        `An invalid ${fieldName} is not allowed. An empty or invalid destination value was detected`,
-      );
+    if (email.length == 0) return helpers.message(`An invalid ${fieldName} is not allowed. An empty or invalid destination value was detected`);
   }
 
   if (emails.length === 0) {
-    return mandatoryFields.includes(fieldName)
-      ? helpers.message(
-          `At least one valid email is required for ${fieldName}.`,
-        )
-      : "";
+    return mandatoryFields.includes(fieldName) ? helpers.message(`At least one valid email is required for ${fieldName}.`) : '';
   }
 
   //if field is fromEmail then only one email is allowed
-  if (fieldName === "fromEmail" && emails.length > 1) {
-    return helpers.message(
-      `The fromEmail field can only contain a single email.`,
-    );
+  if (fieldName === 'fromEmail' && emails.length > 1) {
+    return helpers.message(`The fromEmail field can only contain a single email.`);
   }
 
   const uniqueEmails = [...new Set(emails)];
@@ -49,74 +38,66 @@ const validateEmailList = (value, helpers, fieldName) => {
     }
   }
 
-  return [uniqueEmails.join(", ")];
+  return [uniqueEmails.join(', ')];
 };
 
 const emailValidation = {
-  destination: Joi.when("service", {
-    is: "email",
+  destination: Joi.when('service', {
+    is: 'email',
     then: Joi.string()
       .trim()
       .min(1)
       .required()
-      .custom((value, helpers) =>
-        validateEmailList(value, helpers, "destination"),
-      )
+      .custom((value, helpers) => validateEmailList(value, helpers, 'destination'))
       .messages({
-        "string.empty": "Destination can't be empty for email.",
-        "any.required": "Destination is required for email.",
+        'string.empty': "Destination can't be empty for email.",
+        'any.required': 'Destination is required for email.',
       }),
     otherwise: Joi.forbidden(),
   }),
-  subject: Joi.when("service", {
-    is: "email",
+  subject: Joi.when('service', {
+    is: 'email',
     then: Joi.string().trim().min(1).max(255).required().messages({
-      "string.empty": "Subject can't be empty for email.",
-      "string.max": "Subject must not exceed 255 characters.",
+      'string.empty': "Subject can't be empty for email.",
+      'string.max': 'Subject must not exceed 255 characters.',
     }),
     otherwise: Joi.forbidden(),
   }),
-  body: Joi.when("service", {
-    is: "email",
-    then: Joi.string()
-      .trim()
-      .min(1)
-      .required()
-      .messages({ "string.empty": "Body can't be empty for email." }),
+  body: Joi.when('service', {
+    is: 'email',
+    then: Joi.string().trim().min(1).required().messages({ 'string.empty': "Body can't be empty for email." }),
     otherwise: Joi.forbidden(),
   }),
-  fromEmail: Joi.when("service", {
-    is: "email",
+  fromEmail: Joi.when('service', {
+    is: 'email',
     then: Joi.string()
       .trim()
       .optional()
-      .allow("")
-      .custom((value, helpers) =>
-        validateEmailList(value, helpers, "fromEmail"),
-      ),
+      .allow('')
+      .custom((value, helpers) => validateEmailList(value, helpers, 'fromEmail')),
     otherwise: Joi.forbidden(),
   }),
-  cc: Joi.when("service", {
-    is: "email",
+  cc: Joi.when('service', {
+    is: 'email',
     then: Joi.string()
       .trim()
       .optional()
-      .allow("")
-      .custom((value, helpers) => validateEmailList(value, helpers, "cc"))
+      .allow('')
+      .custom((value, helpers) => validateEmailList(value, helpers, 'cc'))
       .optional(),
     otherwise: Joi.forbidden(),
   }),
-  bcc: Joi.when("service", {
-    is: "email",
+  bcc: Joi.when('service', {
+    is: 'email',
     then: Joi.string()
       .trim()
-      .allow("")
-      .custom((value, helpers) => validateEmailList(value, helpers, "bcc"))
+      .allow('')
+      .custom((value, helpers) => validateEmailList(value, helpers, 'bcc'))
       .optional(),
     otherwise: Joi.forbidden(),
   }),
-  attachments: Joi.when("service", {
-    is: "email",
+  attachments: Joi.when('service', {
+    is: 'email',
     then: Joi.array()
       .optional()
       .custom((value, helpers) => {

@@ -1,4 +1,4 @@
-const RedisHelper = require("./redis.helper");
+const RedisHelper = require('./redis.helper');
 
 const getTriggerKey = (clientId) => `webhook:triggers:services:${clientId}`;
 

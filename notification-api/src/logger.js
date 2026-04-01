@@ -30,7 +30,7 @@ const logger = winston.createLogger({
     logFormat
   ),
   transports: [
-    new winston.transports.Console()
+    new winston.transports.Console(),
     // Add other transports like file or centralized logging service if needed
     // new winston.transports.File({ filename: 'error.log', level: 'error' }),
     // new winston.transports.File({ filename: 'combined.log' }),

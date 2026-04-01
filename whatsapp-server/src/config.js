@@ -29,21 +29,21 @@ require('dotenv').config(); // Load local .env potentially overriding root setti
  * @property {number} maxProcessingAttempts - The maximum number of processing attempts before marking a message as a permanent failure.
  */
 module.exports = {
+  /** @type {string} */
+  env: process.env.NODE_ENV || 'development',
+  rabbitMQ: {
     /** @type {string} */
-    env: process.env.NODE_ENV || 'development',
-    rabbitMQ: {
-        /** @type {string} */
-        url: process.env.RABBITMQ_URL || 'amqp://user:password@rabbitmq:5672', // Use service name 'rabbitmq'
-        /** @type {string} */
-        exchangeName: process.env.RABBITMQ_EXCHANGE_NAME || 'notifications_exchange',
-        /** @type {string} */
-        exchangeType: 'direct',
-        /** @type {string} */
-        queueName: process.env.RABBITMQ_QUEUE_NAME_EMAIL || 'whatsapp_queue',
-        /** @type {string} */
-        bindingKey: process.env.RABBITMQ_BINDING_KEY_EMAIL || 'whatsapp',
-    },
-    // Max retry attempts for processing before marking as permanent failure
-    /** @type {number} */
-    maxProcessingAttempts: parseInt(process.env.MAX_PROCESSING_ATTEMPTS || '3', 10)
+    url: process.env.RABBITMQ_URL || 'amqp://user:password@rabbitmq:5672', // Use service name 'rabbitmq'
+    /** @type {string} */
+    exchangeName: process.env.RABBITMQ_EXCHANGE_NAME || 'notifications_exchange',
+    /** @type {string} */
+    exchangeType: 'direct',
+    /** @type {string} */
+    queueName: process.env.RABBITMQ_QUEUE_NAME_EMAIL || 'whatsapp_queue',
+    /** @type {string} */
+    bindingKey: process.env.RABBITMQ_BINDING_KEY_EMAIL || 'whatsapp',
+  },
+  // Max retry attempts for processing before marking as permanent failure
+  /** @type {number} */
+  maxProcessingAttempts: parseInt(process.env.MAX_PROCESSING_ATTEMPTS || '3', 10),
 };

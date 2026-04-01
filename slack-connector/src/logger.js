@@ -1,19 +1,17 @@
 // ./slack-connector/src/logger.js
-const winston = require("winston");
+const winston = require('winston');
 
-const logFormat = winston.format.printf(
-  ({ level, message, timestamp, stack }) => {
-    return `${timestamp} ${level}: ${stack || message}`;
-  },
-);
+const logFormat = winston.format.printf(({ level, message, timestamp, stack }) => {
+  return `${timestamp} ${level}: ${stack || message}`;
+});
 
 const logger = winston.createLogger({
-  level: process.env.NODE_ENV === "development" ? "debug" : "info",
+  level: process.env.NODE_ENV === 'development' ? 'debug' : 'info',
   format: winston.format.combine(
     winston.format.colorize(),
-    winston.format.timestamp({ format: "YYYY-MM-DD HH:mm:ss" }),
+    winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
     winston.format.errors({ stack: true }),
-    logFormat,
+    logFormat
   ),
   transports: [
     new winston.transports.Console(),
