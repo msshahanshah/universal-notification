@@ -253,7 +253,6 @@ const validateQueryRequest = (req, res, next) => {
       convert: true
     });
 
-    console.log(value);
     if (error) {
       return res.status(400).json({
         success: false,
