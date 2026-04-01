@@ -11,22 +11,19 @@ const {
 const { encrypt, decrypt } = require("../utils/cryptoUtil");
 
 const {
-  isUniqueConstraintError,
   findAllEnabledServicesForClient,
 } = require("../helpers/mongoose.helper");
+
 const { isValidObjectId } = require("mongoose");
+const {
+  assertInternalCaller,
+  handleError,
+} = require("../helpers/webhook.helper");
 
 const addWebhook = async (call, callback) => {
   try {
-    const callerKey = call.metadata.get("x-internal-key")[0];
-
-    if (callerKey !== process.env.INTERNAL_GRPC_KEY) {
-      logger.error(`GRPC call failed as, x-internal-key doesn't match`);
-      return callback({
-        code: grpc.status.PERMISSION_DENIED,
-        message: `Unauthorized caller, x-internal-key doesn't match`,
-      });
-    }
+    /** Verify  Caller */
+    if (!assertInternalCaller(call, callback)) return;
 
     let payload = JSON.parse(call.request.payload);
     const {
@@ -57,34 +54,15 @@ const addWebhook = async (call, callback) => {
         services: services,
       }),
     });
-  } catch (err) {
-    logger.error(
-      `Error in adding webhook configuration: ${JSON.stringify({ error: err.message, stack: err.stack })}`,
-    );
-    if (isUniqueConstraintError(err)) {
-      return callback({
-        code: 6,
-        message: "Configuration already exists.",
-      });
-    }
-    callback({
-      code: grpc.status.INTERNAL,
-      message: "Internal server error",
-    });
+  } catch (error) {
+    handleError("Error in adding webhook configuration", error, callback);
   }
 };
 
 const updateWebhook = async (call, callback) => {
   try {
-    const callerKey = call.metadata.get("x-internal-key")[0];
-
-    if (callerKey !== process.env.INTERNAL_GRPC_KEY) {
-      logger.error(`GRPC call failed as, x-internal-key doesn't match`);
-      return callback({
-        code: grpc.status.PERMISSION_DENIED,
-        message: `Unauthorized caller, x-internal-key doesn't match`,
-      });
-    }
+    /** Verify  Caller */
+    if (!assertInternalCaller(call, callback)) return;
 
     const payload = JSON.parse(call.request.payload);
 
@@ -194,32 +172,14 @@ const updateWebhook = async (call, callback) => {
       }),
     });
   } catch (error) {
-    logger.error(
-      `Error in updating webhook configuration: ${JSON.stringify({ error: error.message, stack: error.stack })}`,
-    );
-    if (isUniqueConstraintError(error)) {
-      return callback({
-        code: grpc.status.ALREADY_EXISTS,
-        message: "Configuration already exists.",
-      });
-    }
-    callback({
-      code: error.statusCode || grpc.status.INTERNAL,
-      message: error.message || "Internal server error",
-    });
+    handleError("Error in updating webhook configuration", error, callback);
   }
 };
 
 const deleteWebhook = async (call, callback) => {
   try {
-    const callerKey = call.metadata.get("x-internal-key")[0];
-
-    if (callerKey !== process.env.INTERNAL_GRPC_KEY) {
-      return callback({
-        code: grpc.status.PERMISSION_DENIED,
-        message: "Unauthorized caller",
-      });
-    }
+    /** Verify  Caller */
+    if (!assertInternalCaller(call, callback)) return;
 
     const payload = JSON.parse(call.request.payload);
     const { clientId, webhookId } = payload;
@@ -259,26 +219,14 @@ const deleteWebhook = async (call, callback) => {
       }),
     });
   } catch (error) {
-    logger.error(
-      `Error in deleting webhook: ${JSON.stringify({ error: error.message, stack: error.stack })}`,
-    );
-    callback({
-      code: error.statusCode || grpc.status.INTERNAL,
-      message: error.message || "Internal server error",
-    });
+    handleError("Error in deleting webhook", error, callback);
   }
 };
 
 const allWebhook = async (call, callback) => {
   try {
-    const callerKey = call.metadata.get("x-internal-key")[0];
-
-    if (callerKey !== process.env.INTERNAL_GRPC_KEY) {
-      return callback({
-        code: grpc.status.PERMISSION_DENIED,
-        message: "Unauthorized caller",
-      });
-    }
+    /** Verify  Caller */
+    if (!assertInternalCaller(call, callback)) return;
 
     const payload = JSON.parse(call.request.payload);
     const { clientId, query } = payload;
@@ -299,7 +247,7 @@ const allWebhook = async (call, callback) => {
       sort = "updatedAt",
       order = "desc",
     } = query;
-    console.log(order, sort);
+
     const skip = (page - 1) * limit;
     const sortOrderValue = order === "desc" ? -1 : 1;
     const allowedSortFields = ["createdAt", "updatedAt"];
@@ -361,26 +309,14 @@ const allWebhook = async (call, callback) => {
       }),
     });
   } catch (error) {
-    logger.error(
-      `Error in fetching all webhooks: ${JSON.stringify({ error: error.message, stack: error.stack })}`,
-    );
-    callback({
-      code: error.statusCode || grpc.status.INTERNAL,
-      message: error.message || "Internal server error",
-    });
+    handleError("Error in fetching all webhooks", error, callback);
   }
 };
 
 const getAllWebhookLogs = async (call, callback) => {
   try {
-    const callerKey = call.metadata.get("x-internal-key")[0];
-
-    if (callerKey !== process.env.INTERNAL_GRPC_KEY) {
-      return callback({
-        code: grpc.status.PERMISSION_DENIED,
-        message: "Unauthorized caller",
-      });
-    }
+    /** Verify  Caller */
+    if (!assertInternalCaller(call, callback)) return;
 
     const payload = JSON.parse(call.request.payload);
     const { clientId, query } = payload;
@@ -424,13 +360,7 @@ const getAllWebhookLogs = async (call, callback) => {
       }),
     });
   } catch (error) {
-    logger.error(
-      `Error in fetching webhook logs: ${JSON.stringify({ error: error.message, stack: error.stack })}`,
-    );
-    callback({
-      code: error.statusCode || grpc.status.INTERNAL,
-      message: error.message || "Internal server error",
-    });
+    handleError("Error in fetching webhook logs", error, callback);
   }
 };
 

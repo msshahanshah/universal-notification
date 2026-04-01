@@ -1,67 +1,35 @@
-/**
- * Checks if a webhook event matches any of the configured service triggers.
- *
- * @param {Object} configs - Configuration object containing service triggers
- * @param {Object} configs.service_trigger - Object in format:
- * {
- *   sms: ["failed", "success"],
- *   email: ["success"]
- * }
- *
- * @param {Object} payload - Webhook payload
- * @param {string} payload.service - Service name (e.g. "sms")
- * @param {string} payload.status - Status (e.g. "failed")
- *
- * @returns {boolean}
- *
- * @example
- * const configs = {
- *   service_trigger: {
- *     sms: ["failed"],
- *     email: ["success"]
- *   }
- * };
- *
- * const payload = { service: "sms", status: "failed" };
- * extractServiceFromServicesTrigger(configs, payload); // true
- */
+const logger = require("../utils/logger");
+const { isUniqueConstraintError } = require("./mongoose.helper");
 
-const extractServiceFromServicesTrigger = (configs, payload) => {
-  const triggers = configs?.service_trigger;
+const assertInternalCaller = (call, callback) => {
+  const callerKey = call.metadata.get("x-internal-key")[0];
 
-  if (!triggers || !payload?.service || !payload?.status) {
+  if (callerKey !== process.env.INTERNAL_GRPC_KEY) {
+    callback({
+      code: grpc.status.PERMISSION_DENIED,
+      message: "Unauthorized caller",
+    });
     return false;
   }
 
-  const service = payload.service.toLowerCase();
-  const status = payload.status.toLowerCase();
-
-  return triggers?.[service]?.some(
-    (s) => s.toLowerCase() === status
-  ) ?? false;
+  return true;
 };
 
-function buildSettings(service_trigger = {}) {
-  const SERVICES = ["sms", "email", "slack"];
-
-  const settings = {};
-  const finalServiceTrigger = {};
-
-  SERVICES.forEach((service) => {
-    const triggers = service_trigger?.[service];
-
-    if (Array.isArray(triggers) && triggers.length > 0) {
-      settings[service] = true;
-      finalServiceTrigger[service] = triggers;
-    } else {
-      settings[service] = false;
-    }
+const handleError = (msg, error, callback) => {
+  logger.error(`${msg}: ${JSON.stringify(error)}`);
+  if (isUniqueConstraintError(err)) {
+    return callback({
+      code: 6,
+      message: "Configuration already exists.",
+    });
+  }
+  callback({
+    code: error.statusCode || grpc.status.INTERNAL,
+    message: error.message || "Internal server error",
   });
-
-  return { settings, finalServiceTrigger };
-}
+};
 
 module.exports = {
-  extractServiceFromServicesTrigger,
-  buildSettings
+  assertInternalCaller,
+  handleError,
 };
