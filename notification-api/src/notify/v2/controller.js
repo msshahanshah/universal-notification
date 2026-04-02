@@ -39,6 +39,7 @@ const notify = async (req, res) => {
             clientId,
           };
 
+      console.log(content);
       const isWebhookEnabled = getWebhookEnabledServices(clientId, service);
       content["isWebhookEnabled"] = isWebhookEnabled;
 
@@ -96,7 +97,7 @@ const notify = async (req, res) => {
   }
 
   // prepare statusCode
-  return res.status((isFailed && isSuccess ? 207 : isSuccess ? 202 : 400)).json({
+  return res.status(isFailed && isSuccess ? 207 : isSuccess ? 202 : 400).json({
     data,
   });
 };

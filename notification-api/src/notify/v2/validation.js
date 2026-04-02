@@ -35,6 +35,15 @@ const normalizeEmptyKeys = (item) => {
     delete next.templateId;
   }
 
+  if (
+    hasOwn(next, "variableValues") &&
+    next.variableValues &&
+    typeof next.variableValues === "object" &&
+    !Object.keys(next.variableValues).length
+  ) {
+    delete next.variableValues;
+  }
+
   return next;
 };
 
@@ -60,6 +69,10 @@ const attachmentValidation = Joi.alternatives().conditional("service", {
   ],
   otherwise: Joi.forbidden(),
 });
+
+const variableValuesSchema = Joi.object()
+  .pattern(Joi.string(), Joi.any())
+  .optional();
 
 const messageObject = Joi.object({
   service: commonValidation.service,
@@ -117,7 +130,14 @@ const messageObject = Joi.object({
 
   templateId: Joi.string().trim().empty("").optional(),
 
-  variableValues: Joi.object().pattern(Joi.string(), Joi.any()).optional(),
+  variableValues: Joi.when("templateId", {
+    is: Joi.string().trim().min(1),
+    then: variableValuesSchema.optional(),
+    otherwise: Joi.forbidden().messages({
+      "any.forbidden":
+        "variableValues is only allowed when templateId is provided",
+    }),
+  }),
 })
   .unknown(false)
 
@@ -143,14 +163,6 @@ const messageObject = Joi.object({
     ),
   })
 
-  .when(Joi.object({ variableValues: Joi.exist() }).unknown(), {
-    then: Joi.object({
-      templateId: Joi.string().trim().min(1).required().messages({
-        "any.required":
-          "templateId is required when variable values is provided",
-      }),
-    }),
-  })
   .when(Joi.object({ service: Joi.valid("email") }).unknown(), {
     then: Joi.object().or("templateId", "body"),
   })
@@ -183,7 +195,6 @@ const validateRequest = async (req, res, next) => {
 
     configs = configs ? configs : await loadClientConfigs();
 
-    // Extract enabling services of client
     const enabledServices = configs?.filter((conf) => conf.ID === clientId)[0]
       ?.ENABLED_SERVERICES;
 
@@ -197,9 +208,9 @@ const validateRequest = async (req, res, next) => {
       };
     }
 
-    // Check for enabled services
     services.forEach((service) => {
-      let casedService = service.toUpperCase();
+      const casedService = service.toUpperCase();
+
       if (!enabledServices.includes(service)) {
         logger.error(
           `ERROR: ${service} is not enabled for ${clientId}. All enabled services for ${clientId} are ${JSON.stringify(enabledServices)}`,
@@ -215,7 +226,6 @@ const validateRequest = async (req, res, next) => {
       }
     });
 
-    // Validate the request body service-wise
     for (const [service, body] of Object.entries(sanitizeBody)) {
       if (!Array.isArray(body)) {
         throw {
@@ -236,8 +246,6 @@ const validateRequest = async (req, res, next) => {
         const hasBody = isNonEmpty(next.body);
         const hasCommonMessage = isNonEmpty(commonMessage);
 
-        // Fill from commonMessage only when the key exists but is empty,
-        // and only when templateId is not meaningfully present.
         if (
           service !== "email" &&
           hasOwn(item, "message") &&
