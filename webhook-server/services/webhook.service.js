@@ -353,6 +353,13 @@ const allWebhook = async (call, callback) => {
       }),
     );
 
+    if (response.configurations) {
+      response["pagination"] = {
+        page: +page,
+        limit: +limit,
+      };
+    }
+
     callback(null, {
       payload: JSON.stringify({
         success: true,
@@ -416,11 +423,19 @@ const getAllWebhookLogs = async (call, callback) => {
       .limit(limit)
       .lean();
 
+    const pagination = {
+      page: +page,
+      limit: +limit,
+    };
+
     callback(null, {
       payload: JSON.stringify({
         success: true,
         message: "Webhook logs fetched successfully",
-        data: webhookLogsSerializer([...schedulerLogs, ...completedLogs]),
+        data: {
+          data: webhookLogsSerializer([...schedulerLogs, ...completedLogs]),
+          pagination,
+        },
       }),
     });
   } catch (error) {

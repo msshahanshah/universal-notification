@@ -89,7 +89,7 @@ async function getWebhooksLogs(req, res) {
     return res.status(200).json({
       success: true,
       message: "webhook logs fetched successfully.",
-      data: result,
+      ...result,
     });
   } catch (error) {
     return handleError(res, error);
