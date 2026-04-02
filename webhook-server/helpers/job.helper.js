@@ -8,8 +8,9 @@ const logger = require("../utils/logger");
 
 const handleFailure = async (msg, errorData, maxRetryAttempts = 4) => {
   const currentAttempt = msg.retryAttempts; // already incremented
+  const retryEnabled = msg.retryEnabled ?? false;
 
-  if (currentAttempt >= maxRetryAttempts) {
+  if (!retryEnabled || currentAttempt >= maxRetryAttempts) {
     await WebhookLog.create({
       clientId: msg.clientId,
       webhookUrl: msg.webhookUrl,
@@ -19,12 +20,13 @@ const handleFailure = async (msg, errorData, maxRetryAttempts = 4) => {
       retryAttempts: currentAttempt,
       webhookPayload: msg.webhookPayload,
       webhookResponse: errorData,
+      retryEnabled: msg.retryEnabled,
     });
 
     await WebhookCronScheduler.deleteOne({ _id: msg._id });
 
     logger.error(
-      `Max retries reached. Moved to logs: ${msg._id}, attempts=${currentAttempt}`,
+      `Max retries reached or re-try disabled. Moved to logs: ${msg._id}, attempts=${currentAttempt}, retryEnabled=${retryEnabled}`,
     );
   } else {
     await WebhookCronScheduler.updateOne(
@@ -76,7 +78,7 @@ const processNotifications = async (messages, maxRetryAttempts = 4) => {
             webhookUrl: msg.webhookUrl,
             status: msg.status,
             serviceTrigger: msg.serviceTrigger,
-            retryAttempts: msg.retryAttempts,
+            retryAttempts: msg.retryAttempts + 1,
             webhookPayload: msg.webhookPayload,
             webhookResponse: msg.webhookResponse,
           }),
@@ -101,7 +103,7 @@ const processNotifications = async (messages, maxRetryAttempts = 4) => {
           webhookUrl: msg.webhookUrl,
           serviceTrigger: msg.serviceTrigger,
           status: "success",
-          retryAttempts: msg.retryAttempts,
+          retryAttempts: msg.retryAttempts + 1,
           webhookPayload: msg.webhookPayload,
           webhookResponse: {
             statusCode: res.status,
@@ -119,7 +121,11 @@ const processNotifications = async (messages, maxRetryAttempts = 4) => {
           `Webhook failed (network): ${msg.webhookUrl}, error=${errorMsg}`,
         );
 
-        return handleFailure(msg, { error: errorMsg }, maxRetryAttempts);
+        return handleFailure(
+          { ...msg, retryAttempts: msg.retryAttempts + 1 },
+          { error: errorMsg },
+          maxRetryAttempts,
+        );
       }
     });
 
