@@ -97,7 +97,7 @@ const registerTemplate = async (clientId, payload) => {
 
 const getTemplates = async (clientId, queryParams) => {
     const {
-        limit = 10,
+        limit = 100,
         page = 1,
         service = null,
         name = null,

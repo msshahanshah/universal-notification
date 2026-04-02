@@ -49,7 +49,13 @@ refresh:
       content:
         application/json:
           schema:
-            $ref: "../index.yaml#/components/schemas/RefreshRequest"
+            type: object
+            required:
+              - refreshToken
+            properties:
+              refreshToken:
+                type: string
+                example: "your-refresh-token-here"
     responses:
       "200":
         description: Token refreshed successfully
@@ -70,7 +76,7 @@ refresh:
                     accessToken:
                       type: string
       "401":
-        description: Invalid or expired refresh token
+        description: Invalid refresh token
         content:
           application/json:
             schema:
@@ -84,9 +90,21 @@ logout:
       - bearerAuth: []
     parameters:
       - $ref: "../index.yaml#/components/parameters/ClientIdHeader"
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - refreshToken
+            properties:
+              refreshToken:
+                type: string
+                example: "your-refresh-token-here"
     responses:
       "200":
-        description: Logged out successfully
+        description: Logout successfully
         content:
           application/json:
             schema:
@@ -99,7 +117,7 @@ logout:
                   type: string
                   example: Logout successfully
       "401":
-        description: Unauthorized
+        description: Invalid refresh token
         content:
           application/json:
             schema:

@@ -75,11 +75,6 @@ const commonValidation = {
           }),
         },
       ],
-      // otherwise: Joi.required().messages({
-      //   'string.base': 'Message must be a string',
-      //   'string.empty': 'Message cannot be empty',
-      //   'any.required': 'Message or Template is required for this service',
-      // }),
     }),
 };
 
@@ -212,7 +207,7 @@ const validateWhatsAppAttachements = (values, helpers) => {
     if (Array.isArray(values) && typeof values[0] === "string") {
       const firstIsUrl = validPublicURL(values[0]);
       const firstIsFile =
-        validateFileNameWithExtension(values[0]) === null ? true : false;
+        validateFileNameWithExtension(values[0]) === null;
 
       if (!firstIsUrl && !firstIsFile) {
         return helpers.message(

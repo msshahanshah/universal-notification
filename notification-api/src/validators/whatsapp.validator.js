@@ -3,6 +3,7 @@ const { PhoneNumberUtil } = require("google-libphonenumber");
 const phoneUtil = PhoneNumberUtil.getInstance();
 const { phonenNumberRegex } = require("../../helpers/regex.helper");
 const { validateWhatsAppAttachements } = require("./common.validator");
+const logger = require("../logger");
 
 const whatsappTemplateRegex = /^HX[a-f0-9]{32}$/;
 const whatsAppValidation = {
@@ -43,6 +44,10 @@ const whatsAppValidation = {
             return helpers.message("Invalid phone number ");
           }
         } catch (err) {
+          logger.error({
+            message: err.message,
+            stack: err?.stack
+          })
           return helpers.message("Invalid phone number ");
         }
       }
@@ -68,7 +73,7 @@ const whatsAppValidation = {
       is: Joi.exist(),
       then: Joi.forbidden().messages({
         "any.forbidden": "attachments are not allowed when templateId is provided ",
-        "any.unknown" : "attachments are not allowed when templateId is provided "
+        "any.unknown": "attachments are not allowed when templateId is provided "
       }),
       otherwise: Joi.array()
         .optional()

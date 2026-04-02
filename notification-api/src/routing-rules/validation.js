@@ -7,7 +7,7 @@ const {
   SERVICES,
 } = require("../../constants");
 const cleanJoiMessage = require("../../helpers/cleanJoiMessage");
-const { TagResource$ } = require("@aws-sdk/client-secrets-manager");
+const logger = require("../logger");
 
 const emailRegex = /^[^\s@]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 const domainRegex = /^[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
@@ -127,6 +127,10 @@ const createSchema = Joi.object({
 
               return normalizedCode;
             } catch (err) {
+              logger.error({
+                message: err.message,
+                stack : err?.stack
+              })
               return helpers.error("any.invalid");
             }
           }),

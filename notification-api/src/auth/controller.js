@@ -50,10 +50,6 @@ const refresh = async (req, res) => {
 
 
     const newAccessToken = await RedisHelper.refreshAccess(x_clientId, refreshToken)
-    // const newAccessToken = await authService.generateNewAccessToken(
-    //   refreshToken,
-    //   x_clientId,
-    // );
     return res.status(200).json({
       success: true,
       message: "refresh successful",
@@ -98,6 +94,14 @@ const logout = async (req, res) => {
       message: err.message,
       stack: err?.stack,
     });
+    if (
+      err.name === "JsonWebTokenError" ||
+      err.name === "TokenExpiredError"
+    ) {
+      return res
+        .status(401)
+        .json({ success: false, message: "Invalid refresh token" });
+    }
     return res.status(err.statusCode || 500).json({
       success: false,
       message: err.message || "Internal Server Error",

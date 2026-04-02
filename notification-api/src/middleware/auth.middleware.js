@@ -28,10 +28,6 @@ const auth = async (req, res, next) => {
 
     const decodedData = verifyToken(token, AUTH_TOKEN.ACCESS_TOKEN);
 
-    // const username = decodedData.username;
-    // const REDIS_ACCESS_TOKEN_KEY = RedisHelper.getAccessTokenRedisKey(username);
-    // const tokenInRedis = await RedisHelper.getValue(REDIS_ACCESS_TOKEN_KEY);
-    //TODO  Update this logic also
     const key = `access:${token}`
     const clientIdInRedis = await RedisHelper.getValue(key);
 
@@ -41,13 +37,6 @@ const auth = async (req, res, next) => {
         message: "Invalid Token. Please Retry Login",
       };
     }
-
-    // if (tokenInRedis !== token) {
-    //   throw {
-    //     statusCode: 401,
-    //     message: "Invalid Token. Please Retry Login",
-    //   };
-    // }
 
     const globalDb = await globalDatabaseManager.getModels();
 
