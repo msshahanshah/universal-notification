@@ -182,10 +182,12 @@ const validateRequest = async (req, res, next) => {
           `ERROR: ${service} is not enabled for ${clientId}. All enabled services for ${clientId} are ${JSON.stringify(enabledServices)}`,
         );
 
+        let casedService = service.toUpperCase();
+        
         throw {
           service,
           statusCode: 400,
-          message: SERVICES.service
+          message: SERVICES.casedService
             ? `${service} is not enabled`
             : "Invalid service",
         };
