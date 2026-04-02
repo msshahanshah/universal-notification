@@ -51,9 +51,8 @@ async function notifyService(clientId, service, bulkMessages) {
         logger.info(
           `[NOTIFY-SERVICE] Pre-signed URLs generated successfully | messageId: ${msg.messageId}, urlCount: ${preSignedUrls.length}`,
         );
-        //TODO Set in redis for that message id send message 
         await redisClient.set(msg.messageId, "true", {
-          EX: 120,
+          EX: 300,
         })
       } catch (error) {
         logger.error(
