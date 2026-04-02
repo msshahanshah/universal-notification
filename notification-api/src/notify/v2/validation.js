@@ -13,6 +13,31 @@ const cleanJoiMessage = require("../../../helpers/cleanJoiMessage");
 const { validPublicURL } = require("../../../helpers/regex.helper");
 const { SERVICES } = require("../../../constants");
 
+const isNonEmpty = (value) =>
+  value !== undefined &&
+  value !== null &&
+  !(typeof value === "string" && value.trim() === "");
+
+const hasOwn = (obj, key) => Object.prototype.hasOwnProperty.call(obj, key);
+
+const normalizeEmptyKeys = (item) => {
+  const next = { ...item };
+
+  if (hasOwn(next, "message") && !isNonEmpty(next.message)) {
+    delete next.message;
+  }
+
+  if (hasOwn(next, "body") && !isNonEmpty(next.body)) {
+    delete next.body;
+  }
+
+  if (hasOwn(next, "templateId") && !isNonEmpty(next.templateId)) {
+    delete next.templateId;
+  }
+
+  return next;
+};
+
 const destinationSchema = Joi.alternatives()
   .conditional("service", {
     switch: [
@@ -90,7 +115,7 @@ const messageObject = Joi.object({
 
   uniqueKey: Joi.string().trim().min(1).optional(),
 
-  templateId: Joi.string().trim().optional(),
+  templateId: Joi.string().trim().empty("").optional(),
 
   variableValues: Joi.object().pattern(Joi.string(), Joi.any()).optional(),
 })
@@ -112,7 +137,7 @@ const messageObject = Joi.object({
       }).unknown(),
       {
         then: Joi.object({
-          message: Joi.string().allow("").optional(), // ✅ allow empty string
+          message: Joi.string().allow("").optional(),
         }),
       },
     ),
@@ -120,7 +145,7 @@ const messageObject = Joi.object({
 
   .when(Joi.object({ variableValues: Joi.exist() }).unknown(), {
     then: Joi.object({
-      templateId: Joi.required().messages({
+      templateId: Joi.string().trim().min(1).required().messages({
         "any.required":
           "templateId is required when variable values is provided",
       }),
@@ -134,14 +159,9 @@ const messageObject = Joi.object({
     then: Joi.object().or("message", "attachments", "templateId"),
   })
 
-  .when(
-    Joi.object({
-      service: Joi.valid("sms", "slack"),
-    }).unknown(),
-    {
-      then: Joi.object().or("message", "templateId"),
-    },
-  );
+  .when(Joi.object({ service: Joi.valid("sms", "slack") }).unknown(), {
+    then: Joi.object().or("message", "templateId"),
+  });
 
 const validateSchema = Joi.array().min(1).max(5).items(messageObject).messages({
   "array.max": "messages should not exceed 5.",
@@ -149,6 +169,7 @@ const validateSchema = Joi.array().min(1).max(5).items(messageObject).messages({
 });
 
 let configs = null;
+
 const validateRequest = async (req, res, next) => {
   try {
     let { commonMessage, ...sanitizeBody } = req.body;
@@ -159,9 +180,10 @@ const validateRequest = async (req, res, next) => {
     if (!services.length) {
       throw { statusCode: 400, message: "No notification service specified" };
     }
+
     configs = configs ? configs : await loadClientConfigs();
 
-    // Extract Enabling services of client
+    // Extract enabling services of client
     const enabledServices = configs?.filter((conf) => conf.ID === clientId)[0]
       ?.ENABLED_SERVERICES;
 
@@ -175,28 +197,26 @@ const validateRequest = async (req, res, next) => {
       };
     }
 
-    // check for enabling service
+    // Check for enabled services
     services.forEach((service) => {
+      let casedService = service.toUpperCase();
       if (!enabledServices.includes(service)) {
         logger.error(
           `ERROR: ${service} is not enabled for ${clientId}. All enabled services for ${clientId} are ${JSON.stringify(enabledServices)}`,
         );
 
-        let casedService = service.toUpperCase();
-        
         throw {
           service,
           statusCode: 400,
-          message: SERVICES.casedService
+          message: SERVICES[casedService]
             ? `${service} is not enabled`
             : "Invalid service",
         };
       }
     });
 
-    // Validate the request Body service-wise
-    for (let [service, body] of Object.entries(sanitizeBody)) {
-      // add service to each message and add common Message if required
+    // Validate the request body service-wise
+    for (const [service, body] of Object.entries(sanitizeBody)) {
       if (!Array.isArray(body)) {
         throw {
           service,
@@ -204,45 +224,60 @@ const validateRequest = async (req, res, next) => {
           message: "messages must be array of objects.",
         };
       }
+
       let messageWithFileAttachmentCount = 0;
       const uniqueKeySet = new Set();
 
       const enrichedBody = body.map((item) => {
+        let next = normalizeEmptyKeys(item);
+
+        const hasTemplateId = isNonEmpty(next.templateId);
+        const hasMessage = isNonEmpty(next.message);
+        const hasBody = isNonEmpty(next.body);
+        const hasCommonMessage = isNonEmpty(commonMessage);
+
+        // Fill from commonMessage only when the key exists but is empty,
+        // and only when templateId is not meaningfully present.
         if (
-          !item.templateId &&
-          !Object.keys(item).includes("message") &&
-          service !== "email"
+          service !== "email" &&
+          hasOwn(item, "message") &&
+          !hasMessage &&
+          !hasTemplateId &&
+          hasCommonMessage
         ) {
-          item.message = commonMessage;
+          next.message = commonMessage;
         }
 
         if (
-          !item.templateId &&
-          !Object.keys(item).includes("body") &&
-          service == "email"
+          service === "email" &&
+          hasOwn(item, "body") &&
+          !hasBody &&
+          !hasTemplateId &&
+          hasCommonMessage
         ) {
-          item.body = commonMessage;
+          next.body = commonMessage;
         }
 
         if (
-          item.attachments &&
-          typeof item.attachments[0] === "string" &&
-          !validPublicURL(item.attachments[0])
+          next.attachments &&
+          typeof next.attachments[0] === "string" &&
+          !validPublicURL(next.attachments[0])
         ) {
           messageWithFileAttachmentCount += 1;
         }
 
-        if (item.uniqueKey) {
-          uniqueKeySet.add(item.uniqueKey.trim());
+        if (next.uniqueKey) {
+          uniqueKeySet.add(next.uniqueKey.trim());
         }
-        return { ...item, service };
+
+        return { ...next, service };
       });
 
       const { error, value } = validateSchema.validate(
         enrichedBody,
         baseOptions,
       );
-      // checking for uniqueKey for messages with attachments when there are file attachment
+
       if (
         messageWithFileAttachmentCount !== 0 &&
         uniqueKeySet.size < messageWithFileAttachmentCount
@@ -253,7 +288,9 @@ const validateRequest = async (req, res, next) => {
           message: `distinct uniqueKey is required to sent message with attachment.`,
         };
       }
+
       if (error) {
+        logger.error("ERROR: validation failed notify: v2", error);
         throw {
           service,
           statusCode: 400,
@@ -262,21 +299,8 @@ const validateRequest = async (req, res, next) => {
       }
 
       sanitizeBody[service] = value;
-      if (error) {
-        logger.error("ERROR: validation failed notify: v2", error);
-        return res.status(400).json({
-          data: {
-            [service]: {
-              success: false,
-              statusCode: 400,
-              message: error.details[0].message,
-            },
-          },
-        });
-      }
     }
 
-    // update messages in body
     req.body = sanitizeBody;
     next();
   } catch (error) {
