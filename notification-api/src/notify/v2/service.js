@@ -7,6 +7,8 @@ const {
   generatePreSignedUrl,
 } = require("../../../helpers/preSignedUrl.helper");
 const { validPublicURL } = require("../../../helpers/regex.helper");
+const RedisHelper = require("../../../helpers/redis.helper");
+const redisClient = require("../../utillity/redisClient");
 
 let configs = null;
 
@@ -49,6 +51,10 @@ async function notifyService(clientId, service, bulkMessages) {
         logger.info(
           `[NOTIFY-SERVICE] Pre-signed URLs generated successfully | messageId: ${msg.messageId}, urlCount: ${preSignedUrls.length}`,
         );
+        //TODO Set in redis for that message id send message 
+        await redisClient.set(msg.messageId, "true", {
+          EX: 120,
+        })
       } catch (error) {
         logger.error(
           `[NOTIFY-SERVICE] Failed to generate pre-signed URLs | messageId: ${msg.messageId}, clientId: ${clientId}, error: ${error.message}`,
@@ -293,7 +299,7 @@ const serviceEnforcers = {
     }
   },
 
-  SMS: () => {},
+  SMS: () => { },
 
   SLACK: () => { },
 
