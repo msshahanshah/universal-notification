@@ -73,12 +73,7 @@ const baseWebhookSchema = {
   }),
 
   serviceTrigger: Joi.object()
-    .pattern(
-      Joi.string(),
-      Joi.array().items(
-        Joi.string().valid("sent", "success", "failed", "pending"),
-      ),
-    )
+    .pattern(Joi.string(), Joi.array().items(Joi.string().trim().min(1)))
     .min(1)
     .messages({
       "object.base": "Invalid servicesTrigger format",
