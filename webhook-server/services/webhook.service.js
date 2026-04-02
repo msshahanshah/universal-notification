@@ -281,86 +281,82 @@ const allWebhook = async (call, callback) => {
     }
 
     const payload = JSON.parse(call.request.payload);
-    const { clientId, query } = payload;
+    const { clientId, query = {} } = payload;
 
     if (!clientId) {
-      logger.info(`Client id is required`);
       return callback({
         code: grpc.status.INVALID_ARGUMENT,
         message: "Client id is required",
       });
     }
 
-    // destructure query params
-    const {
-      fields,
-      page = 1,
-      limit = 10,
-      sort = "updatedAt",
-      order = "desc",
-    } = query;
-    console.log(order, sort);
+    const page = Math.max(Number.parseInt(query.page) || 1, 1);
+    const limit = Math.min(Number.parseInt(query.limit) || 10, 100); // cap limit
     const skip = (page - 1) * limit;
-    const sortOrderValue = order === "desc" ? -1 : 1;
+
+    const sortOrderValue = query.order === "desc" ? -1 : 1;
     const allowedSortFields = ["createdAt", "updatedAt"];
-    const sortField = allowedSortFields.includes(sort) ? sort : "createdAt";
-    // response body
+    const sortField = allowedSortFields.includes(query.sort)
+      ? query.sort
+      : "createdAt";
+
     const response = {};
 
-    if (fields) {
-      const fieldsArr = fields.split(",");
+    const fieldsArr = query.fields ? query.fields.split(",") : [];
 
-      if (fieldsArr.includes("configurations")) {
-        response["configurations"] = await WebhookConfig.find({
-          clientId,
-          deletedAt: null,
-        })
+    const baseQuery = {
+      clientId,
+      deletedAt: null,
+    };
+
+    // CONFIGURATIONS
+    if (!query.fields || fieldsArr.includes("configurations")) {
+      const [data, totalItems] = await Promise.all([
+        WebhookConfig.find(baseQuery)
           .select("-__v")
           .sort({ [sortField]: sortOrderValue })
           .skip(skip)
           .limit(limit)
-          .lean();
-      }
+          .lean(),
 
-      if (fieldsArr.includes("enabledServices")) {
-        response["enabledServices"] =
-          await findAllEnabledServicesForClient(clientId);
-      }
-    } else {
-      response["configurations"] = await WebhookConfig.find({
-        clientId,
-        deletedAt: null,
-      })
-        .select("-__v")
-        .sort({ [sortField]: sortOrderValue })
-        .skip(skip)
-        .limit(limit)
-        .lean();
+        WebhookConfig.countDocuments(baseQuery),
+      ]);
+
+      // decrypt + serialize
+      const serialized = webhookConfigSerializer(
+        data.map((conf) => ({
+          ...conf,
+          apiKey: decrypt(conf.apiKey),
+        })),
+      );
+
+      response.configurations = serialized;
+
+      // pagination
+      response.pagination = {
+        page,
+        limit,
+        totalItems,
+        totalPages: Math.ceil(totalItems / limit),
+        hasNextPage: page * limit < totalItems,
+      };
+    }
+
+    // ENABLED SERVICES
+    if (fieldsArr.includes("enabledServices")) {
+      response.enabledServices =
+        await findAllEnabledServicesForClient(clientId);
     }
 
     if (Object.keys(response).length === 0) {
-      throw {
-        statusCode: grpc.status.NOT_FOUND,
-        message: "no webhook configuration found.",
-      };
+      return callback({
+        code: grpc.status.NOT_FOUND,
+        message: "No webhook configuration found.",
+      });
     }
 
-    // serialize config
-    response["configurations"] = webhookConfigSerializer(
-      response.configurations.map((conf) => {
-        const t = { ...conf, apiKey: decrypt(conf.apiKey) };
-        return t;
-      }),
-    );
-
-    if (response.configurations) {
-      response["pagination"] = {
-        page: +page,
-        limit: +limit,
-      };
-    }
-
-    callback(null, {
+    // FINAL RESPONSE
+    return callback(null, {
       payload: JSON.stringify({
         success: true,
         message: "Webhook fetched successfully",
@@ -369,9 +365,13 @@ const allWebhook = async (call, callback) => {
     });
   } catch (error) {
     logger.error(
-      `Error in fetching all webhooks: ${JSON.stringify({ error: error.message, stack: error.stack })}`,
+      `Error in fetching all webhooks: ${JSON.stringify({
+        error: error.message,
+        stack: error.stack,
+      })}`,
     );
-    callback({
+
+    return callback({
       code: error.statusCode || grpc.status.INTERNAL,
       message: error.message || "Internal server error",
     });
@@ -400,41 +400,67 @@ const getAllWebhookLogs = async (call, callback) => {
       });
     }
 
-    // destructure query params
-    const { page = 1, limit = 10, sort = "createdAt", order = "desc" } = query;
+    const page = Math.max(Number.parseInt(query.page) || 1, 1);
+    const limit = Math.min(Number.parseInt(query.limit) || 10, 100);
     const skip = (page - 1) * limit;
+
+    const sortOrderValue = query.order === "desc" ? -1 : 1;
     const allowedSortFields = ["createdAt", "updatedAt"];
-    const sortField = allowedSortFields.includes(sort) ? sort : "createdAt";
-    const sortOrderValue = order === "desc" ? -1 : 1;
+    const sortField = allowedSortFields.includes(query.sort)
+      ? query.sort
+      : "createdAt";
 
-    // fetch all logs
-    const schedulerLogs = await WebhookCronScheduler.find({
-      clientId,
-    })
-      .select("-__v")
-      .sort({ [sortField]: sortOrderValue })
-      .skip(skip)
-      .limit(limit)
-      .lean();
-    const completedLogs = await WebhookLogs.find({ clientId })
-      .select("-__v")
-      .sort({ [sortField]: sortOrderValue })
-      .skip(skip)
-      .limit(limit)
-      .lean();
+    const result = await WebhookCronScheduler.aggregate([
+      // First collection match
+      {
+        $match: { clientId },
+      },
 
-    const pagination = {
-      page: +page,
-      limit: +limit,
-    };
+      // Merge second collection
+      {
+        $unionWith: {
+          coll: "webhooklogs", // collection name in MongoDB
+          pipeline: [{ $match: { clientId } }],
+        },
+      },
+
+      // Global sort
+      {
+        $sort: { [sortField]: sortOrderValue },
+      },
+
+      // Facet for pagination + total count
+      {
+        $facet: {
+          data: [
+            { $skip: skip },
+            { $limit: limit },
+            {
+              $project: { __v: 0 },
+            },
+          ],
+          totalCount: [{ $count: "count" }],
+        },
+      },
+    ]);
+
+    const data = result[0].data;
+    const totalItems = result[0].totalCount[0]?.count || 0;
+    const totalPages = Math.ceil(totalItems / limit);
 
     callback(null, {
       payload: JSON.stringify({
         success: true,
         message: "Webhook logs fetched successfully",
         data: {
-          data: webhookLogsSerializer([...schedulerLogs, ...completedLogs]),
-          pagination,
+          data: webhookLogsSerializer(data),
+          pagination: {
+            page,
+            limit,
+            totalItems,
+            totalPages,
+            hasNextPage: page * limit < totalItems,
+          },
         },
       }),
     });
