@@ -2,7 +2,7 @@ const updateWhatsAppMessageStatus = async (status, referenceId, clientId, provid
   const dbConnect = await global.connectionManager.getModels(clientId);
   await dbConnect.Notification.update(
     {
-      status : `${provider} : ${status}`,
+      status : `${provider}:${status}`,
     },
     { where: { referenceId } },
   );

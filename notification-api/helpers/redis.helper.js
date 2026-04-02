@@ -231,9 +231,9 @@ const generateNewAccessToken = async (refreshToken, x_clientId) => {
     return token.accessToken;
   } catch (error) {
     throw {
-      message: error.message || "Invalid refresh token",
-      statusCode: error.statusCode || 401,
+      message: "Invalid refresh token",
+      statusCode: 401,
     };
   }
 };
-module.exports = RedisHelper;
+module.exports = RedisHelper, redisClient;

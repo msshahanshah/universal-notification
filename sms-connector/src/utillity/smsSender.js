@@ -62,7 +62,7 @@ class SmsSender {
         `SMS sent via ${this.provider}:`,
         result?.data || result?.sid || result,
       );
-      return result;
+      return result?.body;
     } catch (error) {
       console.error(
         `Error sending SMS via ${this.provider}:`,

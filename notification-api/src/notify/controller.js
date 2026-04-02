@@ -17,6 +17,7 @@ const { fromNumber, templateId } = require("../validators/whatsapp.validator");
 const { generatePreSignedUrl } = require("../../helpers/preSignedUrl.helper");
 const logger = require("../logger");
 const { getWebhookEnabledServices } = require("../webhook/service");
+const redisClient = require("../utillity/redisClient");
 
 const notify = async (req, res) => {
   try {
@@ -40,22 +41,22 @@ const notify = async (req, res) => {
     // Build content
     let content = message
       ? {
-          message,
-          attachments,
-          templateId,
-          fromNumber,
-          variableValues,
-          clientId: clientID,
-        }
+        message,
+        attachments,
+        templateId,
+        fromNumber,
+        variableValues,
+        clientId: clientID,
+      }
       : {
-          subject,
-          body,
-          fromEmail,
-          cc,
-          bcc,
-          attachments,
-          clientId: clientID,
-        };
+        subject,
+        body,
+        fromEmail,
+        cc,
+        bcc,
+        attachments,
+        clientId: clientID,
+      };
 
     if (variableValues) {
       content = {
@@ -133,12 +134,11 @@ const notify = async (req, res) => {
       status: "accepted",
       message:
         attachments?.length &&
-        typeof attachments[0] === "string" &&
-        !validPublicURL(attachments[0])
+          typeof attachments[0] === "string" &&
+          !validPublicURL(attachments[0])
           ? "Waiting for file upload on URL (expiry 5 mins)."
-          : `Notification request accepted ${
-              publishResults ? "and queued." : ""
-            }`,
+          : `Notification request accepted ${publishResults ? "and queued." : ""
+          }`,
       preSignedUrls,
     };
 
@@ -177,6 +177,7 @@ const notifyWithEmailAttachment = async (req, res) => {
 
     const clientId = req.headers["x-client-id"];
 
+
     const notificationData = await getNotificationData(messageId, clientId);
     let content = {
       subject: notificationData.subject,
@@ -210,7 +211,17 @@ const notifyWithEmailAttachment = async (req, res) => {
       attachments,
     };
 
+    if (!await redisClient.get(messageId)) {
+      logger.warn(`Request already processed for message ${messageId} for client ${clientId}`);
+      return res.status(202).json({
+        success: true,
+        status: "already process",
+        message: `Notification request already processed for message ${messageId}`,
+      });
+    }
     const result = await publishingNotificationRequest(notificationRecord);
+
+    await redisClient.del(messageId);
 
     logger.info(
       `Notification record with attachment publish successfully | client ${clientId} | messageId ${messageId}`,
