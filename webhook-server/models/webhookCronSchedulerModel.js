@@ -28,6 +28,11 @@ const webhookCronSchedulerSchema = new mongoose.Schema(
       default: 0,
     },
 
+    retryEnabled: {
+      type: Boolean,
+      default: false,
+    },
+
     webhookResponse: {
       type: Object,
       required: true,

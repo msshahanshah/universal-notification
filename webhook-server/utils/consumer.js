@@ -20,7 +20,9 @@ const consumer = async (payload) => {
       [`serviceTrigger.${service}`]: { $exists: true, $eq: status },
     };
 
-    const configs = await WebhookConfig.find(query).select("webhookUrl apiKey");
+    const configs = await WebhookConfig.find(query).select(
+      "webhookUrl apiKey retryEnabled",
+    );
 
     logger.info(`Found ${configs.length} webhook configs`);
 
@@ -32,6 +34,7 @@ const consumer = async (payload) => {
       retryAttempts: 0,
       webhookPayload: payload,
       webhookResponse: {},
+      retryEnabled: record.retryEnabled,
     }));
 
     if (!schedulerDocs.length) {

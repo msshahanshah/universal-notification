@@ -130,7 +130,7 @@ const updateWebhook = async (call, callback) => {
       setFields.isActive = isActive;
     }
 
-    if (retryEnabled) {
+    if (retryEnabled !== undefined) {
       setFields.retryEnabled = retryEnabled;
     }
 

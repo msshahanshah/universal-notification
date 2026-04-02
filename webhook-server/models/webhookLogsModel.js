@@ -28,6 +28,12 @@ const webhookLogsSchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
+
+    retryEnabled: {
+      type: Boolean,
+      default: false,
+    },
+
     webhookPayload: {
       type: Object,
       required: true,
