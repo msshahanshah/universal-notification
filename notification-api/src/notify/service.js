@@ -3,7 +3,6 @@ const logger = require('../logger');
 const { v4: uuidv4 } = require('uuid');
 const rabbitManager = require('../utillity/rabbit');
 const { loadClientConfigs } = require('../utillity/loadClientConfigs');
-const { templateId } = require('../validators/whatsapp.validator');
 
 let configs = null;
 
@@ -36,7 +35,7 @@ const serviceEnforcers = {
   EMAIL: ({ provider, message, clientConfig }) => {
     if (!provider) return;
 
-    const { service, content, clientId } = message;
+    const { service, content } = message;
 
     const serviceConfig =
       clientConfig[service.toUpperCase()][provider.toUpperCase()];

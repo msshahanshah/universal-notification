@@ -112,7 +112,7 @@ const messageObject = Joi.object({
       }).unknown(),
       {
         then: Joi.object({
-          message: Joi.string().allow("").optional(), // ✅ allow empty string
+          message: Joi.string().allow("").optional(), 
         }),
       },
     ),

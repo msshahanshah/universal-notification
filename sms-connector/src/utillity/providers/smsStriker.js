@@ -11,10 +11,8 @@ class SmsStrikerProvider {
 
     async send({ to, message, templateId }) {
         try {
-            // const msg = `Your OTP is ${message}. Please do not share Powered by: LINQLT`;
-
             const response = await axios.post(`https://www.smsstriker.com/API/sms.php?username=${this.username}&password=${this.password}&from=${this.from}&to=${to}&msg=${message}&type=${this.type}&template_id=${templateId}`);
-
+    
             return response.data;
         } catch (error) {
             logger.error({

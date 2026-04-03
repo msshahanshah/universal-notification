@@ -16,8 +16,7 @@ const serializeLogs = (rows, logType) => {
       status: log.status,
       attempts: log.attempts,
       messageDate: log.updatedAt,
-      message: log.status === "failed" ? log.connectorResponse : "",
-      attempts: log.attempts,
+      message: log.status === "failed" ? log.connectorResponse : ""
     };
 
     if (logType === LOG_TYPE.SLACK_LOGS) {
