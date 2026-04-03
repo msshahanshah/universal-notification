@@ -7,7 +7,6 @@ const {
   generatePreSignedUrl,
 } = require("../../../helpers/preSignedUrl.helper");
 const { validPublicURL } = require("../../../helpers/regex.helper");
-const RedisHelper = require("../../../helpers/redis.helper");
 const redisClient = require("../../utillity/redisClient");
 
 let configs = null;
