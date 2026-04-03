@@ -93,15 +93,6 @@ const templateMiddleware = async (req, res, next) => {
           continue;
         }
 
-        // TODO
-        // if (!msg.variableValues) {
-        //     throw {
-        //         service,
-        //         statusCode: 400,
-        //         message: `Variable values are required for template '${msg.templateId}'.`
-        //     }
-        // }
-
         const templateKey = `${service}:${msg.templateId}`;
         let template = await RedisHelper.getValue(templateKey);
 
@@ -129,7 +120,8 @@ const templateMiddleware = async (req, res, next) => {
             );
           }
 
-          if (template.requiredFields && !msg.variableValues) {
+          if (template.requiredFields.length && !msg.variableValues) {
+            console.log(template.requiredFields)
             throw {
               service,
               statusCode: 400,
@@ -144,24 +136,27 @@ const templateMiddleware = async (req, res, next) => {
           );
         }
 
-        verifyVariables(
-          msg.variableValues,
-          template.requiredFields,
-          msg.templateId,
-          service,
-        );
-        verifyConstraints(msg.variableValues, template.requiredFields, service);
 
-        if (service === "email") {
-          msg.body = replaceVariables(
-            template.messageContent,
+        if (template.requiredFields.length) {
+          verifyVariables(
             msg.variableValues,
+            template.requiredFields,
+            msg.templateId,
+            service,
           );
-        } else {
-          msg.message = replaceVariables(
-            template.messageContent,
-            msg.variableValues,
-          );
+          verifyConstraints(msg.variableValues, template.requiredFields, service);
+
+          if (service === "email") {
+            msg.body = replaceVariables(
+              template.messageContent,
+              msg.variableValues,
+            );
+          } else {
+            msg.message = replaceVariables(
+              template.messageContent,
+              msg.variableValues,
+            );
+          }
         }
       }
     }
