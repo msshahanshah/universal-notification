@@ -8,7 +8,7 @@ const verifyVariables = (
   templateId,
   service,
 ) => {
-  if (!requiredVariables || !requiredVariables.length) return;
+  if (!requiredVariables?.length) return;
   if (!variableValues) {
     throw {
       service,
@@ -35,7 +35,7 @@ const verifyVariables = (
 };
 
 const verifyConstraints = (variableValues, requiredVariables, service) => {
-  if (!requiredVariables || !requiredVariables.length) return;
+  if (!requiredVariables?.length) return;
 
   for (const variable of requiredVariables) {
     const value = variableValues[variable.name];

@@ -13,7 +13,6 @@ const {
 } = require("./service");
 
 const { validPublicURL } = require("../../helpers/regex.helper");
-const { fromNumber, templateId } = require("../validators/whatsapp.validator");
 const { generatePreSignedUrl } = require("../../helpers/preSignedUrl.helper");
 const logger = require("../logger");
 const { getWebhookEnabledServices } = require("../webhook/service");
@@ -231,7 +230,7 @@ const notifyWithEmailAttachment = async (req, res) => {
       success: true,
       status: "accepted",
       message: `Notification request accepted ${result ? "and queued." : ""}`,
-      messageId, // Return the ID to the client
+      messageId, 
     });
   } catch (err) {
     logger.error({
