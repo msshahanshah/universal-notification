@@ -187,7 +187,7 @@ const validateRequest = async (req, res, next) => {
         throw {
           service,
           statusCode: 400,
-          message: SERVICES.casedService
+          message: SERVICES[casedService]
             ? `${service} is not enabled`
             : "Invalid service",
         };
