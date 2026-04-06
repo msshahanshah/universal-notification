@@ -147,7 +147,7 @@ const findAllEligibleNotifications = async (
   const data = await WebhookCronScheduler.aggregate([
     {
       $match: {
-        retryAttempts: { $lte: maxRetryAttempt },
+        retryAttempts: { $lt: maxRetryAttempt },
         updatedAt: { $lte: cutoffTime },
       },
     },
